@@ -1,0 +1,17 @@
+[package]
+name = "audiocloud-models"
+version = "0.1.0"
+edition = "2021"
+
+[lib]
+name = "audiocloud_models"
+
+[dependencies]
+maplit = "1"
+lazy_static = "1"
+
+[dependencies.audiocloud-api]
+path = "../audiocloud-api"
+
+[dev-dependencies]
+serde_yaml = "0.8"

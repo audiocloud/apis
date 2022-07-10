@@ -1,0 +1,77 @@
+---
+resources: {}
+inputs:
+  - - generic
+    - audio
+  - - generic
+    - audio
+  - - generic
+    - audio
+  - - generic
+    - audio
+  - - generic
+    - audio
+  - - generic
+    - audio
+  - - generic
+    - audio
+  - - generic
+    - audio
+  - - generic
+    - audio
+  - - generic
+    - audio
+  - - generic
+    - audio
+  - - generic
+    - audio
+  - - generic
+    - audio
+  - - generic
+    - audio
+  - - generic
+    - audio
+  - - generic
+    - audio
+  - - generic
+    - audio
+  - - generic
+    - audio
+  - - generic
+    - audio
+  - - generic
+    - audio
+  - - generic
+    - audio
+  - - generic
+    - audio
+  - - generic
+    - audio
+  - - generic
+    - audio
+outputs:
+  - - left
+    - audio
+  - - right
+    - audio
+parameters:
+  bus_assign:
+    scope: all_inputs
+    unit: "no"
+    role: no_role
+    values:
+      - 0.0
+      - 1.0
+      - 2.0
+  input:
+    scope: all_inputs
+    unit: dB
+    role:
+      amplifier:
+        - input
+        - gain
+    values:
+      - - -60.0
+        - 10.0
+reports: {}
+media: false
