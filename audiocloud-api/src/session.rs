@@ -3,7 +3,7 @@ use std::collections::HashMap;
 use derive_more::{Display, IsVariant, Unwrap};
 use serde::{Deserialize, Serialize};
 
-use crate::cloud::apps::CreateOrReplaceSession;
+use crate::cloud::apps::CreateSession;
 use crate::model::MultiChannelValue;
 use crate::newtypes::DomainId;
 use crate::newtypes::{AppId, DynamicId, FixedId, FixedInstanceId, InputId, MediaId, MediaObjectId, MixerId, ModelId, ParameterId, SecureKey, TrackId};
@@ -11,34 +11,34 @@ use crate::time::TimeRange;
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct Session {
-  pub version:      u64,
-  pub domain_id:    DomainId,
-  pub domain_event: u64,
-  pub app_id:       AppId,
-  pub time:         TimeRange,
-  pub tracks:       HashMap<TrackId, SessionTrack>,
-  pub mixers:       HashMap<MixerId, SessionMixer>,
-  pub dynamic:      HashMap<DynamicId, SessionDynamicInstance>,
-  pub fixed:        HashMap<FixedId, SessionFixedInstance>,
-  pub security:     HashMap<SecureKey, SessionSecurity>,
-  pub deleted:      bool,
+  pub version:   u64,
+  pub domain_id: DomainId,
+  pub event_id:  u64,
+  pub app_id:    AppId,
+  pub time:      TimeRange,
+  pub tracks:    HashMap<TrackId, SessionTrack>,
+  pub mixers:    HashMap<MixerId, SessionMixer>,
+  pub dynamic:   HashMap<DynamicId, SessionDynamicInstance>,
+  pub fixed:     HashMap<FixedId, SessionFixedInstance>,
+  pub security:  HashMap<SecureKey, SessionSecurity>,
+  pub deleted:   bool,
 }
 
-impl From<CreateOrReplaceSession> for Session {
-  fn from(source: CreateOrReplaceSession) -> Self {
-    let CreateOrReplaceSession { time,
-                                 domain,
-                                 app,
-                                 tracks,
-                                 mixers,
-                                 dynamic,
-                                 fixed,
-                                 security,
-                                 .. } = source;
+impl From<CreateSession> for Session {
+  fn from(source: CreateSession) -> Self {
+    let CreateSession { time,
+                        domain,
+                        app,
+                        tracks,
+                        mixers,
+                        dynamic,
+                        fixed,
+                        security,
+                        .. } = source;
 
     Self { version: 0,
            domain_id: domain,
-           domain_event: 0,
+           event_id: 0,
            app_id: app,
            time,
            tracks,

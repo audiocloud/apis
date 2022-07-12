@@ -6,7 +6,7 @@ use serde::{Deserialize, Serialize};
 
 use crate::cloud::domains::DomainFixedInstance;
 use crate::cloud::domains::{DomainLimits, DynamicInstanceLimits};
-use crate::newtypes::{AppId, DomainId, DynamicId, FixedId, FixedInstanceId, MixerId, ModelId, SecureKey, TrackId};
+use crate::newtypes::{AppId, DomainId, DynamicId, FixedId, FixedInstanceId, MixerId, ModelId, SecureKey, SessionId, TrackId};
 use crate::session::{SessionDynamicInstance, SessionFixedInstance, SessionMixer, SessionSecurity, SessionTrack};
 use crate::time::TimeRange;
 
@@ -39,10 +39,11 @@ impl From<DomainFixedInstance> for AppFixedInstance {
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone, PartialEq)]
-pub struct CreateOrReplaceSession {
-  pub time:     TimeRange,
-  pub domain:   DomainId,
+pub struct CreateSession {
   pub app:      AppId,
+  pub domain:   DomainId,
+  pub id:       SessionId,
+  pub time:     TimeRange,
   #[serde(default)]
   pub tracks:   HashMap<TrackId, SessionTrack>,
   #[serde(default)]
@@ -54,4 +55,16 @@ pub struct CreateOrReplaceSession {
   #[serde(default)]
   pub security: HashMap<SecureKey, SessionSecurity>,
   pub dry_run:  bool,
+}
+
+#[derive(Debug, Serialize, Deserialize, Clone, PartialEq)]
+pub struct SessionSpec {
+  #[serde(default)]
+  pub tracks:  HashMap<TrackId, SessionTrack>,
+  #[serde(default)]
+  pub mixers:  HashMap<MixerId, SessionMixer>,
+  #[serde(default)]
+  pub dynamic: HashMap<DynamicId, SessionDynamicInstance>,
+  #[serde(default)]
+  pub fixed:   HashMap<FixedId, SessionFixedInstance>,
 }

@@ -9,7 +9,7 @@ use serde::{Deserialize, Serialize};
 
 use crate::app::SessionPacket;
 use crate::change::{DesiredSessionPlayState, ModifySession};
-use crate::cloud::apps::CreateOrReplaceSession;
+use crate::cloud::apps::CreateSession;
 use crate::media::DomainMediaCommand;
 use crate::media::MediaDownloadState;
 use crate::newtypes::{FixedInstanceId, MediaObjectId, SessionId};
@@ -26,7 +26,7 @@ pub enum DomainCommand {
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq)]
 #[serde(rename_all = "snake_case")]
 pub enum DomainSessionCommand {
-  CreateOrReplace(CreateOrReplaceSession),
+  CreateOrReplace(CreateSession),
   Modify(Vec<ModifySession>),
   SetDesiredPlayState(DesiredSessionPlayState),
   Delete,
