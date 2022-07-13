@@ -30,6 +30,14 @@ pub struct CreateAppMedia {
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug)]
+pub struct UpdateAppMedia {
+    #[serde(default)]
+    pub grouping: Option<String>,
+    #[serde(default)]
+    pub grouping2: Option<String>,
+}
+
+#[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct QueryAppMedia {
     #[serde(default)]
     pub grouping_is: Option<String>,
