@@ -11,5 +11,5 @@ pub mod instance;
 pub mod media;
 pub mod model;
 pub mod newtypes;
-pub mod time;
 pub mod session;
+pub mod time;

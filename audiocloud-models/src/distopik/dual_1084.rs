@@ -19,7 +19,7 @@ use crate::Manufacturers::Distopik;
 use crate::{left_and_right_inputs, left_and_right_outputs, values};
 
 pub fn distopik_dual_1084_id() -> ModelId {
-  ModelId::new(Distopik.to_string(), "dual_1084".to_owned())
+    ModelId::new(Distopik.to_string(), "dual_1084".to_owned())
 }
 
 lazy_static! {
@@ -46,166 +46,208 @@ lazy_static! {
 }
 
 pub fn distopik_dual_1084_model() -> Model {
-  let params = hashmap! {
-    INPUT_GAIN.clone() => input_gain(),
-    HIGH_PASS_FILTER.clone() => high_pass_filter(),
-    LOW_FREQ.clone() => low_freq(),
-    LOW_GAIN.clone() => low_gain(),
-    LOW_MID_FREQ.clone() => low_mid_freq(),
-    LOW_MID_GAIN.clone() => low_mid_gain(),
-    LOW_MID_WIDTH.clone() => low_mid_width(),
-    HIGH_MID_FREQ.clone() => high_mid_freq(),
-    HIGH_MID_GAIN.clone() => high_mid_gain(),
-    HIGH_MID_WIDTH.clone() => high_mid_width(),
-    HIGH_FREQ.clone() => high_freq(),
-    HIGH_GAIN.clone() => high_gain(),
-    OUTPUT_PAD.clone() => output_pad(),
-    EQL_TOGGLE.clone() => eql_toggle()
-  };
+    let params = hashmap! {
+      INPUT_GAIN.clone() => input_gain(),
+      HIGH_PASS_FILTER.clone() => high_pass_filter(),
+      LOW_FREQ.clone() => low_freq(),
+      LOW_GAIN.clone() => low_gain(),
+      LOW_MID_FREQ.clone() => low_mid_freq(),
+      LOW_MID_GAIN.clone() => low_mid_gain(),
+      LOW_MID_WIDTH.clone() => low_mid_width(),
+      HIGH_MID_FREQ.clone() => high_mid_freq(),
+      HIGH_MID_GAIN.clone() => high_mid_gain(),
+      HIGH_MID_WIDTH.clone() => high_mid_width(),
+      HIGH_FREQ.clone() => high_freq(),
+      HIGH_GAIN.clone() => high_gain(),
+      OUTPUT_PAD.clone() => output_pad(),
+      EQL_TOGGLE.clone() => eql_toggle()
+    };
 
-  Model { inputs:     left_and_right_inputs(),
-          outputs:    left_and_right_outputs(),
-          parameters: params,
-          resources:  Default::default(),
-          reports:    Default::default(),
-          media:      false, }
+    Model {
+        inputs: left_and_right_inputs(),
+        outputs: left_and_right_outputs(),
+        parameters: params,
+        resources: Default::default(),
+        reports: Default::default(),
+        media: false,
+    }
 }
 
 fn input_gain() -> ModelParameter {
-  ModelParameter { scope:  AllInputs,
-                   unit:   Decibels,
-                   role:   Amplifier(Input, AmpGain),
-                   values: vec![values::bool_false(),
-                                values::integer(-10),
-                                values::integer(-5),
-                                values::integer(0),
-                                values::integer(5),
-                                values::integer(10),
-                                values::integer(15),
-                                values::integer(20),], }
+    ModelParameter {
+        scope: AllInputs,
+        unit: Decibels,
+        role: Amplifier(Input, AmpGain),
+        values: vec![
+            values::bool_false(),
+            values::integer(-10),
+            values::integer(-5),
+            values::integer(0),
+            values::integer(5),
+            values::integer(10),
+            values::integer(15),
+            values::integer(20),
+        ],
+    }
 }
 fn high_pass_filter() -> ModelParameter {
-  ModelParameter { scope:  AllInputs,
-                   unit:   Hertz,
-                   role:   Filter(HighPass, Frequency),
-                   values: vec![values::bool_false(),
-                                values::integer(22),
-                                values::integer(45),
-                                values::integer(70),
-                                values::integer(160),
-                                values::integer(360),], }
+    ModelParameter {
+        scope: AllInputs,
+        unit: Hertz,
+        role: Filter(HighPass, Frequency),
+        values: vec![
+            values::bool_false(),
+            values::integer(22),
+            values::integer(45),
+            values::integer(70),
+            values::integer(160),
+            values::integer(360),
+        ],
+    }
 }
 fn low_freq() -> ModelParameter {
-  ModelParameter { scope:  AllInputs,
-                   unit:   Hertz,
-                   role:   Filter(Low, Frequency),
-                   values: vec![values::bool_false(),
-                                values::integer(20),
-                                values::integer(35),
-                                values::integer(60),
-                                values::integer(110),
-                                values::integer(220)], }
+    ModelParameter {
+        scope: AllInputs,
+        unit: Hertz,
+        role: Filter(Low, Frequency),
+        values: vec![
+            values::bool_false(),
+            values::integer(20),
+            values::integer(35),
+            values::integer(60),
+            values::integer(110),
+            values::integer(220),
+        ],
+    }
 }
 fn low_gain() -> ModelParameter {
-  ModelParameter { scope:  AllInputs,
-                   unit:   Decibels,
-                   role:   Filter(Low, FilterGain),
-                   values: filter_gain_values_16(), }
+    ModelParameter {
+        scope: AllInputs,
+        unit: Decibels,
+        role: Filter(Low, FilterGain),
+        values: filter_gain_values_16(),
+    }
 }
 fn low_mid_freq() -> ModelParameter {
-  ModelParameter { scope:  AllInputs,
-                   unit:   Hertz,
-                   role:   Filter(LowMid, Frequency),
-                   values: vec![values::bool_false(),
-                                values::integer(120),
-                                values::integer(180),
-                                values::integer(240),
-                                values::integer(360),
-                                values::integer(480),
-                                values::integer(720),
-                                values::integer(1_600),
-                                values::integer(2_400),
-                                values::integer(3_200),
-                                values::integer(4_800),
-                                values::integer(7_200)], }
+    ModelParameter {
+        scope: AllInputs,
+        unit: Hertz,
+        role: Filter(LowMid, Frequency),
+        values: vec![
+            values::bool_false(),
+            values::integer(120),
+            values::integer(180),
+            values::integer(240),
+            values::integer(360),
+            values::integer(480),
+            values::integer(720),
+            values::integer(1_600),
+            values::integer(2_400),
+            values::integer(3_200),
+            values::integer(4_800),
+            values::integer(7_200),
+        ],
+    }
 }
 fn low_mid_gain() -> ModelParameter {
-  ModelParameter { scope:  AllInputs,
-                   unit:   Decibels,
-                   role:   Filter(LowMid, FilterGain),
-                   values: filter_gain_values_12(), }
+    ModelParameter {
+        scope: AllInputs,
+        unit: Decibels,
+        role: Filter(LowMid, FilterGain),
+        values: filter_gain_values_12(),
+    }
 }
 fn low_mid_width() -> ModelParameter {
-  ModelParameter { scope:  AllInputs,
-                   unit:   Toggle,
-                   role:   Filter(LowMid, Bandwidth),
-                   values: values::toggle(), }
+    ModelParameter {
+        scope: AllInputs,
+        unit: Toggle,
+        role: Filter(LowMid, Bandwidth),
+        values: values::toggle(),
+    }
 }
 fn high_mid_freq() -> ModelParameter {
-  ModelParameter { scope:  AllInputs,
-                   unit:   Hertz,
-                   role:   Filter(HighMid, Frequency),
-                   values: vec![values::bool_false(),
-                                values::integer(360),
-                                values::integer(480),
-                                values::integer(720),
-                                values::integer(1_600),
-                                values::integer(2_400),
-                                values::integer(3_200),
-                                values::integer(3_900),
-                                values::integer(4_800),
-                                values::integer(6_400),
-                                values::integer(7_200),
-                                values::integer(8_400)], }
+    ModelParameter {
+        scope: AllInputs,
+        unit: Hertz,
+        role: Filter(HighMid, Frequency),
+        values: vec![
+            values::bool_false(),
+            values::integer(360),
+            values::integer(480),
+            values::integer(720),
+            values::integer(1_600),
+            values::integer(2_400),
+            values::integer(3_200),
+            values::integer(3_900),
+            values::integer(4_800),
+            values::integer(6_400),
+            values::integer(7_200),
+            values::integer(8_400),
+        ],
+    }
 }
 fn high_mid_gain() -> ModelParameter {
-  ModelParameter { scope:  AllInputs,
-                   unit:   Decibels,
-                   role:   Filter(HighMid, FilterGain),
-                   values: filter_gain_values_12(), }
+    ModelParameter {
+        scope: AllInputs,
+        unit: Decibels,
+        role: Filter(HighMid, FilterGain),
+        values: filter_gain_values_12(),
+    }
 }
 fn high_mid_width() -> ModelParameter {
-  ModelParameter { scope:  AllInputs,
-                   unit:   Toggle,
-                   role:   Filter(HighMid, Bandwidth),
-                   values: values::toggle(), }
+    ModelParameter {
+        scope: AllInputs,
+        unit: Toggle,
+        role: Filter(HighMid, Bandwidth),
+        values: values::toggle(),
+    }
 }
 fn high_freq() -> ModelParameter {
-  ModelParameter { scope:  AllInputs,
-                   unit:   Hertz,
-                   role:   Filter(High, Frequency),
-                   values: vec![values::bool_false(),
-                                values::integer(8_000),
-                                values::integer(10_000),
-                                values::integer(12_000),
-                                values::integer(16_000),
-                                values::integer(20_000)], }
+    ModelParameter {
+        scope: AllInputs,
+        unit: Hertz,
+        role: Filter(High, Frequency),
+        values: vec![
+            values::bool_false(),
+            values::integer(8_000),
+            values::integer(10_000),
+            values::integer(12_000),
+            values::integer(16_000),
+            values::integer(20_000),
+        ],
+    }
 }
 fn high_gain() -> ModelParameter {
-  ModelParameter { scope:  AllInputs,
-                   unit:   Decibels,
-                   role:   Filter(High, FilterGain),
-                   values: filter_gain_values_16(), }
+    ModelParameter {
+        scope: AllInputs,
+        unit: Decibels,
+        role: Filter(High, FilterGain),
+        values: filter_gain_values_16(),
+    }
 }
 
 fn output_pad() -> ModelParameter {
-  ModelParameter { scope:  AllOutputs,
-                   unit:   Decibels,
-                   role:   Amplifier(Output, AmpGain),
-                   values: vec![values::bool_false(), values::integer(-10), values::integer(-20)], }
+    ModelParameter {
+        scope: AllOutputs,
+        unit: Decibels,
+        role: Amplifier(Output, AmpGain),
+        values: vec![values::bool_false(), values::integer(-10), values::integer(-20)],
+    }
 }
 
 fn eql_toggle() -> ModelParameter {
-  ModelParameter { scope:  AllInputs,
-                   unit:   Toggle,
-                   role:   Global(Bypass),
-                   values: values::toggle(), }
+    ModelParameter {
+        scope: AllInputs,
+        unit: Toggle,
+        role: Global(Bypass),
+        values: values::toggle(),
+    }
 }
 
 fn filter_gain_values_16() -> Vec<ModelValueOption> {
-  vec![values::numbers(-16_f64, 16_f64)]
+    vec![values::numbers(-16_f64, 16_f64)]
 }
 
 fn filter_gain_values_12() -> Vec<ModelValueOption> {
-  vec![values::numbers(-12_f64, 12_f64)]
+    vec![values::numbers(-12_f64, 12_f64)]
 }

@@ -18,33 +18,33 @@ use crate::time::Timestamp;
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq)]
 #[serde(rename_all = "snake_case")]
 pub enum DomainCommand {
-  Session(SessionId, DomainSessionCommand),
-  Instance(FixedInstanceId, DomainInstanceCommand),
-  Media(MediaObjectId, DomainMediaCommand),
+    Session(SessionId, DomainSessionCommand),
+    Instance(FixedInstanceId, DomainInstanceCommand),
+    Media(MediaObjectId, DomainMediaCommand),
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq)]
 #[serde(rename_all = "snake_case")]
 pub enum DomainSessionCommand {
-  CreateOrReplace(CreateSession),
-  Modify(Vec<ModifySession>),
-  SetDesiredPlayState(DesiredSessionPlayState),
-  Delete,
+    CreateOrReplace(CreateSession),
+    Modify(Vec<ModifySession>),
+    SetDesiredPlayState(DesiredSessionPlayState),
+    Delete,
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq)]
 #[serde(rename_all = "snake_case")]
 pub enum DomainInstanceCommand {
-  Stop,
-  Play { until: Timestamp },
-  Rewind { to: f64 },
-  PowerOff,
-  PowerOn,
+    Stop,
+    Play { until: Timestamp },
+    Rewind { to: f64 },
+    PowerOff,
+    PowerOn,
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug)]
 #[serde(rename_all = "snake_case")]
 pub enum WebSocketEvent {
-  Packet(SessionId, Arc<SessionPacket>),
-  Download(MediaObjectId, MediaDownloadState),
+    Packet(SessionId, Arc<SessionPacket>),
+    Download(MediaObjectId, MediaDownloadState),
 }
