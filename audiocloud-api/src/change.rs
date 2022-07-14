@@ -15,6 +15,7 @@ use crate::session::{
     MixerInput, MixerInputValues, Session, SessionDynamicInstance, SessionFixedInstance, SessionMixer, SessionMixerId,
     SessionObjectId, SessionTimeSegment, SessionTrack, SessionTrackChannels, SessionTrackMedia,
 };
+use crate::time::Timestamped;
 
 use self::ModifySessionError::*;
 
@@ -243,6 +244,12 @@ impl SessionPlayState {
             _ => false,
         }
     }
+}
+
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq)]
+pub struct SessionState {
+    pub play_state:         Timestamped<SessionPlayState>,
+    pub desired_play_state: Timestamped<DesiredSessionPlayState>,
 }
 
 #[derive(Clone, Copy, Serialize, Deserialize, PartialEq, Eq, Debug, From, Into, Hash, Display, Constructor)]
