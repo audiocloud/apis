@@ -50,6 +50,19 @@ pub enum DomainSessionCommand {
     },
 }
 
+impl DomainSessionCommand {
+    pub fn get_session_id(&self) -> &SessionId {
+        match self {
+            DomainSessionCommand::Create { create } => &create.id,
+            DomainSessionCommand::SetSpec { session_id, .. } => session_id,
+            DomainSessionCommand::SetSecurity { session_id, .. } => session_id,
+            DomainSessionCommand::Modify { session_id, .. } => session_id,
+            DomainSessionCommand::SetDesiredPlayState { session_id, .. } => session_id,
+            DomainSessionCommand::Delete { session_id, .. } => session_id,
+        }
+    }
+}
+
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq)]
 #[serde(rename_all = "snake_case")]
 pub enum DomainMediaCommand {
