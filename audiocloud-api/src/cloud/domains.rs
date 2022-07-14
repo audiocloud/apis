@@ -25,10 +25,6 @@ pub struct BootDomain {
     pub native_sample_rate: usize,
     pub public_url: String,
     pub kafka_url: String,
-    pub consume_username: String,
-    pub consume_password: String,
-    pub produce_username: String,
-    pub produce_password: String,
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq)]

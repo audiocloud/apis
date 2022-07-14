@@ -3,43 +3,65 @@
 //! The domain will communicate with either apps that connect directly to them
 //! or with the cloud.
 
+use std::collections::HashMap;
 use std::sync::Arc;
 
 use serde::{Deserialize, Serialize};
 
-use crate::app::SessionPacket;
-use crate::change::{DesiredSessionPlayState, ModifySession};
-use crate::cloud::apps::CreateSession;
-use crate::media::DomainMediaCommand;
-use crate::media::MediaDownloadState;
-use crate::newtypes::{FixedInstanceId, MediaObjectId, SessionId};
-use crate::time::Timestamp;
-
-#[derive(Serialize, Deserialize, Clone, Debug, PartialEq)]
-#[serde(rename_all = "snake_case")]
-pub enum DomainCommand {
-    Session(SessionId, DomainSessionCommand),
-    Instance(FixedInstanceId, DomainInstanceCommand),
-    Media(MediaObjectId, DomainMediaCommand),
-}
+use crate::newtypes::SecureKey;
+use crate::session::SessionSecurity;
+use crate::{
+    app::SessionPacket,
+    change::{DesiredSessionPlayState, ModifySessionSpec},
+    cloud::apps::{CreateSession, SessionSpec},
+    media::{DownloadMedia, MediaDownloadState},
+    newtypes::{AppId, MediaObjectId, SessionId},
+};
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq)]
 #[serde(rename_all = "snake_case")]
 pub enum DomainSessionCommand {
-    CreateOrReplace(CreateSession),
-    Modify(Vec<ModifySession>),
-    SetDesiredPlayState(DesiredSessionPlayState),
-    Delete,
+    Create {
+        create: CreateSession,
+    },
+    SetSpec {
+        app_id:     AppId,
+        session_id: SessionId,
+        spec:       SessionSpec,
+    },
+    SetSecurity {
+        app_id:     AppId,
+        session_id: SessionId,
+        security:   HashMap<SecureKey, SessionSecurity>,
+    },
+    Modify {
+        app_id:        AppId,
+        session_id:    SessionId,
+        modifications: Vec<ModifySessionSpec>,
+    },
+    SetDesiredPlayState {
+        app_id:             AppId,
+        session_id:         SessionId,
+        desired_play_state: DesiredSessionPlayState,
+    },
+    Delete {
+        app_id:     AppId,
+        session_id: SessionId,
+    },
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq)]
 #[serde(rename_all = "snake_case")]
-pub enum DomainInstanceCommand {
-    Stop,
-    Play { until: Timestamp },
-    Rewind { to: f64 },
-    PowerOff,
-    PowerOn,
+pub enum DomainMediaCommand {
+    Download {
+        app_id:   AppId,
+        media_id: MediaObjectId,
+        download: DownloadMedia,
+    },
+    Delete {
+        app_id:   AppId,
+        media_id: MediaObjectId,
+    },
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug)]

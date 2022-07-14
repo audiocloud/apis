@@ -37,23 +37,8 @@ pub enum MediaUploadState {
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq)]
-#[serde(rename_all = "snake_case")]
-pub enum DomainMediaCommand {
-    Download(DownloadMediaCommand),
-    Delete(DeleteMediaCommand),
-}
-
-#[derive(Serialize, Deserialize, Clone, Debug, PartialEq)]
-pub struct DownloadMediaCommand {
-    pub app_id: AppId,
-    pub media_id: MediaObjectId,
+pub struct DownloadMedia {
     pub get_url: String,
     pub notify_url: String,
     pub context: String,
-}
-
-#[derive(Serialize, Deserialize, Clone, Debug, PartialEq)]
-pub struct DeleteMediaCommand {
-    pub app_id: AppId,
-    pub media_id: MediaObjectId,
 }
