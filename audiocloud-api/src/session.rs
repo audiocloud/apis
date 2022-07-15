@@ -17,7 +17,6 @@ pub struct Session {
     pub version:   u64,
     pub domain_id: DomainId,
     pub event_id:  u64,
-    pub app_id:    AppId,
     pub time:      TimeRange,
     pub spec:      SessionSpec,
     pub security:  HashMap<SecureKey, SessionSecurity>,
@@ -28,7 +27,6 @@ impl From<CreateSession> for Session {
     fn from(source: CreateSession) -> Self {
         let CreateSession { time,
                             domain,
-                            app,
                             tracks,
                             mixers,
                             dynamic,
@@ -39,7 +37,6 @@ impl From<CreateSession> for Session {
         Self { version: 0,
                domain_id: domain,
                event_id: 0,
-               app_id: app,
                time,
                security,
                deleted: false,

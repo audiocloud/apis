@@ -8,7 +8,7 @@ use std::sync::Arc;
 
 use serde::{Deserialize, Serialize};
 
-use crate::newtypes::SecureKey;
+use crate::newtypes::{AppSessionId, SecureKey};
 use crate::session::SessionSecurity;
 use crate::{
     app::SessionPacket,
@@ -22,43 +22,39 @@ use crate::{
 #[serde(rename_all = "snake_case")]
 pub enum DomainSessionCommand {
     Create {
-        create: CreateSession,
+        app_session_id: AppSessionId,
+        create:         CreateSession,
     },
     SetSpec {
-        app_id:     AppId,
-        session_id: SessionId,
-        spec:       SessionSpec,
+        app_session_id: AppSessionId,
+        spec:           SessionSpec,
     },
     SetSecurity {
-        app_id:     AppId,
-        session_id: SessionId,
-        security:   HashMap<SecureKey, SessionSecurity>,
+        app_session_id: AppSessionId,
+        security:       HashMap<SecureKey, SessionSecurity>,
     },
     Modify {
-        app_id:        AppId,
-        session_id:    SessionId,
-        modifications: Vec<ModifySessionSpec>,
+        app_session_id: AppSessionId,
+        modifications:  Vec<ModifySessionSpec>,
     },
     SetDesiredPlayState {
-        app_id:             AppId,
-        session_id:         SessionId,
+        app_session_id:     AppSessionId,
         desired_play_state: DesiredSessionPlayState,
     },
     Delete {
-        app_id:     AppId,
-        session_id: SessionId,
+        app_session_id: AppSessionId,
     },
 }
 
 impl DomainSessionCommand {
-    pub fn get_session_id(&self) -> &SessionId {
+    pub fn get_session_id(&self) -> &AppSessionId {
         match self {
-            DomainSessionCommand::Create { create } => &create.id,
-            DomainSessionCommand::SetSpec { session_id, .. } => session_id,
-            DomainSessionCommand::SetSecurity { session_id, .. } => session_id,
-            DomainSessionCommand::Modify { session_id, .. } => session_id,
-            DomainSessionCommand::SetDesiredPlayState { session_id, .. } => session_id,
-            DomainSessionCommand::Delete { session_id, .. } => session_id,
+            DomainSessionCommand::Create { app_session_id, .. } => app_session_id,
+            DomainSessionCommand::SetSpec { app_session_id, .. } => app_session_id,
+            DomainSessionCommand::SetSecurity { app_session_id, .. } => app_session_id,
+            DomainSessionCommand::Modify { app_session_id, .. } => app_session_id,
+            DomainSessionCommand::SetDesiredPlayState { app_session_id, .. } => app_session_id,
+            DomainSessionCommand::Delete { app_session_id, .. } => app_session_id,
         }
     }
 }

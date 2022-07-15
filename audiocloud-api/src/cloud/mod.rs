@@ -8,16 +8,15 @@ use thiserror::Error;
 
 use crate::change::ModifySessionError;
 use crate::model::ResourceId;
-use crate::newtypes::DomainId;
-use crate::newtypes::{
-    AppId, DynamicId, FixedId, FixedInstanceId, InputId, MixerId, ModelId, SecureKey, SessionId, TrackId,
-};
+use crate::newtypes::{AppSessionId, DomainId};
+use crate::newtypes::{AppId, DynamicId, FixedId, FixedInstanceId, InputId, MixerId, ModelId, SecureKey, SessionId, TrackId};
 use crate::session::{SessionDynamicInstance, SessionFixedInstance, SessionMixer, SessionTrack};
 use crate::time::TimeRange;
 
 pub mod apps;
 pub mod domains;
 pub mod media;
+pub mod models;
 
 #[derive(Serialize, Deserialize, Debug, Clone, Error)]
 pub enum CloudError {
@@ -73,7 +72,7 @@ pub enum CloudError {
     ObjectTooShortLived(DomainId, u64, u64),
 
     #[error("Session {0} was not found")]
-    SessionNotFound(SessionId),
+    SessionNotFound(AppSessionId),
 
     #[error("Session could not be modified: {0}")]
     SessionModification(#[from] ModifySessionError),
