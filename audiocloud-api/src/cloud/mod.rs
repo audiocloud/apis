@@ -8,8 +8,10 @@ use thiserror::Error;
 
 use crate::change::ModifySessionError;
 use crate::model::ResourceId;
+use crate::newtypes::{
+    AppId, AppMediaObjectId, DynamicId, FixedId, FixedInstanceId, InputId, MixerId, ModelId, SecureKey, SessionId, TrackId,
+};
 use crate::newtypes::{AppSessionId, DomainId};
-use crate::newtypes::{AppId, DynamicId, FixedId, FixedInstanceId, InputId, MixerId, ModelId, SecureKey, SessionId, TrackId};
 use crate::session::{SessionDynamicInstance, SessionFixedInstance, SessionMixer, SessionTrack};
 use crate::time::TimeRange;
 
@@ -20,6 +22,21 @@ pub mod models;
 
 #[derive(Serialize, Deserialize, Debug, Clone, Error)]
 pub enum CloudError {
+    #[error("API Key not found")]
+    ApiKeyNotFound,
+
+    #[error("App file {0} not found")]
+    AppFileNotFound(AppMediaObjectId),
+
+    #[error("App not found")]
+    AppNotFound(AppId),
+
+    #[error("{0} is an invalid session ID")]
+    InvalidSessionId(String),
+
+    #[error("{0} is an invalid session ID")]
+    InvalidMediaId(String),
+
     #[error("At least a segment of a reservation needs to be in the future")]
     OnlyFutureReservations,
 

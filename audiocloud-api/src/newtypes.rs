@@ -4,8 +4,12 @@ use std::fmt::Formatter;
 use std::marker::PhantomData;
 use std::str::FromStr;
 
+use crate::cloud::CloudError;
 use derive_more::*;
+use once_cell::sync::OnceCell;
+use regex::Regex;
 use serde::{Deserialize, Deserializer, Serialize, Serializer};
+use serde_json::Value;
 
 #[derive(Clone, Debug, Eq, PartialEq, Hash, Display, Constructor)]
 #[display(fmt = "{manufacturer}/{name}/{instance}")]
@@ -176,6 +180,18 @@ pub struct AppId(String);
 #[repr(transparent)]
 pub struct SessionId(String);
 
+impl SessionId {
+    pub fn validate(self) -> Result<Self, CloudError> {
+        static VALIDATION: OnceCell<Regex> = OnceCell::new();
+
+        VALIDATION.get_or_init(|| Regex::new(r"^[a-zA-Z0-9_\-]+$").unwrap())
+                  .find(&self.0)
+                  .ok_or_else(|| CloudError::InvalidSessionId(self.to_string()))?;
+
+        Ok(self)
+    }
+}
+
 #[derive(Clone, Debug, Eq, PartialEq, Ord, PartialOrd, Display, Constructor, Hash, From)]
 #[display(fmt = "{app_id}/{session_id}")]
 pub struct AppSessionId {
@@ -184,10 +200,10 @@ pub struct AppSessionId {
 }
 
 impl FromStr for AppSessionId {
-    type Err = anyhow::Error;
+    type Err = serde_json::Error;
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
-        Ok(serde_json::from_value(serde_json::Value::String(s.to_string()))?)
+        serde_json::from_value(serde_json::Value::String(s.to_string()))
     }
 }
 
@@ -212,6 +228,54 @@ impl Serialize for AppSessionId {
 #[repr(transparent)]
 pub struct MediaObjectId(String);
 
+impl MediaObjectId {
+    pub fn validate(self) -> Result<Self, CloudError> {
+        static VALIDATION: OnceCell<Regex> = OnceCell::new();
+
+        VALIDATION.get_or_init(|| Regex::new(r"^[a-zA-Z0-9_\-]+$").unwrap())
+                  .find(&self.0)
+                  .ok_or_else(|| CloudError::InvalidMediaId(self.to_string()))?;
+
+        Ok(self)
+    }
+}
+
+#[derive(Clone, Debug, Eq, PartialEq, Ord, PartialOrd, Display, Constructor, Hash)]
+#[display(fmt = "{app_id}/{media_id}")]
+pub struct AppMediaObjectId {
+    pub app_id:   AppId,
+    pub media_id: MediaObjectId,
+}
+
+impl From<(AppId, MediaObjectId)> for AppMediaObjectId {
+    fn from((app_id, media_id): (AppId, MediaObjectId)) -> Self {
+        Self::new(app_id, media_id)
+    }
+}
+
+impl FromStr for AppMediaObjectId {
+    type Err = serde_json::Error;
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        serde_json::from_value(Value::String(s.to_string()))
+    }
+}
+
+impl Serialize for AppMediaObjectId {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+        where S: Serializer
+    {
+        serializer.serialize_str(&format!("{}/{}", &self.app_id, &self.media_id))
+    }
+}
+
+impl<'de> Deserialize<'de> for AppMediaObjectId {
+    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+        where D: Deserializer<'de>
+    {
+        deserializer.deserialize_str(Tuple2Visitor::new())
+    }
+}
 /// A password for session control
 #[derive(Clone, Debug, Serialize, Deserialize, Eq, PartialEq, Ord, PartialOrd, Display, Deref, Constructor, Hash, From, FromStr)]
 #[repr(transparent)]
@@ -231,3 +295,7 @@ pub struct ParameterId(String);
 #[derive(Clone, Debug, Serialize, Deserialize, Eq, PartialEq, Ord, PartialOrd, Display, Deref, Constructor, Hash, From, FromStr)]
 #[repr(transparent)]
 pub struct ReportId(String);
+
+#[derive(Clone, Debug, Serialize, Deserialize, Eq, PartialEq, Ord, PartialOrd, Display, Deref, Constructor, Hash, From, FromStr)]
+#[repr(transparent)]
+pub struct PduId(String);

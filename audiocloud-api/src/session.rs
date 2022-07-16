@@ -7,20 +7,17 @@ use crate::cloud::apps::{CreateSession, SessionSpec};
 use crate::model::MultiChannelValue;
 use crate::newtypes::DomainId;
 use crate::newtypes::{
-    AppId, DynamicId, FixedId, FixedInstanceId, InputId, MediaId, MediaObjectId, MixerId, ModelId, ParameterId,
-    SecureKey, TrackId,
+    DynamicId, FixedId, FixedInstanceId, InputId, MediaId, MediaObjectId, MixerId, ModelId, ParameterId, SecureKey, TrackId,
 };
 use crate::time::TimeRange;
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct Session {
-    pub version:   u64,
     pub domain_id: DomainId,
-    pub event_id:  u64,
     pub time:      TimeRange,
     pub spec:      SessionSpec,
     pub security:  HashMap<SecureKey, SessionSecurity>,
-    pub deleted:   bool,
+    pub version:   u64,
 }
 
 impl From<CreateSession> for Session {
@@ -34,12 +31,11 @@ impl From<CreateSession> for Session {
                             security,
                             .. } = source;
 
-        Self { version: 0,
-               domain_id: domain,
-               event_id: 0,
+        Self { domain_id: domain,
+
                time,
                security,
-               deleted: false,
+               version: 0,
                spec: SessionSpec { tracks,
                                    mixers,
                                    dynamic,

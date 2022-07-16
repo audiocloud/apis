@@ -8,14 +8,14 @@ use std::sync::Arc;
 
 use serde::{Deserialize, Serialize};
 
-use crate::newtypes::{AppSessionId, SecureKey};
+use crate::newtypes::{AppMediaObjectId, AppSessionId, SecureKey};
 use crate::session::SessionSecurity;
 use crate::{
     app::SessionPacket,
     change::{DesiredSessionPlayState, ModifySessionSpec},
     cloud::apps::{CreateSession, SessionSpec},
     media::{DownloadMedia, MediaDownloadState},
-    newtypes::{AppId, MediaObjectId, SessionId},
+    newtypes::{MediaObjectId, SessionId},
 };
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq)]
@@ -27,18 +27,22 @@ pub enum DomainSessionCommand {
     },
     SetSpec {
         app_session_id: AppSessionId,
+        version:        u64,
         spec:           SessionSpec,
     },
     SetSecurity {
         app_session_id: AppSessionId,
+        version:        u64,
         security:       HashMap<SecureKey, SessionSecurity>,
     },
     Modify {
         app_session_id: AppSessionId,
+        version:        u64,
         modifications:  Vec<ModifySessionSpec>,
     },
     SetDesiredPlayState {
         app_session_id:     AppSessionId,
+        version:            u64,
         desired_play_state: DesiredSessionPlayState,
     },
     Delete {
@@ -63,14 +67,21 @@ impl DomainSessionCommand {
 #[serde(rename_all = "snake_case")]
 pub enum DomainMediaCommand {
     Download {
-        app_id:   AppId,
-        media_id: MediaObjectId,
-        download: DownloadMedia,
+        app_media_id: AppMediaObjectId,
+        download:     DownloadMedia,
     },
     Delete {
-        app_id:   AppId,
-        media_id: MediaObjectId,
+        app_media_id: AppMediaObjectId,
     },
+}
+
+impl DomainMediaCommand {
+    pub fn get_app_media_object_id(&self) -> &AppMediaObjectId {
+        match self {
+            Self::Download { app_media_id, .. } => app_media_id,
+            Self::Delete { app_media_id } => app_media_id,
+        }
+    }
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug)]
