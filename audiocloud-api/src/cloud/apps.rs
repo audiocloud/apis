@@ -2,12 +2,15 @@
 
 use std::collections::{HashMap, HashSet};
 
+use crate::cloud::CloudError;
 use serde::{Deserialize, Serialize};
 
 use crate::cloud::domains::DomainFixedInstance;
 use crate::cloud::domains::{DomainLimits, DynamicInstanceLimits};
-use crate::newtypes::{AppSessionId, DomainId, DynamicId, FixedId, FixedInstanceId, MixerId, ModelId, SecureKey, SessionId, TrackId};
-use crate::session::{SessionDynamicInstance, SessionFixedInstance, SessionMixer, SessionSecurity, SessionTrack};
+use crate::newtypes::{DomainId, DynamicId, FixedId, FixedInstanceId, InputId, MixerId, ModelId, SecureKey, SessionId, TrackId};
+use crate::session::{
+    MixerInput, SessionDynamicInstance, SessionFixedInstance, SessionMixer, SessionObjectId, SessionSecurity, SessionTrack,
+};
 use crate::time::TimeRange;
 
 /// Used by APIs for Apps
@@ -77,4 +80,56 @@ pub struct SessionSpec {
     pub dynamic: HashMap<DynamicId, SessionDynamicInstance>,
     #[serde(default)]
     pub fixed:   HashMap<FixedId, SessionFixedInstance>,
+}
+
+impl SessionSpec {
+    pub fn validate(&self) -> Result<(), CloudError> {
+        if self.fixed.is_empty() && self.dynamic.is_empty() && self.mixers.is_empty() && self.tracks.is_empty() {
+            return Err(CloudError::InternalInconsistency(format!("No tracks, mixers, dynamic instances, or fixed instances declared in session spec")));
+        }
+
+        for (mixer_id, mixer) in &self.mixers {
+            let session_object_id = SessionObjectId::Mixer(mixer_id.clone());
+            for (input_id, input) in &mixer.inputs {
+                self.check_input(&session_object_id, input_id, input)?;
+            }
+        }
+
+        Ok(())
+    }
+
+    fn check_input(&self, session_object_id: &SessionObjectId, input_id: &InputId, input: &MixerInput) -> Result<(), CloudError> {
+        match &input.source_id {
+            SessionObjectId::Track(track_id) => {
+                if !self.tracks.contains_key(track_id) {
+                    return Err(CloudError::SourceTrackNotFound(session_object_id.clone(),
+                                                               input_id.clone(),
+                                                               track_id.clone()));
+                }
+            }
+            SessionObjectId::Mixer(mixer_id) => {
+                if !self.mixers.contains_key(mixer_id) {
+                    return Err(CloudError::SourceMixerNotFound(session_object_id.clone(),
+                                                               input_id.clone(),
+                                                               mixer_id.clone()));
+                }
+            }
+            SessionObjectId::DynamicInstance(dynamic_id) => {
+                if !self.dynamic.contains_key(dynamic_id) {
+                    return Err(CloudError::SourceDynamicInstanceNotFound(session_object_id.clone(),
+                                                                         input_id.clone(),
+                                                                         dynamic_id.clone()));
+                }
+            }
+            SessionObjectId::FixedInstance(fixed_id) => {
+                if !self.fixed.contains_key(fixed_id) {
+                    return Err(CloudError::SourceFixedInstanceNotFound(session_object_id.clone(),
+                                                                       input_id.clone(),
+                                                                       fixed_id.clone()));
+                }
+            }
+        }
+
+        Ok(())
+    }
 }

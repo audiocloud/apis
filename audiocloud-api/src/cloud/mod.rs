@@ -12,7 +12,7 @@ use crate::newtypes::{
     AppId, AppMediaObjectId, DynamicId, FixedId, FixedInstanceId, InputId, MixerId, ModelId, SecureKey, SessionId, TrackId,
 };
 use crate::newtypes::{AppSessionId, DomainId};
-use crate::session::{SessionDynamicInstance, SessionFixedInstance, SessionMixer, SessionTrack};
+use crate::session::{SessionDynamicInstance, SessionFixedInstance, SessionMixer, SessionObjectId, SessionTrack};
 use crate::time::TimeRange;
 
 pub mod apps;
@@ -61,17 +61,17 @@ pub enum CloudError {
     #[error("Instance {0} unknown")]
     InstanceNotFound(FixedInstanceId),
 
-    #[error("Bus {0} references mixer {2} with input {1}, which was not found")]
-    SourceBusNotFound(MixerId, InputId, MixerId),
+    #[error("Session object {0:?} references mixer {2} with input {1}, which was not found")]
+    SourceMixerNotFound(SessionObjectId, InputId, MixerId),
 
-    #[error("Bus {0} references track {2} with input {1}, which was not found")]
-    SourceTrackNotFound(MixerId, InputId, TrackId),
+    #[error("Session object {0:?} references track {2} with input {1}, which was not found")]
+    SourceTrackNotFound(SessionObjectId, InputId, TrackId),
 
-    #[error("Bus {0} references fixed instance {2} with input {1}, which was not found")]
-    SourceFixedInstanceNotFound(MixerId, InputId, FixedId),
+    #[error("Session object {0:?} references fixed instance {2} with input {1}, which was not found")]
+    SourceFixedInstanceNotFound(SessionObjectId, InputId, FixedId),
 
-    #[error("Bus {0} references dynamic instance {2} with input {1}, which was not found")]
-    SourceDynamicInstanceNotFound(MixerId, InputId, DynamicId),
+    #[error("Session object {0:?} references dynamic instance {2} with input {1}, which was not found")]
+    SourceDynamicInstanceNotFound(SessionObjectId, InputId, DynamicId),
 
     #[error("Instance {1} required by bus {0} but not reserved")]
     InstanceNotReferenced(u64, FixedInstanceId),
