@@ -4,9 +4,7 @@ use std::iter;
 use lazy_static::lazy_static;
 use maplit::hashmap;
 
-use audiocloud_api::model::{
-    ControlChannels, InputChannelRole, Model, ModelInput, ModelInputs, ModelOutput, ModelOutputs, OutputChannelRole,
-};
+use audiocloud_api::model::{ControlChannels, Model, ModelInput, ModelInputs, ModelOutput, ModelOutputs};
 use audiocloud_api::newtypes::ModelId;
 
 use crate::audio_cloud::insert::{audio_cloud_insert_id, audio_cloud_insert_model};

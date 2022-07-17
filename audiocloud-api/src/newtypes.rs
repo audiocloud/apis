@@ -291,6 +291,12 @@ pub struct DomainId(String);
 #[repr(transparent)]
 pub struct ParameterId(String);
 
+impl From<&str> for ParameterId {
+    fn from(s: &str) -> Self {
+        Self::new(s.to_string())
+    }
+}
+
 /// Report of a model
 #[derive(Clone, Debug, Serialize, Deserialize, Eq, PartialEq, Ord, PartialOrd, Display, Deref, Constructor, Hash, From, FromStr)]
 #[repr(transparent)]

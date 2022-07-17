@@ -1,44 +1,12 @@
 ---
 resources: {}
 inputs:
-  - - left
-    - audio
-  - - right
-    - audio
+  - Audio: left
+  - Audio: right
 outputs:
-  - - left
-    - audio
-  - - right
-    - audio
+  - Audio: left
+  - Audio: right
 parameters:
-  eql_toggle:
-    scope: all_inputs
-    unit: toggle
-    role:
-      global: bypass
-    values:
-      - false
-      - true
-  low_gain:
-    scope: all_inputs
-    unit: dB
-    role:
-      filter:
-        - low
-        - gain
-    values:
-      - - -16.0
-        - 16.0
-  high_mid_gain:
-    scope: all_inputs
-    unit: dB
-    role:
-      filter:
-        - high_mid
-        - gain
-    values:
-      - - -12.0
-        - 12.0
   low_freq:
     scope: all_inputs
     unit: hz
@@ -53,6 +21,34 @@ parameters:
       - 60.0
       - 110.0
       - 220.0
+  low_mid_gain:
+    scope: all_inputs
+    unit: dB
+    role:
+      filter:
+        - low_mid
+        - gain
+    values:
+      - - -12.0
+        - 12.0
+  high_mid_width:
+    scope: all_inputs
+    unit: toggle
+    role:
+      filter:
+        - high_mid
+        - bandwidth
+    values:
+      - false
+      - true
+  eql_toggle:
+    scope: all_inputs
+    unit: toggle
+    role:
+      global: bypass
+    values:
+      - false
+      - true
   high_pass_filter:
     scope: all_inputs
     unit: hz
@@ -67,26 +63,16 @@ parameters:
       - 70.0
       - 160.0
       - 360.0
-  low_mid_freq:
+  low_gain:
     scope: all_inputs
-    unit: hz
+    unit: dB
     role:
       filter:
-        - low_mid
-        - frequency
+        - low
+        - gain
     values:
-      - false
-      - 120.0
-      - 180.0
-      - 240.0
-      - 360.0
-      - 480.0
-      - 720.0
-      - 1600.0
-      - 2400.0
-      - 3200.0
-      - 4800.0
-      - 7200.0
+      - - -16.0
+        - 16.0
   high_mid_freq:
     scope: all_inputs
     unit: hz
@@ -107,22 +93,12 @@ parameters:
       - 6400.0
       - 7200.0
       - 8400.0
-  high_mid_width:
-    scope: all_inputs
-    unit: toggle
-    role:
-      filter:
-        - high_mid
-        - bandwidth
-    values:
-      - false
-      - true
-  low_mid_gain:
+  high_mid_gain:
     scope: all_inputs
     unit: dB
     role:
       filter:
-        - low_mid
+        - high_mid
         - gain
     values:
       - - -12.0
@@ -141,16 +117,6 @@ parameters:
       - 12000.0
       - 16000.0
       - 20000.0
-  high_gain:
-    scope: all_inputs
-    unit: dB
-    role:
-      filter:
-        - high
-        - gain
-    values:
-      - - -16.0
-        - 16.0
   output_pad:
     scope: all_outputs
     unit: dB
@@ -162,6 +128,46 @@ parameters:
       - false
       - -10.0
       - -20.0
+  low_mid_width:
+    scope: all_inputs
+    unit: toggle
+    role:
+      filter:
+        - low_mid
+        - bandwidth
+    values:
+      - false
+      - true
+  low_mid_freq:
+    scope: all_inputs
+    unit: hz
+    role:
+      filter:
+        - low_mid
+        - frequency
+    values:
+      - false
+      - 120.0
+      - 180.0
+      - 240.0
+      - 360.0
+      - 480.0
+      - 720.0
+      - 1600.0
+      - 2400.0
+      - 3200.0
+      - 4800.0
+      - 7200.0
+  high_gain:
+    scope: all_inputs
+    unit: dB
+    role:
+      filter:
+        - high
+        - gain
+    values:
+      - - -16.0
+        - 16.0
   input_gain:
     scope: all_inputs
     unit: dB
@@ -178,15 +184,5 @@ parameters:
       - 10.0
       - 15.0
       - 20.0
-  low_mid_width:
-    scope: all_inputs
-    unit: toggle
-    role:
-      filter:
-        - low_mid
-        - bandwidth
-    values:
-      - false
-      - true
 reports: {}
 media: false

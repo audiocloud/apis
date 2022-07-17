@@ -1,68 +1,34 @@
 ---
 resources: {}
 inputs:
-  - - generic
-    - audio
-  - - generic
-    - audio
-  - - generic
-    - audio
-  - - generic
-    - audio
-  - - generic
-    - audio
-  - - generic
-    - audio
-  - - generic
-    - audio
-  - - generic
-    - audio
-  - - generic
-    - audio
-  - - generic
-    - audio
-  - - generic
-    - audio
-  - - generic
-    - audio
-  - - generic
-    - audio
-  - - generic
-    - audio
-  - - generic
-    - audio
-  - - generic
-    - audio
-  - - generic
-    - audio
-  - - generic
-    - audio
-  - - generic
-    - audio
-  - - generic
-    - audio
-  - - generic
-    - audio
-  - - generic
-    - audio
-  - - generic
-    - audio
-  - - generic
-    - audio
+  - Audio: generic
+  - Audio: generic
+  - Audio: generic
+  - Audio: generic
+  - Audio: generic
+  - Audio: generic
+  - Audio: generic
+  - Audio: generic
+  - Audio: generic
+  - Audio: generic
+  - Audio: generic
+  - Audio: generic
+  - Audio: generic
+  - Audio: generic
+  - Audio: generic
+  - Audio: generic
+  - Audio: generic
+  - Audio: generic
+  - Audio: generic
+  - Audio: generic
+  - Audio: generic
+  - Audio: generic
+  - Audio: generic
+  - Audio: generic
 outputs:
-  - - left
-    - audio
-  - - right
-    - audio
+  - Audio: left
+  - Audio: right
 parameters:
-  bus_assign:
-    scope: all_inputs
-    unit: "no"
-    role: no_role
-    values:
-      - 0.0
-      - 1.0
-      - 2.0
   input:
     scope: all_inputs
     unit: dB
@@ -73,5 +39,22 @@ parameters:
     values:
       - - -60.0
         - 10.0
+  pan:
+    scope: all_inputs
+    unit: "no"
+    role:
+      channel: pan
+    values:
+      - 0.0
+      - 0.5
+      - 1.0
+  bus_assign:
+    scope: all_inputs
+    unit: "no"
+    role: no_role
+    values:
+      - 0.0
+      - 1.0
+      - 2.0
 reports: {}
 media: false
