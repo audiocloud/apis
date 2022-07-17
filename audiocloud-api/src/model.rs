@@ -67,6 +67,7 @@ impl ModelValue {
 }
 
 #[derive(Serialize, Deserialize, Clone, Copy, Debug, PartialEq, IsVariant)]
+#[serde(rename_all = "snake_case")]
 pub enum ModelInput {
     Audio(ControlChannels),
     Sidechain,
@@ -74,6 +75,7 @@ pub enum ModelInput {
 }
 
 #[derive(Serialize, Deserialize, Clone, Copy, Debug, PartialEq, IsVariant)]
+#[serde(rename_all = "snake_case")]
 pub enum ModelOutput {
     Audio(ControlChannels),
     Midi,

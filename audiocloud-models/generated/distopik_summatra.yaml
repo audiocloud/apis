@@ -1,33 +1,33 @@
 ---
 resources: {}
 inputs:
-  - Audio: generic
-  - Audio: generic
-  - Audio: generic
-  - Audio: generic
-  - Audio: generic
-  - Audio: generic
-  - Audio: generic
-  - Audio: generic
-  - Audio: generic
-  - Audio: generic
-  - Audio: generic
-  - Audio: generic
-  - Audio: generic
-  - Audio: generic
-  - Audio: generic
-  - Audio: generic
-  - Audio: generic
-  - Audio: generic
-  - Audio: generic
-  - Audio: generic
-  - Audio: generic
-  - Audio: generic
-  - Audio: generic
-  - Audio: generic
+  - audio: generic
+  - audio: generic
+  - audio: generic
+  - audio: generic
+  - audio: generic
+  - audio: generic
+  - audio: generic
+  - audio: generic
+  - audio: generic
+  - audio: generic
+  - audio: generic
+  - audio: generic
+  - audio: generic
+  - audio: generic
+  - audio: generic
+  - audio: generic
+  - audio: generic
+  - audio: generic
+  - audio: generic
+  - audio: generic
+  - audio: generic
+  - audio: generic
+  - audio: generic
+  - audio: generic
 outputs:
-  - Audio: left
-  - Audio: right
+  - audio: left
+  - audio: right
 parameters:
   input:
     scope: all_inputs
@@ -39,6 +39,14 @@ parameters:
     values:
       - - -60.0
         - 10.0
+  bus_assign:
+    scope: all_inputs
+    unit: "no"
+    role: no_role
+    values:
+      - 0.0
+      - 1.0
+      - 2.0
   pan:
     scope: all_inputs
     unit: "no"
@@ -48,13 +56,5 @@ parameters:
       - 0.0
       - 0.5
       - 1.0
-  bus_assign:
-    scope: all_inputs
-    unit: "no"
-    role: no_role
-    values:
-      - 0.0
-      - 1.0
-      - 2.0
 reports: {}
 media: false

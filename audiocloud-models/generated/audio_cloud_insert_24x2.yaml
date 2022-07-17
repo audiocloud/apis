@@ -1,33 +1,33 @@
 ---
 resources: {}
 inputs:
-  - Audio: generic
-  - Audio: generic
-  - Audio: generic
-  - Audio: generic
-  - Audio: generic
-  - Audio: generic
-  - Audio: generic
-  - Audio: generic
-  - Audio: generic
-  - Audio: generic
-  - Audio: generic
-  - Audio: generic
-  - Audio: generic
-  - Audio: generic
-  - Audio: generic
-  - Audio: generic
-  - Audio: generic
-  - Audio: generic
-  - Audio: generic
-  - Audio: generic
-  - Audio: generic
-  - Audio: generic
-  - Audio: generic
-  - Audio: generic
+  - audio: generic
+  - audio: generic
+  - audio: generic
+  - audio: generic
+  - audio: generic
+  - audio: generic
+  - audio: generic
+  - audio: generic
+  - audio: generic
+  - audio: generic
+  - audio: generic
+  - audio: generic
+  - audio: generic
+  - audio: generic
+  - audio: generic
+  - audio: generic
+  - audio: generic
+  - audio: generic
+  - audio: generic
+  - audio: generic
+  - audio: generic
+  - audio: generic
+  - audio: generic
+  - audio: generic
 outputs:
-  - Audio: left
-  - Audio: right
+  - audio: left
+  - audio: right
 parameters: {}
 reports:
   insert/input:

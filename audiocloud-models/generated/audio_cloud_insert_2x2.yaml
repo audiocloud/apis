@@ -1,11 +1,11 @@
 ---
 resources: {}
 inputs:
-  - Audio: left
-  - Audio: right
+  - audio: left
+  - audio: right
 outputs:
-  - Audio: left
-  - Audio: right
+  - audio: left
+  - audio: right
 parameters: {}
 reports:
   insert/output:

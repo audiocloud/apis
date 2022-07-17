@@ -1,9 +1,9 @@
 ---
 resources: {}
 inputs:
-  - Audio: global
+  - audio: global
 outputs:
-  - Audio: global
+  - audio: global
 parameters: {}
 reports:
   insert/input:
