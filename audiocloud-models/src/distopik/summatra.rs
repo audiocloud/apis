@@ -7,7 +7,7 @@ use audiocloud_api::model::ChannelParameterRole::Pan;
 use audiocloud_api::model::ModelElementScope::AllInputs;
 use audiocloud_api::model::ModelParameterRole::{Amplifier, Channel, NoRole};
 use audiocloud_api::model::ModelValue::Number;
-use audiocloud_api::model::ModelValueOption::Single;
+use audiocloud_api::model::ModelValueOption::{Range, Single};
 use audiocloud_api::model::ModelValueUnit::{Decibels, Unitless};
 use audiocloud_api::model::{Model, ModelParameter, ModelValueOption};
 use audiocloud_api::newtypes::{ModelId, ParameterId};
@@ -65,5 +65,5 @@ fn pan() -> ModelParameter {
     ModelParameter { scope:  AllInputs,
                      unit:   Unitless,
                      role:   Channel(Pan),
-                     values: vec![Single(Number(0f64)), Single(Number(0.5f64)), Single(Number(1f64)),], }
+                     values: vec![ModelValueOption::num_range(-1.0, 1.0)], }
 }

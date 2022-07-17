@@ -7,119 +7,6 @@ outputs:
   - audio: left
   - audio: right
 parameters:
-  high_freq:
-    scope: all_inputs
-    unit: hz
-    role:
-      filter:
-        - high
-        - frequency
-    values:
-      - false
-      - 8000.0
-      - 10000.0
-      - 12000.0
-      - 16000.0
-      - 20000.0
-  high_gain:
-    scope: all_inputs
-    unit: dB
-    role:
-      filter:
-        - high
-        - gain
-    values:
-      - - -16.0
-        - 16.0
-  input_gain:
-    scope: all_inputs
-    unit: dB
-    role:
-      amplifier:
-        - input
-        - gain
-    values:
-      - false
-      - -10.0
-      - -5.0
-      - 0.0
-      - 5.0
-      - 10.0
-      - 15.0
-      - 20.0
-  output_pad:
-    scope: all_outputs
-    unit: dB
-    role:
-      amplifier:
-        - output
-        - gain
-    values:
-      - false
-      - -10.0
-      - -20.0
-  eql_toggle:
-    scope: all_inputs
-    unit: toggle
-    role:
-      global: bypass
-    values:
-      - false
-      - true
-  high_mid_width:
-    scope: all_inputs
-    unit: toggle
-    role:
-      filter:
-        - high_mid
-        - bandwidth
-    values:
-      - false
-      - true
-  high_mid_freq:
-    scope: all_inputs
-    unit: hz
-    role:
-      filter:
-        - high_mid
-        - frequency
-    values:
-      - false
-      - 360.0
-      - 480.0
-      - 720.0
-      - 1600.0
-      - 2400.0
-      - 3200.0
-      - 3900.0
-      - 4800.0
-      - 6400.0
-      - 7200.0
-      - 8400.0
-  low_gain:
-    scope: all_inputs
-    unit: dB
-    role:
-      filter:
-        - low
-        - gain
-    values:
-      - - -16.0
-        - 16.0
-  high_pass_filter:
-    scope: all_inputs
-    unit: hz
-    role:
-      filter:
-        - high_pass
-        - frequency
-    values:
-      - false
-      - 22.0
-      - 45.0
-      - 70.0
-      - 160.0
-      - 360.0
   low_freq:
     scope: all_inputs
     unit: hz
@@ -144,6 +31,24 @@ parameters:
     values:
       - - -12.0
         - 12.0
+  high_mid_width:
+    scope: all_inputs
+    unit: toggle
+    role:
+      filter:
+        - high_mid
+        - bandwidth
+    values:
+      - false
+      - true
+  eql_toggle:
+    scope: all_inputs
+    unit: toggle
+    role:
+      global: bypass
+    values:
+      - false
+      - true
   low_mid_freq:
     scope: all_inputs
     unit: hz
@@ -164,16 +69,26 @@ parameters:
       - 3200.0
       - 4800.0
       - 7200.0
-  low_mid_gain:
+  high_mid_freq:
     scope: all_inputs
-    unit: dB
+    unit: hz
     role:
       filter:
-        - low_mid
-        - gain
+        - high_mid
+        - frequency
     values:
-      - - -12.0
-        - 12.0
+      - false
+      - 360.0
+      - 480.0
+      - 720.0
+      - 1600.0
+      - 2400.0
+      - 3200.0
+      - 3900.0
+      - 4800.0
+      - 6400.0
+      - 7200.0
+      - 8400.0
   low_mid_width:
     scope: all_inputs
     unit: toggle
@@ -184,5 +99,90 @@ parameters:
     values:
       - false
       - true
+  input_gain:
+    scope: all_inputs
+    unit: dB
+    role:
+      amplifier:
+        - input
+        - gain
+    values:
+      - false
+      - -10.0
+      - -5.0
+      - 0.0
+      - 5.0
+      - 10.0
+      - 15.0
+      - 20.0
+  high_pass_filter:
+    scope: all_inputs
+    unit: hz
+    role:
+      filter:
+        - high_pass
+        - frequency
+    values:
+      - false
+      - 22.0
+      - 45.0
+      - 70.0
+      - 160.0
+      - 360.0
+  low_gain:
+    scope: all_inputs
+    unit: dB
+    role:
+      filter:
+        - low
+        - gain
+    values:
+      - - -16.0
+        - 16.0
+  high_gain:
+    scope: all_inputs
+    unit: dB
+    role:
+      filter:
+        - high
+        - gain
+    values:
+      - - -16.0
+        - 16.0
+  low_mid_gain:
+    scope: all_inputs
+    unit: dB
+    role:
+      filter:
+        - low_mid
+        - gain
+    values:
+      - - -12.0
+        - 12.0
+  high_freq:
+    scope: all_inputs
+    unit: hz
+    role:
+      filter:
+        - high
+        - frequency
+    values:
+      - false
+      - 8000.0
+      - 10000.0
+      - 12000.0
+      - 16000.0
+      - 20000.0
+  output_pad:
+    scope: all_outputs
+    unit: dB
+    role:
+      amplifier:
+        - output
+        - gain
+    values:
+      - false
+      - -10.0
+      - -20.0
 reports: {}
 media: false
