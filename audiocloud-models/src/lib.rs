@@ -4,7 +4,9 @@ use std::iter;
 use lazy_static::lazy_static;
 use maplit::hashmap;
 
-use audiocloud_api::model::{ControlChannels, InputChannelRole, Model, ModelInputs, ModelOutputs, OutputChannelRole};
+use audiocloud_api::model::{
+    ControlChannels, InputChannelRole, Model, ModelInput, ModelInputs, ModelOutput, ModelOutputs, OutputChannelRole,
+};
 use audiocloud_api::newtypes::ModelId;
 
 use crate::audio_cloud::insert::{audio_cloud_insert_id, audio_cloud_insert_model};
@@ -35,8 +37,7 @@ impl ToString for Manufacturers {
             Manufacturers::Tierra => "tierra",
             Manufacturers::Gyraf => "gyraf",
             Manufacturers::AudioCloud => "audio_cloud",
-        }
-        .to_owned()
+        }.to_owned()
     }
 }
 
@@ -51,32 +52,27 @@ lazy_static! {
 }
 
 pub fn mono_input() -> ModelInputs {
-    vec![(ControlChannels::Global, InputChannelRole::Audio)]
+    vec![(ModelInput::Audio(ControlChannels::Global))]
 }
 
 pub fn mono_output() -> ModelOutputs {
-    vec![(ControlChannels::Global, OutputChannelRole::Audio)]
+    vec![(ModelOutput::Audio(ControlChannels::Global))]
 }
 
 pub fn left_and_right_inputs() -> ModelInputs {
-    vec![
-        (ControlChannels::Left, InputChannelRole::Audio),
-        (ControlChannels::Right, InputChannelRole::Audio),
-    ]
+    vec![ModelInput::Audio(ControlChannels::Left), ModelInput::Audio(ControlChannels::Right),]
 }
 
 pub fn left_and_right_outputs() -> ModelOutputs {
-    vec![
-        (ControlChannels::Left, OutputChannelRole::Audio),
-        (ControlChannels::Right, OutputChannelRole::Audio),
-    ]
+    vec![ModelOutput::Audio(ControlChannels::Left),
+         ModelOutput::Audio(ControlChannels::Right),]
 }
 
 pub fn standard_inputs(count: usize) -> ModelInputs {
     match count {
         1 => mono_input(),
         2 => left_and_right_inputs(),
-        n => generic_channels(n, InputChannelRole::Audio),
+        n => repeat_channels(n, ModelInput::Audio(ControlChannels::Generic)),
     }
 }
 
@@ -84,12 +80,12 @@ pub fn standard_outputs(count: usize) -> ModelOutputs {
     match count {
         1 => mono_output(),
         2 => left_and_right_outputs(),
-        n => generic_channels(n, OutputChannelRole::Audio),
+        n => repeat_channels(n, ModelOutput::Audio(ControlChannels::Generic)),
     }
 }
 
-pub fn generic_channels<R: Copy>(count: usize, role: R) -> Vec<(ControlChannels, R)> {
-    iter::repeat((ControlChannels::Generic, role)).take(count).collect()
+pub fn repeat_channels<R: Copy>(count: usize, role: R) -> Vec<R> {
+    iter::repeat(role).take(count).collect()
 }
 
 pub mod values {

@@ -66,8 +66,21 @@ impl ModelValue {
     }
 }
 
-pub type ModelInputs = Vec<(ControlChannels, InputChannelRole)>;
-pub type ModelOutputs = Vec<(ControlChannels, OutputChannelRole)>;
+#[derive(Serialize, Deserialize, Clone, Copy, Debug, PartialEq, IsVariant)]
+pub enum ModelInput {
+    Audio(ControlChannels),
+    Sidechain,
+    Midi,
+}
+
+#[derive(Serialize, Deserialize, Clone, Copy, Debug, PartialEq, IsVariant)]
+pub enum ModelOutput {
+    Audio(ControlChannels),
+    Midi,
+}
+
+pub type ModelInputs = Vec<ModelInput>;
+pub type ModelOutputs = Vec<ModelOutput>;
 
 pub type ModelParameters = HashMap<ParameterId, ModelParameter>;
 pub type ModelReports = HashMap<ReportId, ModelReport>;
@@ -76,25 +89,12 @@ pub type ModelReports = HashMap<ReportId, ModelReport>;
 #[derive(Clone, Debug, Serialize, Deserialize, Default)]
 pub struct Model {
     #[serde(default)]
-    pub resources: HashMap<ResourceId, f64>,
-    pub inputs: ModelInputs,
-    pub outputs: ModelOutputs,
+    pub resources:  HashMap<ResourceId, f64>,
+    pub inputs:     ModelInputs,
+    pub outputs:    ModelOutputs,
     pub parameters: ModelParameters,
-    pub reports: ModelReports,
-    pub media: bool,
-}
-
-#[derive(Serialize, Deserialize, Copy, Clone, Debug)]
-#[serde(rename_all = "snake_case")]
-pub enum InputChannelRole {
-    Audio,
-    SideChain,
-}
-
-#[derive(Serialize, Deserialize, Copy, Clone, Debug)]
-#[serde(rename_all = "snake_case")]
-pub enum OutputChannelRole {
-    Audio,
+    pub reports:    ModelReports,
+    pub media:      bool,
 }
 
 #[derive(Serialize, Deserialize, Clone, Copy, Debug, Eq, PartialEq, IsVariant, Unwrap)]
@@ -103,9 +103,16 @@ pub enum ModelParameterRole {
     #[unwrap(ignore)]
     NoRole,
     Global(GlobalParameterRole),
+    Channel(ChannelParameterRole),
     Amplifier(AmplifierId, AmplifierParameterRole),
     Dynamics(DynamicsId, DynamicsParameterRole),
     Filter(FilterId, FilterParameterRole),
+}
+
+#[derive(Serialize, Deserialize, Clone, Copy, Debug, Eq, PartialEq, IsVariant)]
+#[serde(rename_all = "snake_case")]
+pub enum ChannelParameterRole {
+    Pan,
 }
 
 #[derive(Serialize, Deserialize, Clone, Copy, Debug, Eq, PartialEq, IsVariant)]
@@ -182,10 +189,10 @@ pub type MultiChannelValue = Vec<(usize, ModelValue)>;
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq)]
 pub struct ModelParameter {
-    pub scope: ModelElementScope,
+    pub scope:  ModelElementScope,
     #[serde(default)]
-    pub unit: ModelValueUnit,
-    pub role: ModelParameterRole,
+    pub unit:   ModelValueUnit,
+    pub role:   ModelParameterRole,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub values: Vec<ModelValueOption>,
 }
@@ -201,17 +208,17 @@ pub enum ModelElementScope {
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq)]
 pub struct ModelReport {
-    pub scope: ModelElementScope,
+    pub scope:  ModelElementScope,
     #[serde(default)]
-    pub unit: ModelValueUnit,
-    pub role: ModelReportRole,
+    pub unit:   ModelValueUnit,
+    pub role:   ModelReportRole,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub values: Vec<ModelValueOption>,
     #[serde(default)]
     pub public: bool,
 }
 
-#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq, Hash, IsVariant)]
+#[derive(Serialize, Deserialize, Clone, Copy, Debug, PartialEq, Eq, Hash, IsVariant)]
 #[serde(rename_all = "snake_case")]
 pub enum ControlChannels {
     Global,
