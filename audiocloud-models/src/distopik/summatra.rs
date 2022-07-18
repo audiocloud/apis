@@ -25,7 +25,7 @@ lazy_static! {
     pub static ref PAN: ParameterId = ParameterId::new("pan".to_owned());
 }
 
-pub const MIN_LEVEL: f64 = -60f64;
+pub const MIN_LEVEL: f64 = -48f64;
 pub const MAX_LEVEL: f64 = 10f64;
 
 pub const AMPLIFIER_A: f64 = 0f64;
