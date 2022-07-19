@@ -203,8 +203,8 @@ pub enum DynamicsReportRole {
     GainReductionLimitHit,
 }
 
-pub type MultiChannelValue = Vec<(usize, ModelValue)>;
-pub type MultiChannelTimestampedValue = Vec<(usize, Timestamped<ModelValue>)>;
+pub type MultiChannelValue = HashMap<usize, ModelValue>;
+pub type MultiChannelTimestampedValue = HashMap<usize, Timestamped<ModelValue>>;
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq)]
 pub struct ModelParameter {

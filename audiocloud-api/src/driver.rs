@@ -53,14 +53,12 @@ pub enum InstanceDriverEvent {
     Connected,
 
     /// Received metering updates from the hardware
-    Metering {
-        meters: HashMap<ReportId, MultiChannelValue>,
-    },
+    Reports { reports: HashMap<ReportId, MultiChannelValue> },
 
     /// Playing; media current position reported
     PlayState {
         desired: DesiredInstancePlayState,
         current: InstancePlayState,
-        media: Option<f64>,
+        media:   Option<f64>,
     },
 }
