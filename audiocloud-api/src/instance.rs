@@ -4,8 +4,6 @@ use serde::{Deserialize, Serialize};
 
 use crate::change::{PlayId, RenderId};
 use crate::driver::InstanceDriverCommand;
-use crate::model::MultiChannelValue;
-use crate::newtypes::{ParameterId, ReportId};
 use crate::time::Timestamped;
 
 #[derive(PartialEq, Serialize, Deserialize, Copy, Clone, Debug)]
@@ -87,4 +85,25 @@ pub struct InstancePowerStateReport {
 pub struct InstancePlayStateReport {
     pub desired: Timestamped<DesiredInstancePlayState>,
     pub actual:  Timestamped<InstancePlayState>,
+}
+
+pub mod power {
+    pub mod params {
+        use crate::newtypes::ParameterId;
+
+        lazy_static::lazy_static! {
+            pub static ref POWER: ParameterId = ParameterId::from("power");
+        }
+    }
+
+    pub mod reports {
+        use crate::newtypes::ReportId;
+
+        lazy_static::lazy_static! {
+            pub static ref POWER: ReportId = ReportId::from("power");
+            pub static ref CURRENT: ReportId = ReportId::from("current");
+            pub static ref POWER_FACTOR: ReportId = ReportId::from("power_factor");
+            pub static ref ENERGY: ReportId = ReportId::from("energy");
+        }
+    }
 }

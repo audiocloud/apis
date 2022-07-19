@@ -1,3 +1,5 @@
+use audiocloud_api::instance::power;
+use audiocloud_api::instance::power::{params, reports};
 use maplit::hashmap;
 
 use audiocloud_api::model::ModelElementScope::Size;
@@ -16,25 +18,6 @@ pub fn netio_power_pdu_4c_id() -> ModelId {
 }
 
 const NUM_OUTPUTS: usize = 4;
-
-pub mod params {
-    use audiocloud_api::newtypes::ParameterId;
-
-    lazy_static::lazy_static! {
-        pub static ref POWER: ParameterId = ParameterId::from("power");
-    }
-}
-
-pub mod reports {
-    use audiocloud_api::newtypes::ReportId;
-
-    lazy_static::lazy_static! {
-        pub static ref POWER: ReportId = ReportId::from("power");
-        pub static ref CURRENT: ReportId = ReportId::from("current");
-        pub static ref POWER_FACTOR: ReportId = ReportId::from("power_factor");
-        pub static ref ENERGY: ReportId = ReportId::from("energy");
-    }
-}
 
 pub fn netio_power_pdu_4c_model() -> Model {
     let params = hashmap! {
