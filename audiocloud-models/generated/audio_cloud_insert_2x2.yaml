@@ -8,23 +8,23 @@ outputs:
   - audio: right
 parameters: {}
 reports:
-  insert/output:
-    scope: all_outputs
-    unit: dB
-    role:
-      amplifier:
-        - insert_output
-        - peak_volume
-    values:
-      - - -60.0
-        - 0.0
-    public: true
   insert/input:
     scope: all_inputs
     unit: dB
     role:
       amplifier:
         - insert_input
+        - peak_volume
+    values:
+      - - -60.0
+        - 0.0
+    public: true
+  insert/output:
+    scope: all_outputs
+    unit: dB
+    role:
+      amplifier:
+        - insert_output
         - peak_volume
     values:
       - - -60.0

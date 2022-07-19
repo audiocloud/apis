@@ -4,6 +4,7 @@ use derive_more::{Display, IsVariant, Unwrap};
 use serde::{Deserialize, Serialize};
 
 use crate::newtypes::{FilterId, ParameterId, ReportId};
+use crate::time::{Timestamp, Timestamped};
 
 #[derive(Serialize, Deserialize, Clone, Copy, Eq, PartialEq, Debug, IsVariant)]
 pub enum ModelValueUnit {
@@ -19,6 +20,10 @@ pub enum ModelValueUnit {
     Octaves,
     #[serde(rename = "toggle")]
     Toggle,
+    #[serde(rename = "amps")]
+    Amperes,
+    #[serde(rename = "watthrs")]
+    WattHours,
 }
 
 impl Default for ModelValueUnit {
@@ -104,6 +109,7 @@ pub struct Model {
 pub enum ModelParameterRole {
     #[unwrap(ignore)]
     NoRole,
+    Power,
     Global(GlobalParameterRole),
     Channel(ChannelParameterRole),
     Amplifier(AmplifierId, AmplifierParameterRole),
@@ -166,8 +172,18 @@ pub enum FilterParameterRole {
 pub enum ModelReportRole {
     #[unwrap(ignore)]
     NoRole,
+    Power(PowerReportRole),
     Amplifier(AmplifierId, AmplifierReportRole),
     Dynamics(DynamicsId, DynamicsReportRole),
+}
+
+#[derive(Serialize, Deserialize, Clone, Copy, Debug, Eq, PartialEq, IsVariant)]
+#[serde(rename_all = "snake_case")]
+pub enum PowerReportRole {
+    Powered,
+    Current,
+    PowerFactor,
+    TotalEnergy,
 }
 
 #[derive(Serialize, Deserialize, Clone, Copy, Debug, Eq, PartialEq, IsVariant)]
@@ -188,6 +204,7 @@ pub enum DynamicsReportRole {
 }
 
 pub type MultiChannelValue = Vec<(usize, ModelValue)>;
+pub type MultiChannelTimestampedValue = Vec<(usize, Timestamped<ModelValue>)>;
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq)]
 pub struct ModelParameter {

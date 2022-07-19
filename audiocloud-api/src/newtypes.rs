@@ -16,7 +16,7 @@ use serde_json::Value;
 pub struct FixedInstanceId {
     pub manufacturer: String,
     pub name:         String,
-    pub instance:     u64,
+    pub instance:     String,
 }
 
 impl FixedInstanceId {
@@ -25,7 +25,7 @@ impl FixedInstanceId {
                   name:         self.name.to_string(), }
     }
 
-    pub fn from_model_id(model_id: ModelId, instance: u64) -> Self {
+    pub fn from_model_id(model_id: ModelId, instance: String) -> Self {
         let ModelId { manufacturer, name } = model_id;
         Self::new(manufacturer, name, instance)
     }
@@ -41,14 +41,11 @@ impl<'de> Deserialize<'de> for FixedInstanceId {
         let mut s = s.split('/');
         let manufacturer = s.next().ok_or(err("expected manufacturer"))?;
         let name = s.next().ok_or(err("expected manufacturer"))?;
-        let instance: usize = s.next()
-                               .ok_or(err("expected instance"))?
-                               .parse()
-                               .map_err(|_| err("instance is not a number"))?;
+        let instance = s.next().ok_or(err("expected instance"))?;
 
         Ok(Self { manufacturer: manufacturer.to_string(),
                   name:         name.to_string(),
-                  instance:     instance as u64, })
+                  instance:     instance.to_string(), })
     }
 }
 
@@ -68,7 +65,7 @@ pub struct ModelId {
 }
 
 impl ModelId {
-    pub fn instance(self, instance: u64) -> FixedInstanceId {
+    pub fn instance(self, instance: String) -> FixedInstanceId {
         FixedInstanceId::from_model_id(self, instance)
     }
 }
@@ -175,10 +172,24 @@ pub struct FixedId(String);
 #[repr(transparent)]
 pub struct AppId(String);
 
+impl AppId {
+    pub fn is_admin(&self) -> bool {
+        self.0 == "admin"
+    }
+
+    pub fn admin() -> AppId {
+        AppId("admin".to_string())
+    }
+}
+
 /// Session of an App on a Domain
 #[derive(Clone, Debug, Serialize, Deserialize, Eq, PartialEq, Ord, PartialOrd, Display, Deref, Constructor, Hash, From, FromStr)]
 #[repr(transparent)]
 pub struct SessionId(String);
+
+#[derive(Clone, Debug, Serialize, Deserialize, Eq, PartialEq, Ord, PartialOrd, Display, Deref, Constructor, Hash, From, FromStr)]
+#[repr(transparent)]
+pub struct SocketId(String);
 
 impl SessionId {
     pub fn validate(self) -> Result<Self, CloudError> {
@@ -302,6 +313,8 @@ impl From<&str> for ParameterId {
 #[repr(transparent)]
 pub struct ReportId(String);
 
-#[derive(Clone, Debug, Serialize, Deserialize, Eq, PartialEq, Ord, PartialOrd, Display, Deref, Constructor, Hash, From, FromStr)]
-#[repr(transparent)]
-pub struct PduId(String);
+impl From<&str> for ReportId {
+    fn from(s: &str) -> Self {
+        Self::new(s.to_string())
+    }
+}

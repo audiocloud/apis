@@ -45,7 +45,7 @@ parameters:
         - input
         - gain
     values:
-      - - -60.0
+      - - -48.0
         - 10.0
   pan:
     scope: all_inputs

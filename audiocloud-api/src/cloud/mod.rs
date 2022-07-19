@@ -82,6 +82,9 @@ pub enum CloudError {
     #[error("Fixed instance {2} required by bus {0} is not supported on domain {1}")]
     FixedInstanceNotSupported(FixedId, DomainId, FixedInstanceId),
 
+    #[error("Fixed instance {2} required by bus {0} is not assignable to app {3} on domain {1}")]
+    FixedInstanceAccessDenied(FixedId, DomainId, FixedInstanceId, AppId),
+
     #[error("Out of {0} resource by {1}")]
     OutOfResource(ResourceId, f64),
 

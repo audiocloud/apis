@@ -4,7 +4,7 @@ use derive_more::{IsVariant, Unwrap};
 use serde::{Deserialize, Serialize};
 
 use crate::cloud::apps::{CreateSession, SessionSpec};
-use crate::model::MultiChannelValue;
+use crate::model::{MultiChannelTimestampedValue, MultiChannelValue};
 use crate::newtypes::DomainId;
 use crate::newtypes::{
     DynamicId, FixedId, FixedInstanceId, InputId, MediaId, MediaObjectId, MixerId, ModelId, ParameterId, SecureKey, TrackId,
@@ -64,6 +64,7 @@ pub struct SessionFixedInstance {
 }
 
 pub type InstanceParameters = HashMap<ParameterId, MultiChannelValue>;
+pub type InstanceReports = HashMap<ParameterId, MultiChannelTimestampedValue>;
 
 #[derive(Clone, Debug, Serialize, Deserialize, PartialEq)]
 pub struct MixerInput {

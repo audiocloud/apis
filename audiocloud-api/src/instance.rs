@@ -88,21 +88,3 @@ pub struct InstancePlayStateReport {
     pub desired: Timestamped<DesiredInstancePlayState>,
     pub actual:  Timestamped<InstancePlayState>,
 }
-
-#[derive(Serialize, Deserialize, Clone, Debug, PartialEq)]
-pub struct InstancePowerStateSummary {
-    pub power_state:         Timestamped<InstancePowerState>,
-    pub desired_power_state: Timestamped<DesiredInstancePowerState>,
-}
-
-#[derive(Serialize, Deserialize, Clone, Debug, PartialEq)]
-pub struct InstancePlayStateSummary {
-    pub play_state:         Timestamped<InstancePlayState>,
-    pub desired_play_state: Timestamped<DesiredInstancePlayState>,
-}
-
-#[derive(Serialize, Deserialize, Clone, Debug, PartialEq)]
-pub struct InstanceState {
-    pub power: Option<InstancePowerStateSummary>,
-    pub play:  Option<InstancePlayStateSummary>,
-}

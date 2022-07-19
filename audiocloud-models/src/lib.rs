@@ -10,10 +10,12 @@ use audiocloud_api::newtypes::ModelId;
 use crate::audio_cloud::insert::{audio_cloud_insert_id, audio_cloud_insert_model};
 use crate::distopik::dual_1084::{distopik_dual_1084_id, distopik_dual_1084_model};
 use crate::distopik::summatra::{distopik_summatra_id, distopik_summatra_model};
+use crate::netio::netio_4c::{netio_power_pdu_4c_id, netio_power_pdu_4c_model};
 
 pub mod audio_cloud;
 pub mod cockos;
 pub mod distopik;
+pub mod netio;
 
 pub enum Manufacturers {
     AudioCloud,
@@ -23,6 +25,7 @@ pub enum Manufacturers {
     Cockos,
     Tierra,
     Gyraf,
+    Netio,
 }
 
 impl ToString for Manufacturers {
@@ -35,6 +38,7 @@ impl ToString for Manufacturers {
             Manufacturers::Tierra => "tierra",
             Manufacturers::Gyraf => "gyraf",
             Manufacturers::AudioCloud => "audio_cloud",
+            Manufacturers::Netio => "netio",
         }.to_owned()
     }
 }
@@ -46,6 +50,7 @@ lazy_static! {
       audio_cloud_insert_id(1,1) => audio_cloud_insert_model(1,1),
       audio_cloud_insert_id(2,2) => audio_cloud_insert_model(2,2),
       audio_cloud_insert_id(24,2) => audio_cloud_insert_model(24,2),
+      netio_power_pdu_4c_id() => netio_power_pdu_4c_model()
     };
 }
 
