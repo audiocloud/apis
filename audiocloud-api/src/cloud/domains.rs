@@ -55,7 +55,7 @@ pub struct DomainFixedInstance {
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq)]
 pub struct DomainPowerInstanceSettings {
-    pub warm_up_ms:       usize,
+    pub warm_up_ms:        usize,
     pub cool_down_ms:      usize,
     pub idle_off_delay_ms: usize,
     pub instance:          FixedInstanceId,
