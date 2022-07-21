@@ -1,7 +1,7 @@
-use audiocloud_api::instance::power;
-use audiocloud_api::instance::power::{params, reports};
-use maplit::hashmap;
+use maplit::{hashmap, hashset};
 
+use audiocloud_api::instance::power::{params, reports};
+use audiocloud_api::model::ModelCapability::PowerDistributor;
 use audiocloud_api::model::ModelElementScope::Size;
 use audiocloud_api::model::ModelParameterRole::Power as PowerOnOff;
 use audiocloud_api::model::ModelReportRole::Power;
@@ -60,10 +60,11 @@ pub fn netio_power_pdu_4c_model() -> Model {
         },
     };
 
-    Model { resources:  Default::default(),
-            inputs:     vec![],
-            outputs:    vec![],
-            parameters: params,
-            reports:    reps,
-            media:      false, }
+    Model { resources:    Default::default(),
+            inputs:       vec![],
+            outputs:      vec![],
+            parameters:   params,
+            reports:      reps,
+            media:        false,
+            capabilities: hashset! {PowerDistributor}, }
 }

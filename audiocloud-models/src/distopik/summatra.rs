@@ -1,9 +1,10 @@
 use lazy_static::lazy_static;
-use maplit::hashmap;
+use maplit::{hashmap, hashset};
 
 use audiocloud_api::model::AmplifierId::Input;
 use audiocloud_api::model::AmplifierParameterRole::Gain;
 use audiocloud_api::model::ChannelParameterRole::Pan;
+use audiocloud_api::model::ModelCapability::AudioMixer;
 use audiocloud_api::model::ModelElementScope::AllInputs;
 use audiocloud_api::model::ModelParameterRole::{Amplifier, Channel, NoRole};
 use audiocloud_api::model::ModelValue::Number;
@@ -33,16 +34,17 @@ pub const AMPLIFIER_B: f64 = 1f64;
 pub const AMPLIFIER_C: f64 = 2f64;
 
 pub fn distopik_summatra_model() -> Model {
-    Model { resources:  Default::default(),
-            inputs:     standard_inputs(24),
-            outputs:    standard_outputs(2),
-            reports:    Default::default(),
-            media:      false,
-            parameters: hashmap! {
+    Model { resources:    Default::default(),
+            inputs:       standard_inputs(24),
+            outputs:      standard_outputs(2),
+            reports:      Default::default(),
+            media:        false,
+            parameters:   hashmap! {
               INPUT.clone() => input_level(),
               BUS_ASSIGN.clone() => bus_assign(),
               PAN.clone() => pan()
-            }, }
+            },
+            capabilities: hashset! {AudioMixer}, }
 }
 
 fn input_level() -> ModelParameter {
