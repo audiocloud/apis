@@ -98,6 +98,15 @@ impl SessionSpec {
         Ok(())
     }
 
+    pub fn fixed_instance_to_fixed_id(&self, instance_id: &FixedInstanceId) -> Option<&FixedId> {
+        for (fixed_id, fixed) in &self.fixed {
+            if &fixed.instance_id == instance_id {
+                return Some(fixed_id);
+            }
+        }
+        None
+    }
+
     fn check_input(&self, session_object_id: &SessionObjectId, input_id: &InputId, input: &MixerInput) -> Result<(), CloudError> {
         match &input.source_id {
             SessionObjectId::Track(track_id) => {
