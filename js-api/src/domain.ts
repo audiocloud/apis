@@ -5,7 +5,6 @@ import { CreateSession, SessionSpec } from "./cloud/apps";
 import { DownloadMedia, MediaDownloadState } from "./media";
 import { AppMediaObjectId, AppSessionId, MediaObjectId, SecureKey, SessionId } from "./new_types";
 import { SessionSecurity } from "./session";
-import Option from "./utils/option";
 
 export const DomainSessionCommand = Type.Union([
     Type.Object({

@@ -260,7 +260,6 @@ pub struct ModelParameter {
     #[serde(default)]
     pub unit:   ModelValueUnit,
     pub role:   ModelParameterRole,
-    #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub values: Vec<ModelValueOption>,
 }
 
@@ -279,7 +278,6 @@ pub struct ModelReport {
     #[serde(default)]
     pub unit:   ModelValueUnit,
     pub role:   ModelReportRole,
-    #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub values: Vec<ModelValueOption>,
     #[serde(default)]
     pub public: bool,

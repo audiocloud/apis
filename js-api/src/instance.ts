@@ -5,11 +5,33 @@ import { PlayId, RenderId } from "./change";
 import { Timestamped } from "./time";
 
 export const InstancePlayState = Type.Union([
-    Type.Object({ "preparing_to_play":      { play_id: PlayId }}),
-    Type.Object({ "playing":                { play_id: PlayId }}),
-    Type.Object({ "preparing_to_render":    { length: Type.Number(), render_id: RenderId }}),
-    Type.Object({ "rendering":              { length: Type.Number(), render_id: RenderId }}),
-    Type.Object({ "rewinding":              { to: Type.Number() }}),
+    Type.Object({
+        "preparing_to_play":    Type.Object({
+            "play_id":          PlayId,
+            })
+        }),
+    Type.Object({
+        "playing":              Type.Object({
+            "play_id":          PlayId,
+            })
+        }),
+    Type.Object({
+        "preparing_to_render":  Type.Object({
+            "length":           Type.Number(),
+            "render_id":        RenderId,
+            })
+        }),
+    Type.Object({
+        "rendering":            Type.Object({
+            "length":           Type.Number(),
+            "render_id":        RenderId,
+            })
+        }),
+    Type.Object({
+        "rewinding":            Type.Object({
+            "to":               Type.Number(),
+            })
+        }),
     Type.Literal("stopping"),
     Type.Literal("stopped"),
 ])
