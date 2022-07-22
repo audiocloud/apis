@@ -1,10 +1,16 @@
-import {Static, Type} from "@sinclair/typebox";
+import { Static, Type } from "@sinclair/typebox";
 
 export const DomainId = Type.String({minLength: 8, maxLength: 32})
 export type DomainId = Static<typeof DomainId>
 
 export const AppId = Type.String({minLength: 8, maxLength: 32})
-export type AppId = Static<typeof DomainId>
+export type AppId = Static<typeof AppId>
+
+export const SessionId = Type.String({minLength: 8, maxLength: 32})
+export type SessionId = Static<typeof SessionId>
+
+export const AppSessionId = Type.RegEx(/[\w-_]{8,32}\/[\w-_]{8,32}/)
+export type AppSessionId = Static<typeof AppSessionId>
 
 export const ModelId = Type.RegEx(/[\w-_]{1,32}\/[\w-_]{1,32}/)
 export type ModelId = Static<typeof ModelId>
@@ -41,3 +47,6 @@ export type ParameterId = Static<typeof ParameterId>
 
 export const ReportId = Type.RegEx(/[\w-_]{1,32}/)
 export type ReportId = Static<typeof ReportId>
+
+export const AppMediaObjectId = Type.String(/[\w-_]{8,32}\/[\w-_]{8,}/)
+export type AppMediaObjectId = Static<typeof AppMediaObjectId>

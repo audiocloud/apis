@@ -21,6 +21,7 @@ pub mod media;
 pub mod models;
 
 #[derive(Serialize, Deserialize, Debug, Clone, Error)]
+#[serde(rename_all = "snake_case")]
 pub enum CloudError {
     #[error("API Key not found")]
     ApiKeyNotFound,

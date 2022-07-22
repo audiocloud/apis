@@ -18,6 +18,7 @@ use crate::time::Timestamped;
 use self::ModifySessionError::*;
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq)]
+#[serde(rename_all = "snake_case")]
 pub enum ModifySessionSpec {
     AddTrack {
         track_id: TrackId,
@@ -89,6 +90,7 @@ pub enum ModifySessionSpec {
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq)]
+#[serde(rename_all = "snake_case")]
 pub enum ModifySession {
     Spec(ModifySessionSpec),
     SetSecurity { key: SecureKey, security: SessionSecurity },
@@ -96,6 +98,7 @@ pub enum ModifySession {
 }
 
 #[derive(Serialize, Deserialize, Debug, Copy, Clone, Eq, PartialEq)]
+#[serde(rename_all = "snake_case")]
 pub enum SampleRate {
     #[serde(rename = "192")]
     SR192,
@@ -110,6 +113,7 @@ pub enum SampleRate {
 }
 
 #[derive(Serialize, Deserialize, Debug, Copy, Clone, Eq, PartialEq)]
+#[serde(rename_all = "snake_case")]
 pub enum PlayBitDepth {
     #[serde(rename = "24")]
     PD24,

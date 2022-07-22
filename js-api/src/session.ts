@@ -1,6 +1,6 @@
 // noinspection JSUnusedGlobalSymbols
 
-import {Static, Type} from "@sinclair/typebox";
+import { Static, Type } from "@sinclair/typebox";
 import {
     AppId,
     DomainId,
@@ -116,3 +116,10 @@ export const JsonCreateSession = Type.Integer([
 export type JsonCreateSession = Static<typeof JsonCreateSession>
 
 export type Session = FromJsonTimeRanges<JsonSession, 'time'>
+
+export const SessionMixerId = Type.Union([
+    Type.Object({ "mixer": MixerId }),
+    Type.Object({ "fixed_instance": FixedId }),
+    Type.Object({ "dynamic_instance": DynamicId })
+])
+export type SessionMixerId = Static<typeof SessionMixerId>

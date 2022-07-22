@@ -1,4 +1,4 @@
-import {Static, Type} from "@sinclair/typebox";
+import { Static, Type, TSchema } from "@sinclair/typebox";
 
 export const JsonTimeStamp = Type.String({format: 'date-time'})
 export type JsonTimeStamp = Static<typeof JsonTimeStamp>
@@ -25,4 +25,8 @@ export type FromJsonTimeStamps<T extends object, K extends keyof T> = {
 
 export type FromJsonTimeRanges<T extends object, K extends keyof T> = {
     [k in keyof T]: k extends K ? TimeRange : T[k]
+}
+
+export function Timestamped<T extends TSchema>(t: T) {
+    return Type.Tuple([JsonTimeStamp, t])
 }

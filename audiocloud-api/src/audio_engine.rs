@@ -59,6 +59,7 @@ pub enum AudioEngineCommand {
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq)]
+#[serde(rename_all = "snake_case")]
 pub enum AudioEngineEvent {
     Loaded,
     Stopped,
@@ -92,6 +93,7 @@ pub struct CompressedAudio {
 }
 
 #[derive(Debug, Error, Serialize, Deserialize)]
+#[serde(rename_all = "snake_case")]
 pub enum AudioEngineError {
     #[error("Track {0} not found")]
     TrackNotFound(usize),
