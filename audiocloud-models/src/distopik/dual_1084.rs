@@ -63,12 +63,13 @@ pub fn distopik_dual_1084_model() -> Model {
       EQL_TOGGLE.clone() => eql_toggle()
     };
 
-    Model { inputs:     left_and_right_inputs(),
-            outputs:    left_and_right_outputs(),
-            parameters: params,
-            resources:  Default::default(),
-            reports:    Default::default(),
-            media:      false, }
+    Model { inputs:       left_and_right_inputs(),
+            outputs:      left_and_right_outputs(),
+            parameters:   params,
+            resources:    Default::default(),
+            reports:      Default::default(),
+            media:        false,
+            capabilities: Default::default(), }
 }
 
 fn input_gain() -> ModelParameter {

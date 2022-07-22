@@ -1,4 +1,4 @@
-use std::collections::HashMap;
+use std::collections::{HashMap, HashSet};
 
 use derive_more::{Display, IsVariant, Unwrap};
 use serde::{Deserialize, Serialize};
@@ -62,11 +62,25 @@ pub enum ModelValue {
 }
 
 impl ModelValue {
-    pub fn to_f64(self) -> Option<f64> {
+    pub fn to_f64(&self) -> Option<f64> {
         match self {
             ModelValue::String(_) => None,
-            ModelValue::Number(v) => Some(v),
-            ModelValue::Bool(b) => Some(if b { 1.0 } else { 0.0 }),
+            ModelValue::Number(v) => Some(*v),
+            ModelValue::Bool(b) => Some(if *b { 1.0 } else { 0.0 }),
+        }
+    }
+
+    pub fn to_bool(&self) -> Option<bool> {
+        match self {
+            ModelValue::String(_) => None,
+            ModelValue::Number(v) => Some({
+                if *v == 0.0 {
+                    false
+                } else {
+                    true
+                }
+            }),
+            ModelValue::Bool(b) => Some(*b),
         }
     }
 }
@@ -96,12 +110,22 @@ pub type ModelReports = HashMap<ReportId, ModelReport>;
 #[derive(Clone, Debug, Serialize, Deserialize, Default)]
 pub struct Model {
     #[serde(default)]
-    pub resources:  HashMap<ResourceId, f64>,
-    pub inputs:     ModelInputs,
-    pub outputs:    ModelOutputs,
-    pub parameters: ModelParameters,
-    pub reports:    ModelReports,
-    pub media:      bool,
+    pub resources:    HashMap<ResourceId, f64>,
+    pub inputs:       ModelInputs,
+    pub outputs:      ModelOutputs,
+    pub parameters:   ModelParameters,
+    pub reports:      ModelReports,
+    pub media:        bool,
+    #[serde(default)]
+    pub capabilities: HashSet<ModelCapability>,
+}
+
+#[derive(Copy, Clone, Serialize, Deserialize, Debug, PartialEq, Eq, Hash)]
+pub enum ModelCapability {
+    PowerDistributor,
+    AudioRouter,
+    AudioMixer,
+    DigitalInputOutput,
 }
 
 #[derive(Serialize, Deserialize, Clone, Copy, Debug, Eq, PartialEq, IsVariant, Unwrap)]
@@ -205,6 +229,30 @@ pub enum DynamicsReportRole {
 
 pub type MultiChannelValue = HashMap<usize, ModelValue>;
 pub type MultiChannelTimestampedValue = HashMap<usize, Timestamped<ModelValue>>;
+
+pub mod multi_channel_value {
+    use maplit::hashmap;
+
+    use crate::model::{ModelValue, MultiChannelValue};
+
+    pub fn bool(channel: usize, value: bool) -> MultiChannelValue {
+        hashmap! {
+            channel => ModelValue::Bool(value),
+        }
+    }
+
+    pub fn number(channel: usize, value: f64) -> MultiChannelValue {
+        hashmap! {
+            channel => ModelValue::Number(value),
+        }
+    }
+
+    pub fn string(channel: usize, value: String) -> MultiChannelValue {
+        hashmap! {
+            channel => ModelValue::String(value),
+        }
+    }
+}
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq)]
 pub struct ModelParameter {

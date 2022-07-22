@@ -41,32 +41,29 @@ pub fn cockos_eq() -> Model {
 
     let media = false;
 
-    Model {
-        resources,
-        inputs,
-        outputs,
-        parameters,
-        reports,
-        media,
-    }
+    let capabilities = Default::default();
+
+    Model { resources,
+            inputs,
+            outputs,
+            parameters,
+            reports,
+            media,
+            capabilities }
 }
 
 fn low_gain() -> ModelParameter {
-    ModelParameter {
-        scope: AllInputs,
-        unit: Decibels,
-        role: Filter(Low, Gain),
-        values: filter_gain_numbers(),
-    }
+    ModelParameter { scope:  AllInputs,
+                     unit:   Decibels,
+                     role:   Filter(Low, Gain),
+                     values: filter_gain_numbers(), }
 }
 
 fn low_freq() -> ModelParameter {
-    ModelParameter {
-        scope: AllInputs,
-        unit: Decibels,
-        role: Filter(Low, Frequency),
-        values: vec![values::numbers(20_f64, 2000_f64)],
-    }
+    ModelParameter { scope:  AllInputs,
+                     unit:   Decibels,
+                     role:   Filter(Low, Frequency),
+                     values: vec![values::numbers(20_f64, 2000_f64)], }
 }
 
 fn filter_gain_numbers() -> Vec<ModelValueOption> {

@@ -8,11 +8,11 @@ use thiserror::Error;
 use crate::cloud::apps::SessionSpec;
 use crate::model::MultiChannelValue;
 use crate::newtypes::{DynamicId, FixedId, FixedInstanceId, InputId, MediaId, MediaObjectId, MixerId, ParameterId, SecureKey, TrackId};
-use crate::session::SessionSecurity;
 use crate::session::{
     MixerInput, MixerInputValues, Session, SessionDynamicInstance, SessionFixedInstance, SessionMixer, SessionMixerId, SessionObjectId,
     SessionTimeSegment, SessionTrack, SessionTrackChannels, SessionTrackMedia,
 };
+use crate::session::{SessionMode, SessionSecurity};
 use crate::time::Timestamped;
 
 use self::ModifySessionError::*;
@@ -245,12 +245,14 @@ impl SessionPlayState {
 pub struct SessionState {
     pub play_state:         Timestamped<SessionPlayState>,
     pub desired_play_state: Timestamped<DesiredSessionPlayState>,
+    pub mode:               Timestamped<SessionMode>,
 }
 
 impl Default for SessionState {
     fn default() -> Self {
         Self { play_state:         Timestamped::new(SessionPlayState::Stopped),
-               desired_play_state: Timestamped::new(DesiredSessionPlayState::Stopped), }
+               desired_play_state: Timestamped::new(DesiredSessionPlayState::Stopped),
+               mode:               Timestamped::new(SessionMode::Idle), }
     }
 }
 

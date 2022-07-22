@@ -1,5 +1,3 @@
-use std::collections::HashMap;
-
 use serde::{Deserialize, Serialize};
 
 use crate::change::{PlayId, RenderId};
@@ -52,13 +50,20 @@ impl InstancePlayState {
 #[derive(Serialize, Deserialize, Clone, Copy, Debug, PartialEq)]
 #[serde(rename_all = "snake_case")]
 pub enum InstancePowerState {
-    WarmingUp,
-    CoolingDown,
+    PoweringUp,
+    ShuttingDown,
     PoweredUp,
     ShutDown,
 }
 
 impl InstancePowerState {
+    pub fn from_bool(power: bool) -> Self {
+        match power {
+            true => Self::PoweredUp,
+            false => Self::ShutDown,
+        }
+    }
+
     pub fn satisfies(self, desired: DesiredInstancePowerState) -> bool {
         match (self, desired) {
             (Self::PoweredUp, DesiredInstancePowerState::PoweredUp) => true,
@@ -75,16 +80,26 @@ pub enum DesiredInstancePowerState {
     ShutDown,
 }
 
+impl DesiredInstancePowerState {
+    pub fn to_bool(self) -> bool {
+        match self {
+            DesiredInstancePowerState::PoweredUp => true,
+            DesiredInstancePowerState::ShutDown => false,
+        }
+    }
+}
+
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq)]
-pub struct InstancePowerStateReport {
+pub struct ReportInstancePowerState {
     pub desired: Timestamped<DesiredInstancePowerState>,
     pub actual:  Timestamped<InstancePowerState>,
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq)]
-pub struct InstancePlayStateReport {
+pub struct ReportInstancePlayState {
     pub desired: Timestamped<DesiredInstancePlayState>,
     pub actual:  Timestamped<InstancePlayState>,
+    pub media:   Option<Timestamped<f64>>,
 }
 
 pub mod power {

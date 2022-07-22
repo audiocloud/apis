@@ -66,3 +66,49 @@ impl Codec for MsgPack {
 pub trait Transferable {
     type Codec: Codec;
 }
+
+#[cfg(test)]
+mod test {
+    use serde_json::json;
+
+    use crate::audio_engine::AudioEngineCommand;
+    use crate::codec::{Codec, Json, MsgPack};
+
+    #[test]
+    pub fn test_roundtrip_json() {
+        let value = AudioEngineCommand::Exit;
+        let msg = Json.serialize(&value).expect("serialize");
+        let roundtrip = Json.deserialize(&msg).expect("deserialize");
+        assert_eq!(value, roundtrip);
+    }
+
+    #[test]
+    pub fn test_roundtrip_msgpack() {
+        let value = AudioEngineCommand::Exit;
+        let msg = MsgPack.serialize(&value).expect("serialize");
+        let roundtrip = MsgPack.deserialize(&msg).expect("deserialize");
+        assert_eq!(value, roundtrip);
+    }
+
+    #[test]
+    pub fn test_err_json() {
+        let value = Err::<String, _>(format!("Error message"));
+        let msg = Json.serialize(&value).expect("serialize");
+        let jsvalue: serde_json::Value = serde_json::from_slice(&msg).expect("deserialize");
+        assert_eq!(jsvalue,
+                   json!({
+                       "Err": "Error message"
+                   }));
+    }
+
+    #[test]
+    pub fn test_ok_json() {
+        let value = Ok::<_, String>(18);
+        let msg = Json.serialize(&value).expect("serialize");
+        let jsvalue: serde_json::Value = serde_json::from_slice(&msg).expect("deserialize");
+        assert_eq!(jsvalue,
+                   json!({
+                       "Ok": 18
+                   }));
+    }
+}
