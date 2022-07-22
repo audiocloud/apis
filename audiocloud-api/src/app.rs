@@ -48,12 +48,12 @@ impl SessionPacket {
     pub fn push_fixed_instance_reports(&mut self, instance: FixedId, reports: InstanceReports) {
         let fixed = self.fixed.entry(instance).or_default();
 
-        for (report_id, value) in reports {
-            fixed.instance_metering
-                 .entry(report_id)
-                 .or_default()
-                 .push());
-        }
+        // for (report_id, value) in reports {
+        //     fixed.instance_metering
+        //          .entry(report_id)
+        //          .or_default()
+        //          .push();
+        // }
     }
 
     pub fn add_waiting_instance(&mut self, instance_id: &FixedInstanceId) {

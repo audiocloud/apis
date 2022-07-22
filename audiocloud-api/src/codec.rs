@@ -66,3 +66,25 @@ impl Codec for MsgPack {
 pub trait Transferable {
     type Codec: Codec;
 }
+
+#[cfg(test)]
+mod test {
+    use crate::audio_engine::AudioEngineCommand;
+    use crate::codec::{Codec, Json, MsgPack};
+
+    #[test]
+    pub fn test_roundtrip_json() {
+        let value = AudioEngineCommand::Exit;
+        let msg = Json.serialize(&value).expect("serialize");
+        let roundtrip = Json.deserialize(&msg).expect("deserialize");
+        assert_eq!(value, roundtrip);
+    }
+
+    #[test]
+    pub fn test_roundtrip_msgpack() {
+        let value = AudioEngineCommand::Exit;
+        let msg = MsgPack.serialize(&value).expect("serialize");
+        let roundtrip = MsgPack.deserialize(&msg).expect("deserialize");
+        assert_eq!(value, roundtrip);
+    }
+}
