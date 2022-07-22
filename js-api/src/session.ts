@@ -15,6 +15,7 @@ import {
 } from "./new_types";
 import {FromJsonTimeRanges, JsonTimeRange} from "./time";
 import {InstanceParameters} from "./instance";
+import { PlayId, RenderId } from "./change";
 
 export const SessionTrackChannels = Type.Union([
     Type.Literal("mono"),
@@ -123,3 +124,14 @@ export const SessionMixerId = Type.Union([
     Type.Object({ "dynamic_instance": DynamicId })
 ])
 export type SessionMixerId = Static<typeof SessionMixerId>
+
+export const SessionMode = Type.Union([
+    Type.Object({ "StoppingRender":     RenderId }),
+    Type.Object({ "StoppingPlay":       PlayId }),
+    Type.Object({ "PreparingToPlay":    PlayId }),
+    Type.Object({ "PreparingToRender":  RenderId }),
+    Type.Object({ "Rendering":          RenderId }),
+    Type.Object({ "Playing":            PlayId }),
+    Type.Literal("idle"),
+])
+export type SessionMode = Static<typeof SessionMode>

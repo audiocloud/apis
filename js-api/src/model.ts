@@ -207,14 +207,21 @@ export type ModelParameters = Static<typeof ModelParameters>
 export const ModelReports = Type.Record(ReportId, ModelReport)
 export type ModelReports = Static<typeof ModelReports>
 
+export const ModelCapability = Type.Union([
+    Type.Literal("power_distributor"),
+    Type.Literal("audio_router"),
+    Type.Literal("audio_mixer"),
+    Type.Literal("digital_input_output"),
+])
+export type ModelCapability = Static<typeof ModelCapability>
+
 export const Model = Type.Object({
-    manufacturer: Type.String(),
-    name: Type.String(),
-    resources: Type.Partial(Type.Record(ResourceId, Type.Number())),
-    inputs: ModelInputs,
-    outputs: ModelOutputs,
-    parameters: ModelParameters,
-    reports: ModelReports,
-    media: Type.Boolean()
+    resources:      Type.Optional(Type.Record(ResourceId, Type.Number())),
+    inputs:         ModelInputs,
+    outputs:        ModelOutputs,
+    parameters:     ModelParameters,
+    reports:        ModelReports,
+    media:          Type.Boolean(),
+    capabilities:   Type.Optional(Type.Array(ModelCapability))
 }, {additionalProperties: false})
 export type Model = Static<typeof Model>

@@ -23,8 +23,8 @@ export const DesiredInstancePlayState = Type.Union([
 export type DesiredInstancePlayState = Static<typeof DesiredInstancePlayState>
 
 export const InstancePowerState = Type.Union([
-    Type.Literal("warming_up"),
-    Type.Literal("cooling_down"),
+    Type.Literal("powering_up"),
+    Type.Literal("shutting_down"),
     Type.Literal("powered_up"),
     Type.Literal("shut_down"),
 ])
@@ -36,17 +36,17 @@ export const DesiredInstancePowerState = Type.Union([
 ])
 export type DesiredInstancePowerState = Static<typeof DesiredInstancePowerState>
 
-export const InstancePowerStateReport = Type.Object({
+export const ReportInstancePowerState = Type.Object({
     desired: Timestamped(DesiredInstancePowerState),
     actual:  Timestamped(InstancePowerState),
 })
-export type InstancePowerStateReport = Static<typeof InstancePowerStateReport>
+export type ReportInstancePowerState = Static<typeof ReportInstancePowerState>
 
-export const InstancePlayStateReport = Type.Object({
+export const ReportInstancePlayState = Type.Object({
     desired: Timestamped(DesiredInstancePlayState),
     actual:  Timestamped(InstancePlayState),
 })
-export type InstancePlayStateReport = Static<typeof InstancePlayStateReport>
+export type ReportInstancePlayState = Static<typeof ReportInstancePlayState>
 
 export const MultiChannelValue = Type.Array(Type.Tuple([
     Type.Integer({minimum: 0, maximum: 64}),

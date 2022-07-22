@@ -1,7 +1,7 @@
 import { Static, Type } from "@sinclair/typebox";
 import Option from "./utils/option";
 import { TrackId, FixedId, DynamicId, MixerId, InputId, MediaId, MediaObjectId, ParameterId, SecureKey } from "./new_types";
-import { MixerInput, SessionDynamicInstance, SessionFixedInstance, SessionMixer, SessionMixerId, SessionObjectId, SessionSecurity, SessionTimeSegment, SessionTrackChannels } from "./session";
+import { MixerInput, SessionDynamicInstance, SessionFixedInstance, SessionMixer, SessionMixerId, SessionMode, SessionObjectId, SessionSecurity, SessionTimeSegment, SessionTrackChannels } from "./session";
 import { MultiChannelValue } from "./instance";
 import { Timestamped } from "./time";
 
@@ -204,6 +204,7 @@ export type DesiredSessionPlayState = Static<typeof DesiredSessionPlayState>
 export const SessionState = Type.Object({
     play_state:                             Timestamped(SessionPlayState),
     desired_play_state:                     Timestamped(DesiredSessionPlayState),
+    mode:                                   Timestamped(SessionMode)
 })
 export type SessionState = Static<typeof SessionState>
 

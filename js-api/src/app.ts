@@ -21,7 +21,6 @@ export const FixedInstancePacket = Type.Object({
 })
 export type FixedInstancePacket = Static<typeof FixedInstancePacket>
 
-
 export const DynamicInstancePacket = Type.Object({
     instance_metering:      Type.Record(ReportId, Type.Array(DiffStamped(MultiChannelValue))),
     input_metering:         Type.Array(DiffStamped(MultiChannelValue)),
