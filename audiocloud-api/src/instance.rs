@@ -8,8 +8,8 @@ use crate::time::Timestamped;
 #[serde(rename_all = "snake_case")]
 pub enum InstancePlayState {
     PreparingToPlay { play_id: PlayId },
-    PreparingToRender { length: f64, render_id: RenderId },
     Playing { play_id: PlayId },
+    PreparingToRender { length: f64, render_id: RenderId },
     Rendering { length: f64, render_id: RenderId },
     Rewinding { to: f64 },
     Stopping,

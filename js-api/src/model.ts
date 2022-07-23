@@ -1,7 +1,8 @@
 // noinspection JSUnusedGlobalSymbols
 
-import {Type, Static} from "@sinclair/typebox";
-import {ParameterId, ReportId} from "./new_types";
+import { Type, Static } from "@sinclair/typebox";
+import { ParameterId, ReportId } from "./new_types";
+import { Timestamped } from "./time";
 
 export const ResourceId = Type.Union([
     Type.Literal("ram"),
@@ -12,6 +13,31 @@ export const ResourceId = Type.Union([
 ])
 export type ResourceId = Static<typeof ResourceId>
 
+export const ModelValueUnit = Type.Union([
+    Type.Literal("no"),
+    Type.Literal("percent"),
+    Type.Literal("dB"),
+    Type.Literal("hz"),
+    Type.Literal("oct"),
+    Type.Literal("toggle"),
+    Type.Literal("amps"),
+    Type.Literal("watthrs"),
+])
+export type ModelValueUnit = Static<typeof ModelValueUnit>
+
+export const ModelValue = Type.Union([
+    Type.String(),
+    Type.Number(),
+    Type.Boolean(),
+])
+export type ModelValue = Static<typeof ModelValue>
+
+export const ModelValueOption = Type.Union([
+    Type.Object({ "single": ModelValue }),
+    Type.Object({ "range" : Type.Tuple([ModelValue, ModelValue]) }),
+])
+export type ModelValueOption = Static<typeof ModelValueOption>
+
 export const ControlChannels = Type.Union([
     Type.Literal("global"),
     Type.Literal("left"),
@@ -20,30 +46,30 @@ export const ControlChannels = Type.Union([
 ])
 export type ControlChannels = Static<typeof ControlChannels>
 
-export const InputChannelRole = Type.Union([
-    Type.Literal("audio"),
-    Type.Literal("side_chain")
+export const ModelInput = Type.Union([
+    Type.Object({ "audio": ControlChannels }),
+    Type.Literal("sidechain"),
+    Type.Literal("midi"),
 ])
-export type InputChannelRole = Static<typeof InputChannelRole>
+export type ModelInput = Static<typeof ModelInput>
 
-export const OutputChannelRole = Type.Union([
-    Type.Literal("audio"),
+export const ModelOutput = Type.Union([
+    Type.Object({ "audio": ControlChannels }),
+    Type.Literal("midi"),
 ])
-export type OutputChannelRole = Static<typeof OutputChannelRole>
+export type ModelOutput = Static<typeof ModelOutput>
 
-export const ModelInputs = Type.Array(Type.Tuple([ControlChannels, InputChannelRole]))
+export const ModelInputs = Type.Array(ControlChannels)
 export type ModelInputs = Static<typeof ModelInputs>
 
-export const ModelOutputs = Type.Array(Type.Tuple([ControlChannels, OutputChannelRole]))
+export const ModelOutputs = Type.Array(ControlChannels)
 export type ModelOutputs = Static<typeof ModelOutputs>
 
 export const ModelElementScope = Type.Union([
     Type.Literal("global"),
     Type.Literal("all_inputs"),
     Type.Literal("all_outputs"),
-    Type.Object({
-        size: Type.Number()
-    })
+    Type.Object({ "size": Type.Integer() })
 ])
 export type ModelElementScope = Static<typeof ModelElementScope>
 
@@ -72,13 +98,18 @@ export const AmplifierId = Type.Union([
 ])
 export type AmplifierId = Static<typeof AmplifierId>
 
-export const AmpifierParameterRole = Type.Union([
+export const AmplifierParameterRole = Type.Union([
     Type.Literal("enable"),
     Type.Literal("gain"),
     Type.Literal("distortion"),
     Type.Literal("slew_rate"),
 ])
-export type AmpifierParameterRole = Static<typeof AmpifierParameterRole>
+export type AmplifierParameterRole = Static<typeof AmplifierParameterRole>
+
+export const ChannelParameterRole = Type.Union([
+    Type.Literal("pan")
+])
+export type ChannelParameterRole = Static<typeof ChannelParameterRole>
 
 export const DynamicsId = Type.Union([
     Type.Literal("total"),
@@ -106,6 +137,23 @@ export const DynamicsParameterRole = Type.Union([
 ])
 export type DynamicsParameterRole = Static<typeof DynamicsParameterRole>
 
+export const FilterParameterRole = Type.Union([
+    Type.Literal("gain"),
+    Type.Literal("gain_direction"),
+    Type.Literal("frequency"),
+    Type.Literal("bandwidth"),
+    Type.Literal("type")
+])
+export type FilterParameterRole = Static<typeof FilterParameterRole>
+
+export const PowerReportRole = Type.Union([
+    Type.Literal("powered"),
+    Type.Literal("current"),
+    Type.Literal("power_factor"),
+    Type.Literal("total_energy"),
+])
+export type PowerReportRole = Static<typeof PowerReportRole>
+
 export const FilterId = Type.Union([
     Type.Literal("high_pass"),
     Type.Literal("low"),
@@ -120,22 +168,13 @@ export const FilterId = Type.Union([
 ])
 export type FilterId = Static<typeof FilterId>
 
-export const FilterParameterRole = Type.Union([
-    Type.Literal("gain"),
-    Type.Literal("gain_direction"),
-    Type.Literal("frequency"),
-    Type.Literal("bandwidth"),
-    Type.Literal("type")
-])
-export type FilterParameterRole = Static<typeof FilterParameterRole>
-
 export const InstanceParameterRole = Type.Union([
     Type.Literal("no_role"),
     Type.Object({
         global: GlobalParameterRole
     }),
     Type.Object({
-        amplifier: Type.Tuple([AmplifierId, AmpifierParameterRole]),
+        amplifier: Type.Tuple([AmplifierId, AmplifierParameterRole]),
     }),
     Type.Object({
         dynamics: Type.Tuple([DynamicsId, DynamicsParameterRole])
@@ -159,14 +198,6 @@ export const InstanceValueOption = Type.Union([
 ])
 export type InstanceValueOption = Static<typeof InstanceValueOption>
 
-export const ModelParameter = Type.Object({
-    scope: ModelElementScope,
-    unit: InstanceValueUnit,
-    role: InstanceParameterRole,
-    values: Type.Array(InstanceValueOption, {default: []})
-})
-export type ModelParameter = Static<typeof ModelParameter>
-
 export const AmplifierReportRole = Type.Union([
     Type.Literal("peak_volume"),
     Type.Literal("rms_volume"),
@@ -182,22 +213,45 @@ export const DynamicsReportRole = Type.Union([
 ])
 export type DynamicsReportRole = Static<typeof DynamicsReportRole>
 
-export const InstanceReportRole = Type.Union([
+export const MultiChannelValue = Type.Record(Type.Integer(), ModelValue);
+export type MultiChannelValue = Static<typeof MultiChannelValue>
+
+export const MultiChannelTimestampedValue = Type.Record(Type.Integer(), Timestamped(ModelValue));
+export type MultiChannelTimestampedValue = Static<typeof MultiChannelTimestampedValue>
+
+export const ModelReportRole = Type.Union([
     Type.Literal("no_role"),
-    Type.Object({
-        amplifier: Type.Tuple([AmplifierId, AmplifierReportRole])
-    }),
-    Type.Object({
-        dynamics: Type.Tuple([DynamicsId, DynamicsReportRole])
-    })
+    Type.Object({ "power": PowerReportRole }),
+    Type.Object({ "amplifier": Type.Tuple([AmplifierId, AmplifierReportRole]) }),
+    Type.Object({ "dynamics": Type.Tuple([DynamicsId, DynamicsReportRole]) }),
 ])
-export type InstanceReportRole = Static<typeof InstanceReportRole>
+export type ModelReportRole = Static<typeof ModelReportRole>
+
+export const ModelParameterRole = Type.Union([
+    Type.Literal("no_role"),
+    Type.Literal("power"),
+    Type.Object({ "Global": GlobalParameterRole }),
+    Type.Object({ "Channel": ChannelParameterRole }),
+    Type.Object({ "Amplifier": Type.Tuple([AmplifierId, AmplifierParameterRole]) }),
+    Type.Object({ "Dynamics": Type.Tuple([DynamicsId, DynamicsParameterRole]) }),
+    Type.Object({ "Filter": Type.Tuple([FilterId, FilterParameterRole]) }),
+])
+export type ModelParameterRole = Static<typeof ModelParameterRole>
+
+export const ModelParameter = Type.Object({
+    scope:      ModelElementScope,
+    unit:       Type.Optional(ModelValueUnit),
+    role:       ModelParameterRole,
+    values:     Type.Array(ModelValueOption)
+})
+export type ModelParameter = Static<typeof ModelParameter>
 
 export const ModelReport = Type.Object({
-    scope: ModelElementScope,
-    unit: InstanceValueUnit,
-    role: InstanceReportRole,
-    values: Type.Array(InstanceValueOption, {default: []})
+    scope:      ModelElementScope,
+    unit:       Type.Optional(ModelValueUnit),
+    role:       ModelReportRole,
+    values:     Type.Array(ModelValueOption),
+    public:     Type.Optional(Type.Boolean())
 })
 export type ModelReport = Static<typeof ModelReport>
 

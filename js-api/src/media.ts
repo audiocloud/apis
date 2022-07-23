@@ -1,5 +1,4 @@
 import { Static, Type } from "@sinclair/typebox";
-import Option from "./utils/option";
 
 const Pending = Type.Literal("pending")
 type Pending = Static<typeof Pending>
