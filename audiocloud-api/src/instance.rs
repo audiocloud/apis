@@ -71,6 +71,10 @@ impl InstancePowerState {
             _ => false,
         }
     }
+
+    pub fn is_powered_on(&self) -> bool {
+        matches!(self, Self::PoweredUp)
+    }
 }
 
 #[derive(Serialize, Deserialize, Clone, Copy, Debug, PartialEq)]

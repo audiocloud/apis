@@ -9,6 +9,7 @@ use crate::change::{PlayId, RenderId};
 use crate::instance::{DesiredInstancePlayState, InstancePlayState};
 use crate::model::MultiChannelValue;
 use crate::newtypes::{ParameterId, ReportId};
+use crate::session::InstanceReports;
 
 #[derive(PartialEq, Serialize, Deserialize, Clone, Debug)]
 #[serde(rename_all = "snake_case")]
@@ -53,7 +54,7 @@ pub enum InstanceDriverEvent {
     Connected,
 
     /// Received metering updates from the hardware
-    Reports { reports: HashMap<ReportId, MultiChannelValue> },
+    Reports { reports: InstanceReports },
 
     /// Playing; media current position reported
     PlayState {

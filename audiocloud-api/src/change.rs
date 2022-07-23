@@ -6,6 +6,7 @@ use serde::{Deserialize, Serialize};
 use thiserror::Error;
 
 use crate::cloud::apps::SessionSpec;
+use crate::instance::DesiredInstancePlayState;
 use crate::model::MultiChannelValue;
 use crate::newtypes::{DynamicId, FixedId, FixedInstanceId, InputId, MediaId, MediaObjectId, MixerId, ParameterId, SecureKey, TrackId};
 use crate::session::{
@@ -169,6 +170,15 @@ impl DesiredSessionPlayState {
             DesiredSessionPlayState::Stopped => SessionPlayState::PreparingToStop,
         }
     }
+
+    pub fn to_instance(&self) -> DesiredInstancePlayState {
+        match self {
+            DesiredSessionPlayState::Play(play) => DesiredInstancePlayState::Playing { play_id: play.play_id },
+            DesiredSessionPlayState::Render(render) => DesiredInstancePlayState::Rendering { render_id: render.render_id,
+                                                                                             length:    render.segment.length, },
+            DesiredSessionPlayState::Stopped => DesiredInstancePlayState::Stopped,
+        }
+    }
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq)]
@@ -300,10 +310,6 @@ pub enum ModifySessionError {
 }
 
 impl Session {
-    pub fn get_fixed_instance_ids<'a>(&'a self) -> impl Iterator<Item = &'a FixedInstanceId> + 'a {
-        self.spec.fixed.values().map(|fixed| &fixed.instance_id)
-    }
-
     pub fn get_media_object_ids<'a>(&'a self) -> impl Iterator<Item = &'a MediaObjectId> + 'a {
         self.spec
             .tracks
@@ -346,6 +352,10 @@ impl Session {
 }
 
 impl SessionSpec {
+    pub fn get_fixed_instance_ids<'a>(&'a self) -> impl Iterator<Item = &'a FixedInstanceId> + 'a {
+        self.fixed.values().map(|fixed| &fixed.instance_id)
+    }
+
     pub fn modify(&mut self, modify: ModifySessionSpec) -> Result<(), ModifySessionError> {
         match modify {
             ModifySessionSpec::AddFixedInstance { fixed_id: mixer_id,

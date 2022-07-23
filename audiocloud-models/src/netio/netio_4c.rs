@@ -1,6 +1,6 @@
 use maplit::{hashmap, hashset};
 
-use audiocloud_api::instance::power::{params, reports};
+pub use audiocloud_api::instance::power::{params, reports};
 use audiocloud_api::model::ModelCapability::PowerDistributor;
 use audiocloud_api::model::ModelElementScope::Size;
 use audiocloud_api::model::ModelParameterRole::Power as PowerOnOff;
