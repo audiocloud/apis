@@ -4,18 +4,17 @@
 //! or with the cloud.
 
 use std::collections::HashMap;
-use std::sync::Arc;
 
 use serde::{Deserialize, Serialize};
 
+use crate::change::SessionState;
 use crate::newtypes::{AppMediaObjectId, AppSessionId, SecureKey};
 use crate::session::SessionSecurity;
 use crate::{
     app::SessionPacket,
     change::{DesiredSessionPlayState, ModifySessionSpec},
     cloud::apps::{CreateSession, SessionSpec},
-    media::{DownloadMedia, MediaDownloadState},
-    newtypes::{MediaObjectId, SessionId},
+    media::DownloadMedia,
 };
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq)]
@@ -61,6 +60,17 @@ impl DomainSessionCommand {
             DomainSessionCommand::Delete { app_session_id, .. } => app_session_id,
         }
     }
+
+    pub fn get_kind(&self) -> &'static str {
+        match self {
+            DomainSessionCommand::Create { .. } => "create",
+            DomainSessionCommand::SetSpec { .. } => "set_spec",
+            DomainSessionCommand::SetSecurity { .. } => "set_security",
+            DomainSessionCommand::Modify { .. } => "modify",
+            DomainSessionCommand::SetDesiredPlayState { .. } => "set_desired_play_state",
+            DomainSessionCommand::Delete { .. } => "delete",
+        }
+    }
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq)]
@@ -87,6 +97,17 @@ impl DomainMediaCommand {
 #[derive(Serialize, Deserialize, Clone, Debug)]
 #[serde(rename_all = "snake_case")]
 pub enum WebSocketEvent {
-    Packet(SessionId, Arc<SessionPacket>),
-    Download(MediaObjectId, MediaDownloadState),
+    Packet(AppSessionId, SessionPacket),
+    Spec(AppSessionId, SessionSpec),
+    State(AppSessionId, SessionState),
+    LoginError(AppSessionId, String),
+    SessionError(AppSessionId, String),
+}
+
+#[derive(Serialize, Deserialize, Clone, Debug)]
+#[serde(rename_all = "snake_case")]
+pub enum WebSocketCommand {
+    Login(AppSessionId, SecureKey),
+    Logout(AppSessionId),
+    Session(DomainSessionCommand),
 }

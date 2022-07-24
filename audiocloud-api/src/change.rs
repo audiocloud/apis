@@ -90,6 +90,28 @@ pub enum ModifySessionSpec {
     },
 }
 
+impl ModifySessionSpec {
+    pub fn get_kind(&self) -> &'static str {
+        match self {
+            ModifySessionSpec::AddTrack { .. } => "add_track",
+            ModifySessionSpec::AddTrackMedia { .. } => "add_track_media",
+            ModifySessionSpec::SetTrackMediaValues { .. } => "set_track_media_values",
+            ModifySessionSpec::DeleteTrackMedia { .. } => "delete_track_media",
+            ModifySessionSpec::DeleteTrack { .. } => "delete_track",
+            ModifySessionSpec::AddFixedInstance { .. } => "add_fixed_instance",
+            ModifySessionSpec::AddDynamicInstance { .. } => "add_dynamic_instance",
+            ModifySessionSpec::AddMixer { .. } => "add_mixer",
+            ModifySessionSpec::DeleteMixer { .. } => "delete_mixer",
+            ModifySessionSpec::DeleteMixerInput { .. } => "delete_mixer_input",
+            ModifySessionSpec::DeleteInputsReferencing { .. } => "delete_inputs_referencing",
+            ModifySessionSpec::AddMixerInput { .. } => "add_mixer_input",
+            ModifySessionSpec::SetInputValues { .. } => "set_input_values",
+            ModifySessionSpec::SetFixedInstanceParameterValues { .. } => "set_fixed_instance_parameter_values",
+            ModifySessionSpec::SetDynamicInstanceParameterValues { .. } => "set_dynamic_instance_parameter_values",
+        }
+    }
+}
+
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq)]
 #[serde(rename_all = "snake_case")]
 pub enum ModifySession {
