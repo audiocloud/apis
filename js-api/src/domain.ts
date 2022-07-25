@@ -1,6 +1,6 @@
 import { Static, Type } from "@sinclair/typebox";
 import { SessionPacket } from "./app";
-import { DesiredSessionPlayState, ModifySessionSpec } from "./change";
+import { DesiredSessionPlayState, ModifySessionSpec, SessionState } from "./change";
 import { CreateSession, SessionSpec } from "./cloud/apps";
 import { DownloadMedia, MediaDownloadState } from "./media";
 import { AppMediaObjectId, AppSessionId, MediaObjectId, SecureKey, SessionId } from "./new_types";
@@ -65,7 +65,17 @@ export const DomainMediaCommand = Type.Union([
 export type DomainMediaCommand = Static<typeof DomainMediaCommand>
 
 export const WebSocketEvent = Type.Union([
-    Type.Object({ "packet":         Type.Tuple([SessionId, SessionPacket]) }),
-    Type.Object({ "download":       Type.Tuple([MediaObjectId, MediaDownloadState]) }),
+    Type.Object({ "packet":         Type.Tuple([AppSessionId, SessionPacket]) }),
+    Type.Object({ "spec":           Type.Tuple([AppSessionId, SessionSpec]) }),
+    Type.Object({ "state":          Type.Tuple([AppSessionId, SessionState]) }),
+    Type.Object({ "login_error":    Type.Tuple([AppSessionId, Type.String()]) }),
+    Type.Object({ "session_error":  Type.Tuple([AppSessionId, Type.String()]) }),
 ])
 export type WebSocketEvent = Static<typeof WebSocketEvent>
+
+export const WebSocketCommand = ([
+    Type.Object({ "login":          Type.Tuple([AppSessionId, SecureKey]) }),
+    Type.Object({ "logout":         AppSessionId }),
+    Type.Object({ "session":        DomainSessionCommand }),
+])
+export type WebSocketCommand = Static<typeof WebSocketCommand>
