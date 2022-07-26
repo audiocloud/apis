@@ -12,6 +12,10 @@ jobs:
     steps:
       - uses: actions/checkout@v2
         name: Checkout API code
+      - uses: actions/setup-node@v3
+        with:
+          node-version: '18.x'
+          registry-url: 'https://registry.npmjs.org'
       - run: npm ci
         name: Install dependencies
       - run: npm run build
