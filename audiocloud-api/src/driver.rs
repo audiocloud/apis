@@ -8,7 +8,7 @@ use thiserror::Error;
 use crate::change::{PlayId, RenderId};
 use crate::instance::{DesiredInstancePlayState, InstancePlayState};
 use crate::model::MultiChannelValue;
-use crate::newtypes::{ParameterId, ReportId};
+use crate::newtypes::{FixedInstanceId, ParameterId, ReportId};
 use crate::session::InstanceReports;
 
 #[derive(PartialEq, Serialize, Deserialize, Clone, Debug)]
@@ -25,6 +25,9 @@ pub enum InstanceDriverCommand {
 #[derive(PartialEq, Serialize, Deserialize, Clone, Debug, Error)]
 #[serde(rename_all = "snake_case")]
 pub enum InstanceDriverError {
+    #[error("Instance {0} does not exist")]
+    InstanceNotFound(FixedInstanceId),
+
     #[error("Parameter {parameter} does not exist")]
     ParameterDoesNotExist { parameter: String },
 
