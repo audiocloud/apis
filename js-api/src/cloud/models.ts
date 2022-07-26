@@ -7,3 +7,4 @@ export const ModelFilter = Type.Object({
     name_contains:   Option(Type.String()),
     id_one_of:       Type.Array(ModelId),
 })
+export type ModelFilter = Static<typeof ModelFilter>
