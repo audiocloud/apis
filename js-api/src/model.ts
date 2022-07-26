@@ -2,7 +2,6 @@
 
 import { Type, Static } from "@sinclair/typebox";
 import { ParameterId, ReportId } from "./new_types";
-import { Timestamped } from "./time";
 
 export const ResourceId = Type.Union([
     Type.Literal("ram"),
@@ -154,7 +153,7 @@ export const PowerReportRole = Type.Union([
 ])
 export type PowerReportRole = Static<typeof PowerReportRole>
 
-export const FilterId = Type.Union([
+export const RoleFilterId = Type.Union([
     Type.Literal("high_pass"),
     Type.Literal("low"),
     Type.Literal("low_mid"),
@@ -166,7 +165,6 @@ export const FilterId = Type.Union([
     Type.Literal("dynamics"),
     Type.Literal("de_esser"),
 ])
-export type FilterId = Static<typeof FilterId>
 
 export const InstanceParameterRole = Type.Union([
     Type.Literal("no_role"),
@@ -180,7 +178,7 @@ export const InstanceParameterRole = Type.Union([
         dynamics: Type.Tuple([DynamicsId, DynamicsParameterRole])
     }),
     Type.Object({
-        filter: Type.Tuple([FilterId, FilterParameterRole])
+        filter: Type.Tuple([RoleFilterId, FilterParameterRole])
     })
 ])
 export type InstanceParameterRole = Static<typeof InstanceParameterRole>
@@ -213,12 +211,6 @@ export const DynamicsReportRole = Type.Union([
 ])
 export type DynamicsReportRole = Static<typeof DynamicsReportRole>
 
-export const MultiChannelValue = Type.Record(Type.Integer(), ModelValue);
-export type MultiChannelValue = Static<typeof MultiChannelValue>
-
-export const MultiChannelTimestampedValue = Type.Record(Type.Integer(), Timestamped(ModelValue));
-export type MultiChannelTimestampedValue = Static<typeof MultiChannelTimestampedValue>
-
 export const ModelReportRole = Type.Union([
     Type.Literal("no_role"),
     Type.Object({ "power": PowerReportRole }),
@@ -234,7 +226,7 @@ export const ModelParameterRole = Type.Union([
     Type.Object({ "Channel": ChannelParameterRole }),
     Type.Object({ "Amplifier": Type.Tuple([AmplifierId, AmplifierParameterRole]) }),
     Type.Object({ "Dynamics": Type.Tuple([DynamicsId, DynamicsParameterRole]) }),
-    Type.Object({ "Filter": Type.Tuple([FilterId, FilterParameterRole]) }),
+    Type.Object({ "Filter": Type.Tuple([RoleFilterId, FilterParameterRole]) }),
 ])
 export type ModelParameterRole = Static<typeof ModelParameterRole>
 

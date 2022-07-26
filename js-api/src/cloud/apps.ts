@@ -19,11 +19,11 @@ export const AppFixedInstance = Type.Object({
 export type AppFixedInstance = Static<typeof AppFixedInstance>
 
 export const AppDomain = Type.Object({
-    fixed_instances:    Type.Record({ FixedInstanceId, AppFixedInstance }),
-    dynamic_instances:  Type.Record({ ModelId, DynamicInstanceLimits }),
+    fixed_instances:    Type.Record(FixedInstanceId, AppFixedInstance),
+    dynamic_instances:  Type.Record(ModelId, DynamicInstanceLimits),
     domain_limits:      DomainLimits,
     min_session_len:    Type.Number(),
-    public_url:         String,
+    public_url:         Type.String(),
     native_sample_rate: Type.Integer(),
     maintenance:        Type.Array(Maintenance),
 })

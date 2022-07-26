@@ -1,0 +1,22 @@
+on: [ workflow_dispatch ]
+
+name: Build API package and publish to NPM
+
+jobs:
+  build:
+    name: NPM build and publish
+    defaults:
+      run:
+        working-directory: js-api
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+        name: Checkout API code
+      - run: npm ci
+        name: Install dependencies
+      - run: npm run build
+        name: Build API package
+      - run: npm publish
+        name: Publish to NPM
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}

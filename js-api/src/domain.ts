@@ -73,7 +73,7 @@ export const WebSocketEvent = Type.Union([
 ])
 export type WebSocketEvent = Static<typeof WebSocketEvent>
 
-export const WebSocketCommand = ([
+export const WebSocketCommand = Type.Union([
     Type.Object({ "login":          Type.Tuple([AppSessionId, SecureKey]) }),
     Type.Object({ "logout":         AppSessionId }),
     Type.Object({ "session":        DomainSessionCommand }),

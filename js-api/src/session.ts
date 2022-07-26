@@ -4,10 +4,9 @@ import { Static, Type } from "@sinclair/typebox";
 import Option from "./utils/option";
 import { AppId, DomainId, DynamicId, FixedId, FixedInstanceId, InputId, MediaId, MediaObjectId, MixerId, ModelId, ParameterId, ReportId, SecureKey, TrackId } from "./new_types";
 import { JsonTimeRange } from "./time";
-import { MultiChannelValue } from "./instance";
+import {MultiChannelTimestampedValue, MultiChannelValue} from "./instance";
 import { PlayId, RenderId } from "./change";
 import { SessionSpec } from "./cloud/apps";
-import { MultiChannelTimestampedValue } from "./model";
 
 export const SessionTrackChannels = Type.Union([
     Type.Literal("mono"),

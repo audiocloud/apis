@@ -110,7 +110,7 @@ export type AudioEngineEvent = Static<typeof AudioEngineEvent>
 
 export const AudioEngineError = Type.Union([
     Type.Object({"track_not_found":     Type.Integer() }),
-    Type.Object({"item_not_found":      Type.Tuple(Type.Integer(), Type.Integer()) }),
+    Type.Object({"item_not_found":      Type.Tuple([Type.Integer(), Type.Integer()]) }),
     Type.Object({"internal_error":      Type.String() }),
     Type.Object({"rpc":                 Type.String() })
 ])
