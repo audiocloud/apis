@@ -112,13 +112,11 @@ export const JsonSession = Type.Object({
 })
 export type JsonSession = Static<typeof JsonSession>
 
-export const JsonCreateSession = Type.Integer([
+export const JsonCreateSession = Type.Union([
     Type.Omit(JsonSession, ['deleted', 'version']),
     Type.Object({ "dry_run": Type.Boolean() })
 ])
 export type JsonCreateSession = Static<typeof JsonCreateSession>
-
-// export type Session = FromJsonTimeRanges<JsonSession, 'time'>
 
 export const Session = Type.Object({
     domain_id:                              DomainId,
