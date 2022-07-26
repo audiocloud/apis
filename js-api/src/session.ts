@@ -112,7 +112,7 @@ export const JsonSession = Type.Object({
 })
 export type JsonSession = Static<typeof JsonSession>
 
-export const JsonCreateSession = Type.Union([
+export const JsonCreateSession = Type.Intersect([
     Type.Omit(JsonSession, ['deleted', 'version']),
     Type.Object({ "dry_run": Type.Boolean() })
 ])
