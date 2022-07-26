@@ -1,7 +1,7 @@
 import { Static, Type } from "@sinclair/typebox";
 import Option from "./utils/option";
 import { TrackId, FixedId, DynamicId, MixerId, InputId, MediaId, MediaObjectId, ParameterId, SecureKey } from "./new_types";
-import { MixerInput, SessionDynamicInstance, SessionFixedInstance, SessionMixer, SessionMixerId, SessionMode, SessionObjectId, SessionSecurity, SessionTimeSegment, SessionTrackChannels } from "./session";
+import { MixerInput, MixerInputValues, SessionDynamicInstance, SessionFixedInstance, SessionMixer, SessionMixerId, SessionMode, SessionObjectId, SessionSecurity, SessionTimeSegment, SessionTrackChannels } from "./session";
 import { MultiChannelValue } from "./instance";
 import { Timestamped } from "./time";
 

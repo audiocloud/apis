@@ -1,5 +1,4 @@
 import { Static, Type } from "@sinclair/typebox";
-import { ParameterId } from "./new_types";
 import { InstanceValue } from "./model";
 import { PlayId, RenderId } from "./change";
 import { Timestamped } from "./time";
@@ -75,6 +74,3 @@ export const MultiChannelValue = Type.Array(Type.Tuple([
     InstanceValue
 ]))
 export type MultiChannelValue = Static<typeof MultiChannelValue>
-
-export const InstanceParameters = Type.Record(ParameterId, MultiChannelValue)
-export type InstanceParameters = Static<typeof InstanceParameters>
