@@ -1,4 +1,4 @@
-on: [ workflow_dispatch ]
+on: [ release ]
 
 name: Build API package and publish to NPM
 
@@ -20,7 +20,7 @@ jobs:
         name: Install dependencies
       - run: npm run build
         name: Build API package
-      - run: npm publish
+      - run: npm publish --access public
         name: Publish to NPM
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}

@@ -1,7 +1,8 @@
 use std::collections::{HashMap, HashSet};
 
-use derive_more::{Display, IsVariant, Unwrap};
+use derive_more::{Constructor, Deref, DerefMut, Display, From, IsVariant, Unwrap};
 use serde::{Deserialize, Serialize};
+use serde_with::serde_as;
 
 use crate::newtypes::{FilterId, ParameterId, ReportId};
 use crate::time::{Timestamp, Timestamped};
@@ -227,8 +228,13 @@ pub enum DynamicsReportRole {
     GainReductionLimitHit,
 }
 
-pub type MultiChannelValue = HashMap<usize, ModelValue>;
-pub type MultiChannelTimestampedValue = HashMap<usize, Timestamped<ModelValue>>;
+#[serde_as]
+#[derive(Serialize, Deserialize, Deref, DerefMut, Debug, Clone, PartialEq, From, Constructor)]
+pub struct MultiChannelValue(#[serde_as(as = "Vec<(_, _)>")] HashMap<usize, ModelValue>);
+
+#[serde_as]
+#[derive(Serialize, Deserialize, Deref, DerefMut, Debug, Clone, PartialEq, From, Constructor)]
+pub struct MultiChannelTimestampedValue(#[serde_as(as = "Vec<(_, _)>")] HashMap<usize, Timestamped<ModelValue>>);
 
 pub mod multi_channel_value {
     use maplit::hashmap;
@@ -236,21 +242,21 @@ pub mod multi_channel_value {
     use crate::model::{ModelValue, MultiChannelValue};
 
     pub fn bool(channel: usize, value: bool) -> MultiChannelValue {
-        hashmap! {
+        (hashmap! {
             channel => ModelValue::Bool(value),
-        }
+        }).into()
     }
 
     pub fn number(channel: usize, value: f64) -> MultiChannelValue {
-        hashmap! {
+        (hashmap! {
             channel => ModelValue::Number(value),
-        }
+        }).into()
     }
 
     pub fn string(channel: usize, value: String) -> MultiChannelValue {
-        hashmap! {
+        (hashmap! {
             channel => ModelValue::String(value),
-        }
+        }).into()
     }
 }
 
