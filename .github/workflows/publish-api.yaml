@@ -1,4 +1,4 @@
-on: [ release ]
+on: [ workflow_dispatch ]
 
 name: Build API package and publish to NPM
 
