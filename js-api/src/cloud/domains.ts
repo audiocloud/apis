@@ -2,7 +2,7 @@ import { Static, Type } from "@sinclair/typebox";
 import Option from "../utils/option";
 import { Model, ResourceId } from "../model";
 import { AppId, AppSessionId, DomainId, FixedInstanceId, ModelId } from "../new_types";
-import { JsonSession } from "../session";
+import { Session } from "../session";
 import { Maintenance } from "./apps";
 
 export const DynamicInstanceLimits = Type.Object({
@@ -47,7 +47,7 @@ export const BootDomain = Type.Object({
     event_base:         Type.Integer(),
     fixed_instances:    Type.Record(FixedInstanceId, DomainFixedInstance),
     dynamic_instances:  Type.Record(ModelId, DynamicInstanceLimits),
-    sessions:           Type.Record(AppSessionId, JsonSession),
+    sessions:           Type.Record(AppSessionId, Session),
     models:             Type.Record(ModelId, Model),
     domain_limits:      DomainLimits,
     min_session_len:    Type.Number(),
@@ -61,6 +61,4 @@ export const BootDomain = Type.Object({
     produce_username:   Type.String(),
     produce_password:   Type.String(),
 })
-
-
-
+export type BootDomain = Static<typeof BootDomain>

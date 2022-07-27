@@ -2,8 +2,8 @@ import { Static, Type } from "@sinclair/typebox";
 import { SessionPacket } from "./app";
 import { DesiredSessionPlayState, ModifySessionSpec, SessionState } from "./change";
 import { CreateSession, SessionSpec } from "./cloud/apps";
-import { DownloadMedia, MediaDownloadState } from "./media";
-import { AppMediaObjectId, AppSessionId, MediaObjectId, SecureKey, SessionId } from "./new_types";
+import { DownloadMedia } from "./media";
+import { AppMediaObjectId, AppSessionId, SecureKey } from "./new_types";
 import { SessionSecurity } from "./session";
 
 export const DomainSessionCommand = Type.Union([
