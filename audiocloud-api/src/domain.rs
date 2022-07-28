@@ -100,6 +100,7 @@ pub enum WebSocketEvent {
     Packet(AppSessionId, SessionPacket),
     Spec(AppSessionId, SessionSpec),
     State(AppSessionId, SessionState),
+    LoginSuccess(AppSessionId),
     LoginError(AppSessionId, String),
     SessionError(AppSessionId, String),
 }

@@ -5,7 +5,7 @@ use serde::{Deserialize, Serialize};
 use serde_with::serde_as;
 
 use crate::newtypes::{FilterId, ParameterId, ReportId};
-use crate::time::{Timestamp, Timestamped};
+use crate::time::Timestamped;
 
 #[derive(Serialize, Deserialize, Clone, Copy, Eq, PartialEq, Debug, IsVariant)]
 pub enum ModelValueUnit {
