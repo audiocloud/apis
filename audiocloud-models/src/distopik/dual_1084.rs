@@ -72,7 +72,7 @@ pub fn distopik_dual_1084_model() -> Model {
             capabilities: Default::default(), }
 }
 
-fn input_gain() -> ModelParameter {
+pub fn input_gain() -> ModelParameter {
     ModelParameter { scope:  AllInputs,
                      unit:   Decibels,
                      role:   Amplifier(Input, AmpGain),
@@ -85,7 +85,7 @@ fn input_gain() -> ModelParameter {
                                   values::integer(15),
                                   values::integer(20),], }
 }
-fn high_pass_filter() -> ModelParameter {
+pub fn high_pass_filter() -> ModelParameter {
     ModelParameter { scope:  AllInputs,
                      unit:   Hertz,
                      role:   Filter(HighPass, Frequency),
@@ -96,7 +96,7 @@ fn high_pass_filter() -> ModelParameter {
                                   values::integer(160),
                                   values::integer(360),], }
 }
-fn low_freq() -> ModelParameter {
+pub fn low_freq() -> ModelParameter {
     ModelParameter { scope:  AllInputs,
                      unit:   Hertz,
                      role:   Filter(Low, Frequency),
@@ -107,13 +107,13 @@ fn low_freq() -> ModelParameter {
                                   values::integer(110),
                                   values::integer(220),], }
 }
-fn low_gain() -> ModelParameter {
+pub fn low_gain() -> ModelParameter {
     ModelParameter { scope:  AllInputs,
                      unit:   Decibels,
                      role:   Filter(Low, FilterGain),
                      values: filter_gain_values_16(), }
 }
-fn low_mid_freq() -> ModelParameter {
+pub fn low_mid_freq() -> ModelParameter {
     ModelParameter { scope:  AllInputs,
                      unit:   Hertz,
                      role:   Filter(LowMid, Frequency),
@@ -130,19 +130,19 @@ fn low_mid_freq() -> ModelParameter {
                                   values::integer(4_800),
                                   values::integer(7_200),], }
 }
-fn low_mid_gain() -> ModelParameter {
+pub fn low_mid_gain() -> ModelParameter {
     ModelParameter { scope:  AllInputs,
                      unit:   Decibels,
                      role:   Filter(LowMid, FilterGain),
                      values: filter_gain_values_12(), }
 }
-fn low_mid_width() -> ModelParameter {
+pub fn low_mid_width() -> ModelParameter {
     ModelParameter { scope:  AllInputs,
                      unit:   Toggle,
                      role:   Filter(LowMid, Bandwidth),
                      values: values::toggle(), }
 }
-fn high_mid_freq() -> ModelParameter {
+pub fn high_mid_freq() -> ModelParameter {
     ModelParameter { scope:  AllInputs,
                      unit:   Hertz,
                      role:   Filter(HighMid, Frequency),
@@ -159,19 +159,19 @@ fn high_mid_freq() -> ModelParameter {
                                   values::integer(7_200),
                                   values::integer(8_400),], }
 }
-fn high_mid_gain() -> ModelParameter {
+pub fn high_mid_gain() -> ModelParameter {
     ModelParameter { scope:  AllInputs,
                      unit:   Decibels,
                      role:   Filter(HighMid, FilterGain),
                      values: filter_gain_values_12(), }
 }
-fn high_mid_width() -> ModelParameter {
+pub fn high_mid_width() -> ModelParameter {
     ModelParameter { scope:  AllInputs,
                      unit:   Toggle,
                      role:   Filter(HighMid, Bandwidth),
                      values: values::toggle(), }
 }
-fn high_freq() -> ModelParameter {
+pub fn high_freq() -> ModelParameter {
     ModelParameter { scope:  AllInputs,
                      unit:   Hertz,
                      role:   Filter(High, Frequency),
@@ -182,21 +182,21 @@ fn high_freq() -> ModelParameter {
                                   values::integer(16_000),
                                   values::integer(20_000),], }
 }
-fn high_gain() -> ModelParameter {
+pub fn high_gain() -> ModelParameter {
     ModelParameter { scope:  AllInputs,
                      unit:   Decibels,
                      role:   Filter(High, FilterGain),
                      values: filter_gain_values_16(), }
 }
 
-fn output_pad() -> ModelParameter {
+pub fn output_pad() -> ModelParameter {
     ModelParameter { scope:  AllOutputs,
                      unit:   Decibels,
                      role:   Amplifier(Output, AmpGain),
                      values: vec![values::bool_false(), values::integer(-10), values::integer(-20)], }
 }
 
-fn eql_toggle() -> ModelParameter {
+pub fn eql_toggle() -> ModelParameter {
     ModelParameter { scope:  AllInputs,
                      unit:   Toggle,
                      role:   Global(Bypass),
