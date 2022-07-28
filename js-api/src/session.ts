@@ -98,26 +98,6 @@ export const SessionSecurity = Type.Object({
 })
 export type SessionSecurity = Static<typeof SessionSecurity>
 
-export const JsonSession = Type.Object({
-    version:            Type.Number(),
-    domain_id:          DomainId,
-    app_id:             AppId,
-    time:               JsonTimeRange,
-    tracks:             Type.Record(TrackId, SessionTrack),
-    mixers:             Type.Record(MixerId, SessionMixer),
-    dynamic:            Type.Record(DynamicId, SessionDynamicInstance),
-    fixed:              Type.Record(FixedId, SessionFixedInstance),
-    security:           Type.Record(SecureKey, SessionSecurity),
-    deleted:            Type.Boolean()
-})
-export type JsonSession = Static<typeof JsonSession>
-
-export const JsonCreateSession = Type.Intersect([
-    Type.Omit(JsonSession, ['deleted', 'version']),
-    Type.Object({ "dry_run": Type.Boolean() })
-])
-export type JsonCreateSession = Static<typeof JsonCreateSession>
-
 export const Session = Type.Object({
     domain_id:                              DomainId,
     time:                                   JsonTimeRange,
