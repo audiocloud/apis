@@ -1,9 +1,10 @@
 import { Static, Type } from "@sinclair/typebox";
 import Option from "./utils/option";
 import { PlayId, RenderId } from "./change";
-import { DesiredInstancePlayState, InstancePlayState, MultiChannelValue } from "./instance";
+import { DesiredInstancePlayState, InstancePlayState } from "./instance";
 import { ParameterId } from "./new_types";
 import { InstanceReports } from "./session";
+import { MultiChannelValue } from "./model";
 
 export const InstanceDriverCommand = Type.Union([
     Type.Literal("check_connection"),

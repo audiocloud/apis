@@ -2,9 +2,9 @@
 
 import { Static, Type } from "@sinclair/typebox";
 import Option from "./utils/option";
-import { AppId, DomainId, DynamicId, FixedId, FixedInstanceId, InputId, MediaId, MediaObjectId, MixerId, ModelId, ParameterId, ReportId, SecureKey, TrackId } from "./new_types";
+import { DomainId, DynamicId, FixedId, FixedInstanceId, InputId, MediaId, MediaObjectId, MixerId, ModelId, ParameterId, ReportId, SecureKey, TrackId } from "./new_types";
 import { JsonTimeRange } from "./time";
-import {MultiChannelTimestampedValue, MultiChannelValue} from "./instance";
+import { MultiChannelTimestampedValue, MultiChannelValue } from "./model";
 import { PlayId, RenderId } from "./change";
 import { SessionSpec } from "./cloud/apps";
 
@@ -85,7 +85,7 @@ export type SessionDynamicInstance = Static<typeof SessionDynamicInstance>
 export const SessionFixedInstance = Type.Object({
     instance_id:        FixedInstanceId,
     parameters:         InstanceParameters,
-    inputs:             Type.Record(InputId, MixerInput)
+    inputs:             Type.Record(InputId, MixerInput) 
 })
 export type SessionFixedInstance = Static<typeof SessionFixedInstance>
 

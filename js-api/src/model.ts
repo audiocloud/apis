@@ -2,6 +2,7 @@
 
 import { Type, Static } from "@sinclair/typebox";
 import { ParameterId, ReportId } from "./new_types";
+import { Timestamped } from "./time";
 
 export const ResourceId = Type.Union([
     Type.Literal("ram"),
@@ -210,6 +211,19 @@ export const DynamicsReportRole = Type.Union([
     Type.Literal("gain_reduction_limit_hit"),
 ])
 export type DynamicsReportRole = Static<typeof DynamicsReportRole>
+
+/**
+ * Rok's note for Rok:
+ * 
+ * Array of Tuples because stereo signals (and many channels possible on summing mixer for example...).
+ * 
+ * Use [[0, -10], [1, -10]] as 'pad' parameter example for non-summing-mixer parameters.
+ */
+export const MultiChannelValue = Type.Array(Type.Tuple([Type.Integer(), ModelValue]));
+export type MultiChannelValue = Static<typeof MultiChannelValue>
+
+export const MultiChannelTimestampedValue = Type.Array(Type.Tuple([Type.Integer(), Timestamped(ModelValue)]));
+export type MultiChannelTimestampedValue = Static<typeof MultiChannelTimestampedValue>
 
 export const ModelReportRole = Type.Union([
     Type.Literal("no_role"),

@@ -2,7 +2,7 @@ import { Static, Type } from "@sinclair/typebox";
 import Option from "./utils/option";
 import { Uuid } from "./utils/uuid";
 import { PlayId, PlaySegment, PlaySession, RenderId, RenderSession } from "./change";
-import { MultiChannelValue } from "./instance";
+import { MultiChannelValue } from "./model";
 
 export const CompressedAudio = Type.Object({
     play_id:                            PlayId,

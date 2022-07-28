@@ -1,5 +1,4 @@
 import { Static, Type } from "@sinclair/typebox";
-import {InstanceValue, ModelValue} from "./model";
 import { PlayId, RenderId } from "./change";
 import { Timestamped } from "./time";
 
@@ -68,9 +67,3 @@ export const ReportInstancePlayState = Type.Object({
     actual:  Timestamped(InstancePlayState),
 })
 export type ReportInstancePlayState = Static<typeof ReportInstancePlayState>
-
-export const MultiChannelValue = Type.Array(Type.Tuple([Type.Integer(), ModelValue]));
-export type MultiChannelValue = Static<typeof MultiChannelValue>
-
-export const MultiChannelTimestampedValue = Type.Array(Type.Tuple([Type.Integer(), Timestamped(ModelValue)]));
-export type MultiChannelTimestampedValue = Static<typeof MultiChannelTimestampedValue>
