@@ -6,10 +6,11 @@ use serde::{Deserialize, Serialize};
 use thiserror::Error;
 use uuid::Uuid;
 
-use crate::change::{PlayId, PlaySession, RenderId, RenderSession};
+use crate::change::{ModifySessionSpec, PlayId, PlaySession, RenderId, RenderSession};
 use crate::cloud::apps::SessionSpec;
-use crate::model::MultiChannelValue;
-use crate::newtypes::{AppSessionId, DynamicId, ParameterId};
+use crate::model::{MultiChannelTimestampedValue, MultiChannelValue};
+use crate::newtypes::{AppSessionId, DynamicId, ParameterId, ReportId};
+use crate::session::SessionObjectId;
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq)]
 #[serde(rename_all = "snake_case")]
@@ -18,10 +19,14 @@ pub enum AudioEngineCommand {
         session_id: AppSessionId,
         spec:       SessionSpec,
     },
-    SetDynamicValues {
+    ModifySpec {
+        session_id:  AppSessionId,
+        transaction: Vec<ModifySessionSpec>,
+    },
+    SetDynamicParameters {
         session_id: AppSessionId,
         dynamic_id: DynamicId,
-        values:     HashMap<ParameterId, MultiChannelValue>,
+        parameters: HashMap<ParameterId, MultiChannelValue>,
     },
     Render {
         session_id: AppSessionId,
@@ -44,10 +49,11 @@ pub enum AudioEngineEvent {
         session_id: AppSessionId,
     },
     Playing {
-        session_id:  AppSessionId,
-        playing:     PlaySession,
-        audio:       CompressedAudio,
-        peak_meters: HashMap<Uuid, MultiChannelValue>,
+        session_id:      AppSessionId,
+        playing:         PlaySession,
+        audio:           CompressedAudio,
+        peak_meters:     HashMap<SessionObjectId, MultiChannelValue>,
+        dynamic_reports: HashMap<DynamicId, HashMap<ReportId, MultiChannelTimestampedValue>>,
     },
     Rendering {
         session_id: AppSessionId,

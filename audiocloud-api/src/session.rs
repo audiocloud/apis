@@ -98,7 +98,7 @@ impl MixerChannels {
     }
 }
 
-#[derive(Clone, Debug, Serialize, Deserialize, PartialEq, IsVariant, Unwrap)]
+#[derive(Clone, Debug, Serialize, Deserialize, PartialEq, IsVariant, Unwrap, Hash, Eq)]
 #[serde(rename_all = "snake_case")]
 pub enum SessionObjectId {
     Mixer(MixerId),
