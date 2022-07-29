@@ -215,11 +215,11 @@ export type DynamicsReportRole = Static<typeof DynamicsReportRole>
 /**
  * Rok's note for Rok:
  * 
- * Array of Tuples because stereo signals (and many channels possible on summing mixer for example...).
+ * Array of null or ModelValue values because stereo signals need values for each channel and summing mixer needs lots....
  * 
- * Use [[0, -10], [1, -10]] as 'pad' parameter example for non-summing-mixer parameters.
+ * Use [-10, -10] as 'pad' parameter example for non-summing-mixer parameters. Send [null, -10] if you only want to change 2nd channel.
  */
-export const MultiChannelValue = Type.Array(Type.Tuple([Type.Integer(), ModelValue]));
+export const MultiChannelValue = Type.Array(Type.Union([Type.Null(), ModelValue]));
 export type MultiChannelValue = Static<typeof MultiChannelValue>
 
 export const MultiChannelTimestampedValue = Type.Array(Type.Tuple([Type.Integer(), Timestamped(ModelValue)]));
