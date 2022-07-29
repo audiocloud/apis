@@ -228,35 +228,50 @@ pub enum DynamicsReportRole {
     GainReductionLimitHit,
 }
 
-#[serde_as]
-#[derive(Serialize, Deserialize, Deref, DerefMut, Debug, Clone, PartialEq, From, Constructor)]
-pub struct MultiChannelValue(#[serde_as(as = "Vec<(_, _)>")] HashMap<usize, ModelValue>);
+// #[serde_as]
+// #[derive(Serialize, Deserialize, Deref, DerefMut, Debug, Clone, PartialEq, From, Constructor)]
+// pub struct MultiChannelValue(#[serde_as(as = "Vec<(_, _)>")] HashMap<usize, ModelValue>);
 
-#[serde_as]
-#[derive(Serialize, Deserialize, Deref, DerefMut, Debug, Clone, PartialEq, From, Constructor)]
-pub struct MultiChannelTimestampedValue(#[serde_as(as = "Vec<(_, _)>")] HashMap<usize, Timestamped<ModelValue>>);
+// alternative
+pub type MultiChannelValue = Vec<Option<ModelValue>>;
+
+// #[serde_as]
+// #[derive(Serialize, Deserialize, Deref, DerefMut, Debug, Clone, PartialEq, From, Constructor)]
+// pub struct MultiChannelTimestampedValue(#[serde_as(as = "Vec<(_, _)>")] HashMap<usize, Timestamped<ModelValue>>);
+pub type MultiChannelTimestampedValue = Vec<Option<Timestamped<ModelValue>>>;
 
 pub mod multi_channel_value {
     use maplit::hashmap;
+    use std::iter;
 
     use crate::model::{ModelValue, MultiChannelValue};
 
+    pub fn single(channel: usize, value: ModelValue) -> MultiChannelValue {
+        iter::repeat(None).take(channel - 1).chain(Some(Some(value)).into_iter()).collect()
+    }
+
     pub fn bool(channel: usize, value: bool) -> MultiChannelValue {
-        (hashmap! {
-            channel => ModelValue::Bool(value),
-        }).into()
+        single(channel, ModelValue::Bool(value))
     }
 
     pub fn number(channel: usize, value: f64) -> MultiChannelValue {
-        (hashmap! {
-            channel => ModelValue::Number(value),
-        }).into()
+        single(channel, ModelValue::Number(value))
     }
 
     pub fn string(channel: usize, value: String) -> MultiChannelValue {
-        (hashmap! {
-            channel => ModelValue::String(value),
-        }).into()
+        single(channel, ModelValue::String(value))
+    }
+
+    pub fn join(mut first: MultiChannelValue, other: MultiChannelValue) -> MultiChannelValue {
+        for (index, value) in other.into_iter().enumerate() {
+            if index >= first.len() {
+                first.push(value);
+            } else if value.is_some() {
+                first[index] = value;
+            }
+        }
+
+        first
     }
 }
 
