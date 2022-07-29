@@ -6,68 +6,61 @@ use serde::{Deserialize, Serialize};
 use thiserror::Error;
 use uuid::Uuid;
 
-use crate::change::{PlayId, PlaySegment, PlaySession, RenderId, RenderSession};
-use crate::codec::MsgPack;
+use crate::change::{PlayId, PlaySession, RenderId, RenderSession};
+use crate::cloud::apps::SessionSpec;
 use crate::model::MultiChannelValue;
+use crate::newtypes::{AppSessionId, DynamicId, ParameterId};
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq)]
 #[serde(rename_all = "snake_case")]
 pub enum AudioEngineCommand {
-    SetTrackStateChunk {
-        track_id: Uuid,
-        chunk:    String,
+    SetSpec {
+        session_id: AppSessionId,
+        spec:       SessionSpec,
     },
-    SetItemStateChunk {
-        track_id: Uuid,
-        item_id:  Uuid,
-        chunk:    String,
+    SetDynamicValues {
+        session_id: AppSessionId,
+        dynamic_id: DynamicId,
+        values:     HashMap<ParameterId, MultiChannelValue>,
     },
-    SetTrackValues {
-        track_id:    Uuid,
-        volume:      Option<f64>,
-        pan:         Option<f64>,
-        master_send: Option<bool>,
+    Render {
+        session_id: AppSessionId,
+        render:     RenderSession,
     },
-    SetReceiveValues {
-        track_id:         Uuid,
-        receive_track_id: Uuid,
-        volume:           Option<f64>,
-        pan:              Option<f64>,
+    Play {
+        session_id: AppSessionId,
+        play:       PlaySession,
     },
-    SetFXValues {
-        track_id: Uuid,
-        fx_id:    Uuid,
-        values:   HashMap<u32, f64>,
+    Stop {
+        session_id: AppSessionId,
     },
-    SetFXStateValues {
-        track_id: Uuid,
-        fx_id:    Uuid,
-        enabled:  Option<bool>,
-        dry_wet:  Option<f64>,
-    },
-    SetMaster {
-        track_id: Uuid,
-    },
-    DeleteTrack {
-        track_id: Uuid,
-    },
-    Play(PlaySession),
-    SetPlaySegment(PlaySegment),
-    Stop,
-    Render(RenderSession),
-    Exit,
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq)]
 #[serde(rename_all = "snake_case")]
 pub enum AudioEngineEvent {
     Loaded,
-    Stopped,
-    Playing { playing: PlaySession, audio: CompressedAudio },
-    Rendering { rendering: RenderSession },
-    RenderingFinished { render_id: RenderId, path: String },
-    Meters { peak_meters: HashMap<Uuid, MultiChannelValue> },
-    Exit { code: i32 },
+    Stopped {
+        session_id: AppSessionId,
+    },
+    Playing {
+        session_id:  AppSessionId,
+        playing:     PlaySession,
+        audio:       CompressedAudio,
+        peak_meters: HashMap<Uuid, MultiChannelValue>,
+    },
+    Rendering {
+        session_id: AppSessionId,
+        rendering:  RenderSession,
+    },
+    RenderingFinished {
+        session_id: AppSessionId,
+        render_id:  RenderId,
+        path:       String,
+    },
+    Exit {
+        code: i32,
+    },
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq)]
