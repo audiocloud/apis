@@ -2,7 +2,7 @@ import { Static, Type } from "@sinclair/typebox";
 import Option from "./utils/option";
 import { TrackId, FixedId, DynamicId, MixerId, InputId, MediaId, MediaObjectId, ParameterId, SecureKey } from "./new_types";
 import { MixerInput, MixerInputValues, SessionDynamicInstance, SessionFixedInstance, SessionMixer, SessionMixerId, SessionMode, SessionObjectId, SessionSecurity, SessionTimeSegment, SessionTrackChannels } from "./session";
-import { MultiChannelValue } from "./instance";
+import { MultiChannelValue } from "./model";
 import { Timestamped } from "./time";
 
 export const ModifySessionSpec = Type.Union([

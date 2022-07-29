@@ -2,9 +2,10 @@ import { Static, Type, TSchema } from "@sinclair/typebox";
 import Option from "./utils/option";
 import { DynamicId, FixedId, FixedInstanceId, MediaObjectId, MixerId, ReportId, TrackId } from "./new_types";
 import { JsonTimeStamp, Timestamped } from "./time";
-import { InstancePlayState, InstancePowerState, MultiChannelValue } from "./instance";
+import { InstancePlayState, InstancePowerState } from "./instance";
 import { DesiredSessionPlayState, SessionPlayState } from "./change";
 import { CompressedAudio } from "./audio_engine";
+import { MultiChannelValue } from "./model";
 
 export function DiffStamped<T extends TSchema>(t: T) {
     return Type.Tuple([Type.Integer(), t])
