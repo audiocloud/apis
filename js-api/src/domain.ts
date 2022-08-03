@@ -8,41 +8,41 @@ import { SessionSecurity } from "./session";
 
 export const DomainSessionCommand = Type.Union([
     Type.Object({
-        "Create":                   Type.Object({
+        "create":                   Type.Object({
             "app_session_id":       AppSessionId,
             "create":               CreateSession,
         })
     }),
     Type.Object({
-        "SetSpec":                  Type.Object({
+        "set_spec":                 Type.Object({
             "app_session_id":       AppSessionId,
             "version":              Type.Integer(),
             "spec":                 SessionSpec,
         })
     }),
     Type.Object({
-        "SetSecurity":              Type.Object({
+        "set_security":             Type.Object({
             "app_session_id":       AppSessionId,
             "version":              Type.Integer(),
             "security":             Type.Record(SecureKey, SessionSecurity),
         })
     }),
     Type.Object({
-        "Modify":                   Type.Object({
+        "modify":                   Type.Object({
             "app_session_id":       AppSessionId,
             "version":              Type.Integer(),
             "modifications":        Type.Array(ModifySessionSpec),
         })
     }),
     Type.Object({
-        "SetDesiredPlayState":      Type.Object({
+        "set_desired_play_state":   Type.Object({
             "app_session_id":       AppSessionId,
             "version":              Type.Integer(),
             "desired_play_state":   DesiredSessionPlayState,
         })
     }),
     Type.Object({
-        "Delete":                   Type.Object({
+        "delete":                   Type.Object({
             "app_session_id":       AppSessionId,
         })
     }),
@@ -68,6 +68,7 @@ export const WebSocketEvent = Type.Union([
     Type.Object({ "packet":         Type.Tuple([AppSessionId, SessionPacket]) }),
     Type.Object({ "spec":           Type.Tuple([AppSessionId, SessionSpec]) }),
     Type.Object({ "state":          Type.Tuple([AppSessionId, SessionState]) }),
+    Type.Object({ "login_success":  AppSessionId }),
     Type.Object({ "login_error":    Type.Tuple([AppSessionId, Type.String()]) }),
     Type.Object({ "session_error":  Type.Tuple([AppSessionId, Type.String()]) }),
 ])

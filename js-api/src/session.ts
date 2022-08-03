@@ -20,11 +20,20 @@ export const SessionTimeSegment = Type.Object({
 })
 export type SessionTimeSegment = Static<typeof SessionTimeSegment>
 
+export const SessionTrackMediaFormat = Type.Union([
+    Type.Literal("wav"),
+    Type.Literal("mp3"),
+    Type.Literal("flac"),
+    Type.Literal("wavpack"),
+])
+export type SessionTrackMediaFormat = Static<typeof SessionTrackMediaFormat>
+
 export const SessionTrackMedia = Type.Object({
     channels:           SessionTrackChannels,
     media_segment:      SessionTimeSegment,
     timeline_segment:   SessionTimeSegment,
     object_id:          MediaObjectId,
+    format:             SessionTrackMediaFormat
 })
 export type SessionTrackMedia = Static<typeof SessionTrackMedia>
 
@@ -35,10 +44,10 @@ export const SessionTrack = Type.Object({
 export type SessionTrack = Static<typeof SessionTrack>
 
 export const SessionObjectId = Type.Union([
-    Type.Object({ "mixer": MixerId}),
-    Type.Object({ "fixed_instance": FixedId}),
-    Type.Object({ "dynamic_instance": DynamicId}),
-    Type.Object({ "track": TrackId}),
+    Type.Object({ "mixer":              MixerId}),
+    Type.Object({ "fixed_instance":     FixedId}),
+    Type.Object({ "dynamic_instance":   DynamicId}),
+    Type.Object({ "track":              TrackId}),
 ])
 export type SessionObjectId = Static<typeof SessionObjectId>
 

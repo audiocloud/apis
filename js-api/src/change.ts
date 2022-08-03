@@ -107,8 +107,7 @@ export const ModifySessionSpec = Type.Union([
 export type ModifySessionSpec = Static<typeof ModifySessionSpec>
 
 export const ModifySession = Type.Union([
-    Type.Object({
-        "spec":                                     ModifySessionSpec }),
+    Type.Object({ "spec":                           ModifySessionSpec }),
     Type.Object({
         "set_security":                             Type.Object({
             "key":                                  SecureKey,
@@ -163,6 +162,7 @@ export type RenderId = Static<typeof RenderId>
 
 export const RenderSession = Type.Object({
     render_id:                  RenderId,
+    mixer_id:                   MixerId,
     segment:                    SessionTimeSegment,
     object_id:                  MediaObjectId,
     put_url:                    Type.String(),

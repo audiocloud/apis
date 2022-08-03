@@ -1,8 +1,11 @@
 import { Static, Type } from "@sinclair/typebox";
 import Option from "./utils/option";
 import { Uuid } from "./utils/uuid";
-import { PlayId, PlaySegment, PlaySession, RenderId, RenderSession } from "./change";
-import { MultiChannelValue } from "./model";
+import { ModifySessionSpec, PlayId, PlaySegment, PlaySession, RenderId, RenderSession } from "./change";
+import { MultiChannelTimestampedValue, MultiChannelValue } from "./model";
+import { AppSessionId, DynamicId, ParameterId, ReportId } from "./new_types";
+import { SessionSpec } from "./cloud/apps";
+import { Session, SessionObjectId } from "./session";
 
 export const CompressedAudio = Type.Object({
     play_id:                            PlayId,
@@ -14,90 +17,78 @@ export type CompressedAudio = Static<typeof CompressedAudio> & { buffer: Uint8Ar
 
 export const AudioEngineCommand = Type.Union([
     Type.Object({
-        "set_track_state_chunk":        Type.Object({
-            "track_id":                 Uuid,
-            "chunk":                    Type.String()
+        "set_spec":                     Type.Object({
+            "session_id":               AppSessionId,
+            "spec":                     SessionSpec
         })
     }),
     Type.Object({
-        "set_item_state_chunk":         Type.Object({
-            "track_id":                 Uuid,
-            "item_id":                  Uuid,
-            "chunk":                    Type.String() 
+        "modify_spec":                  Type.Object({
+            "session_id":               AppSessionId,
+            "transaction":              Type.Array(ModifySessionSpec)
         })
     }),
     Type.Object({
-        "set_track_values":             Type.Object({
-            "track_id":                 Uuid,
-            "volume":                   Option(Type.Number()),
-            "pan":                      Option(Type.Number()),
-            "master_send":              Option(Type.Boolean())
+        "set_dynamic_parameters":       Type.Object({
+            "session_id":               AppSessionId,
+            "dynamic_id":               DynamicId,
+            "parameters":               Type.Record(ParameterId, MultiChannelValue)
         })
     }),
     Type.Object({
-        "set_receive_values":           Type.Object({
-            "track_id":                 Uuid,
-            "receive_track_id":         Uuid,
-            "volume":                   Option(Type.Number()),
-            "pan":                      Option(Type.Number())
+        "render":                       Type.Object({
+            "session_id":               AppSessionId,
+            "render":                   RenderSession
         })
     }),
     Type.Object({
-        "set_fx_values":                Type.Object({
-            "track_id":                 Uuid,
-            "fx_id":                    Uuid,
-            "values":                   Type.Record(Type.Number(), Type.Number())
+        "play":                         Type.Object({
+            "session_id":               AppSessionId,
+            "play":                     PlaySession
         })
     }),
     Type.Object({
-        "set_fx_state_values":          Type.Object({
-            "track_id":                 Uuid,
-            "fx_id":                    Uuid,
-            "enabled":                  Option(Type.Boolean()),
-            "dry_wet":                  Option(Type.Number())
+        "stop":                         Type.Object({
+            "session_id":               AppSessionId
         })
-    }),
-    Type.Object({
-        "set_master":                   Type.Object({
-            "track_id":                 Uuid 
-        })
-    }),
-    Type.Object({
-        "delete_track":                 Type.Object({
-            "track_id":                 Uuid 
-        })
-    }),
-    Type.Object({ "play":               PlaySession }),
-    Type.Object({ "set_play_segment":   PlaySegment }),
-    Type.Object({ "render":             RenderSession }),
-    Type.Literal("stop"),
-    Type.Literal("exit")
+    })
 ])
 export type AudioEngineCommand = Static<typeof AudioEngineCommand>
 
 export const AudioEngineEvent = Type.Union([
     Type.Literal("loaded"),
-    Type.Literal("stopped"),
+    Type.Object({
+        "stopped":                      Type.Object({
+            "session_id":               AppSessionId
+        })
+    }),
     Type.Object({
         "playing":                      Type.Object({
+            "session_id":               AppSessionId,
             "playing":                  PlaySession,
-            "audio":                    CompressedAudio
+            "audio":                    CompressedAudio,
+            "peak_meters":              Type.Array(Type.Tuple([SessionObjectId, MultiChannelValue])),
+            "dynamic_reports":          Type.Record(DynamicId, Type.Record(ReportId, MultiChannelTimestampedValue))
         })
     }),
     Type.Object({
         "rendering":                    Type.Object({
+            "session_id":               AppSessionId,
             "rendering":                RenderSession
         })
     }),
     Type.Object({
         "rendering_finished":           Type.Object({
+            "session_id":               AppSessionId,
             "render_id":                RenderId,
             "path":                     Type.String()
         })
     }),
     Type.Object({
-        "meters":                       Type.Object({
-            "peak_meters":              Type.Array(Uuid, MultiChannelValue)
+        "rendering_failed":             Type.Object({
+            "session_id":               AppSessionId,
+            "render_id":                RenderId,
+            "reason":                   Type.String()
         })
     }),
     Type.Object({
