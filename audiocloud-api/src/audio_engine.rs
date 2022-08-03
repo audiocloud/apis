@@ -64,6 +64,11 @@ pub enum AudioEngineEvent {
         render_id:  RenderId,
         path:       String,
     },
+    RenderingFailed {
+        session_id: AppSessionId,
+        render_id:  RenderId,
+        reason:     String,
+    },
     Exit {
         code: i32,
     },

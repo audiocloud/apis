@@ -223,6 +223,7 @@ pub struct PlaySegment {
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq)]
 pub struct RenderSession {
     pub render_id:  RenderId,
+    pub mixer_id:   MixerId,
     pub segment:    SessionTimeSegment,
     pub object_id:  MediaObjectId,
     pub put_url:    String,

@@ -1,8 +1,9 @@
 use std::collections::HashMap;
+use std::str::FromStr;
 
 use crate::change::{PlayId, RenderId};
 use derive_more::{IsVariant, Unwrap};
-use serde::{Deserialize, Serialize};
+use serde::{Deserialize, Deserializer, Serialize, Serializer};
 
 use crate::cloud::apps::{CreateSession, SessionSpec};
 use crate::model::{MultiChannelTimestampedValue, MultiChannelValue};
@@ -98,13 +99,62 @@ impl MixerChannels {
     }
 }
 
-#[derive(Clone, Debug, Serialize, Deserialize, PartialEq, IsVariant, Unwrap, Hash, Eq)]
-#[serde(rename_all = "snake_case")]
+#[derive(Clone, Debug, PartialEq, IsVariant, Unwrap, Hash, Eq, PartialOrd, Ord)]
 pub enum SessionObjectId {
     Mixer(MixerId),
     FixedInstance(FixedId),
     DynamicInstance(DynamicId),
     Track(TrackId),
+}
+
+impl std::fmt::Display for SessionObjectId {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        let inner_json = match serde_json::to_value(self).unwrap() {
+            serde_json::Value::String(s) => s,
+            _ => unreachable!(),
+        };
+        f.write_str(&inner_json)
+    }
+}
+
+impl Serialize for SessionObjectId {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+        where S: Serializer
+    {
+        serializer.serialize_str(&match self {
+                                     SessionObjectId::Mixer(mixer) => format!("mixer:{mixer}"),
+                                     SessionObjectId::FixedInstance(fixed) => format!("fixed:{fixed}"),
+                                     SessionObjectId::DynamicInstance(dynamic) => format!("dynamic:{dynamic}"),
+                                     SessionObjectId::Track(track) => format!("track:{track}"),
+                                 })
+    }
+}
+
+impl<'de> Deserialize<'de> for SessionObjectId {
+    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+        where D: Deserializer<'de>
+    {
+        let err = |msg| serde::de::Error::custom(msg);
+        let string = String::deserialize(deserializer)?;
+        let sep_pos = string.find(':').ok_or_else(|| err("expected separator ':'"))?;
+        let rest = string[(sep_pos + 1)..].to_owned();
+
+        Ok(match &string[..sep_pos] {
+            "mixer" => Self::Mixer(MixerId::new(rest)),
+            "fixed" => Self::FixedInstance(FixedId::new(rest)),
+            "dynamic" => Self::DynamicInstance(DynamicId::new(rest)),
+            "track" => Self::Track(TrackId::new(rest)),
+            _ => return Err(err("unknown variant")),
+        })
+    }
+}
+
+impl FromStr for SessionObjectId {
+    type Err = serde_json::Error;
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        serde_json::from_str(s)
+    }
 }
 
 impl From<SessionMixerId> for SessionObjectId {
@@ -166,6 +216,19 @@ pub struct SessionTrackMedia {
     pub media_segment:    SessionTimeSegment,
     pub timeline_segment: SessionTimeSegment,
     pub object_id:        MediaObjectId,
+    pub format:           SessionTrackMediaFormat,
+}
+
+#[derive(Clone, Copy, Debug, Serialize, Deserialize, PartialEq)]
+pub enum SessionTrackMediaFormat {
+    #[serde(rename = "wav")]
+    Wav,
+    #[serde(rename = "mp3")]
+    Mp3,
+    #[serde(rename = "flac")]
+    Flac,
+    #[serde(rename = "wavpack")]
+    WavPack,
 }
 
 #[derive(Clone, Copy, Debug, Serialize, Deserialize, PartialEq)]
