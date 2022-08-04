@@ -63,12 +63,32 @@ pub enum ModelValue {
 }
 
 impl ModelValue {
+    pub fn into_f64(self) -> Option<f64> {
+        self.to_f64()
+    }
+
     pub fn to_f64(&self) -> Option<f64> {
         match self {
             ModelValue::String(_) => None,
             ModelValue::Number(v) => Some(*v),
             ModelValue::Bool(b) => Some(if *b { 1.0 } else { 0.0 }),
         }
+    }
+
+    pub fn into_i64(self) -> Option<i64> {
+        self.to_i64()
+    }
+
+    pub fn to_i64(&self) -> Option<i64> {
+        match self {
+            ModelValue::String(_) => None,
+            ModelValue::Number(v) => Some(*v as i64),
+            ModelValue::Bool(b) => Some(if *b { 1 } else { 0 }),
+        }
+    }
+
+    pub fn into_bool(self) -> Option<bool> {
+        self.to_bool()
     }
 
     pub fn to_bool(&self) -> Option<bool> {
@@ -239,6 +259,28 @@ pub type MultiChannelValue = Vec<Option<ModelValue>>;
 // #[derive(Serialize, Deserialize, Deref, DerefMut, Debug, Clone, PartialEq, From, Constructor)]
 // pub struct MultiChannelTimestampedValue(#[serde_as(as = "Vec<(_, _)>")] HashMap<usize, Timestamped<ModelValue>>);
 pub type MultiChannelTimestampedValue = Vec<Option<Timestamped<ModelValue>>>;
+
+pub fn enumerate_multi_channel_value(val: MultiChannelValue) -> impl Iterator<Item = (usize, ModelValue)> {
+    val.into_iter().enumerate().filter_map(|(i, v)| v.map(|v| (i, v)))
+}
+
+pub fn enumerate_multi_channel_value_bool(val: MultiChannelValue) -> impl Iterator<Item = (usize, bool)> {
+    val.into_iter()
+       .enumerate()
+       .filter_map(|(i, v)| v.and_then(ModelValue::into_bool).map(|v| (i, v)))
+}
+
+pub fn enumerate_multi_channel_value_f64(val: MultiChannelValue) -> impl Iterator<Item = (usize, f64)> {
+    val.into_iter()
+       .enumerate()
+       .filter_map(|(i, v)| v.and_then(ModelValue::into_f64).map(|v| (i, v)))
+}
+
+pub fn enumerate_multi_channel_value_i64(val: MultiChannelValue) -> impl Iterator<Item = (usize, i64)> {
+    val.into_iter()
+       .enumerate()
+       .filter_map(|(i, v)| v.and_then(ModelValue::into_i64).map(|v| (i, v)))
+}
 
 pub mod multi_channel_value {
     use maplit::hashmap;

@@ -207,6 +207,7 @@ impl DesiredSessionPlayState {
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq)]
 pub struct PlaySession {
     pub play_id:     PlayId,
+    pub mixer_id:    MixerId,
     pub segment:     SessionTimeSegment,
     pub start_at:    f64,
     pub looping:     bool,
