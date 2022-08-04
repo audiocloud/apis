@@ -55,6 +55,11 @@ pub enum AudioEngineEvent {
         peak_meters:     HashMap<SessionObjectId, MultiChannelValue>,
         dynamic_reports: HashMap<DynamicId, HashMap<ReportId, MultiChannelTimestampedValue>>,
     },
+    PlayingFailed {
+        session_id: AppSessionId,
+        play_id:    PlayId,
+        error:      String,
+    },
     Rendering {
         session_id: AppSessionId,
         rendering:  RenderSession,
