@@ -11,7 +11,7 @@ use crate::model::MultiChannelValue;
 use crate::newtypes::{DynamicId, FixedId, FixedInstanceId, InputId, MediaId, MediaObjectId, MixerId, ParameterId, SecureKey, TrackId};
 use crate::session::{
     MixerInput, MixerInputValues, Session, SessionDynamicInstance, SessionFixedInstance, SessionMixer, SessionMixerId, SessionObjectId,
-    SessionTimeSegment, SessionTrack, SessionTrackChannels, SessionTrackMedia,
+    SessionTimeSegment, SessionTrack, SessionTrackChannels, SessionTrackMedia, SessionTrackMediaFormat,
 };
 use crate::session::{SessionMode, SessionSecurity};
 use crate::time::Timestamped;
@@ -32,6 +32,7 @@ pub enum ModifySessionSpec {
         media_segment:    SessionTimeSegment,
         timeline_segment: SessionTimeSegment,
         object_id:        MediaObjectId,
+        format:           SessionTrackMediaFormat,
     },
     SetTrackMediaValues {
         track_id:         TrackId,
@@ -408,8 +409,9 @@ impl SessionSpec {
                                                channels,
                                                media_segment,
                                                timeline_segment,
-                                               object_id, } => {
-                self.add_track_media(track_id, media_id, channels, media_segment, timeline_segment, object_id)
+                                               object_id,
+                                               format, } => {
+                self.add_track_media(track_id, media_id, channels, media_segment, timeline_segment, object_id, format)
             }
             ModifySessionSpec::SetTrackMediaValues { track_id,
                                                      media_id,
@@ -660,7 +662,8 @@ impl SessionSpec {
                            channels: SessionTrackChannels,
                            media_segment: SessionTimeSegment,
                            timeline_segment: SessionTimeSegment,
-                           object_id: MediaObjectId)
+                           object_id: MediaObjectId,
+                           format: SessionTrackMediaFormat)
                            -> Result<(), ModifySessionError> {
         let track = self.tracks.get_mut(&track_id).ok_or(TrackDoesNotExist(track_id.clone()))?;
 
@@ -672,7 +675,8 @@ impl SessionSpec {
                            SessionTrackMedia { channels,
                                                media_segment,
                                                timeline_segment,
-                                               object_id });
+                                               object_id,
+                                               format });
 
         Ok(())
     }
