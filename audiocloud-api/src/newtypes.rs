@@ -10,19 +10,22 @@ use once_cell::sync::OnceCell;
 use regex::Regex;
 use serde::{Deserialize, Deserializer, Serialize, Serializer};
 use serde_json::Value;
+use crate::session::SessionFlowId;
 
 #[derive(Clone, Debug, Eq, PartialEq, Hash, Display, Constructor)]
 #[display(fmt = "{manufacturer}/{name}/{instance}")]
 pub struct FixedInstanceId {
     pub manufacturer: String,
-    pub name:         String,
-    pub instance:     String,
+    pub name: String,
+    pub instance: String,
 }
 
 impl FixedInstanceId {
     pub fn model_id(&self) -> ModelId {
-        ModelId { manufacturer: self.manufacturer.to_string(),
-                  name:         self.name.to_string(), }
+        ModelId {
+            manufacturer: self.manufacturer.to_string(),
+            name: self.name.to_string(),
+        }
     }
 
     pub fn from_model_id(model_id: ModelId, instance: String) -> Self {
@@ -43,9 +46,11 @@ impl<'de> Deserialize<'de> for FixedInstanceId {
         let name = s.next().ok_or(err("expected manufacturer"))?;
         let instance = s.next().ok_or(err("expected instance"))?;
 
-        Ok(Self { manufacturer: manufacturer.to_string(),
-                  name:         name.to_string(),
-                  instance:     instance.to_string(), })
+        Ok(Self {
+            manufacturer: manufacturer.to_string(),
+            name: name.to_string(),
+            instance: instance.to_string(),
+        })
     }
 }
 
@@ -61,7 +66,7 @@ impl Serialize for FixedInstanceId {
 #[display(fmt = "{manufacturer}/{name}")]
 pub struct ModelId {
     pub manufacturer: String,
-    pub name:         String,
+    pub name: String,
 }
 
 impl ModelId {
@@ -142,6 +147,12 @@ impl<'de, K, V, T> serde::de::Visitor<'de> for Tuple2Visitor<K, V, T>
 #[repr(transparent)]
 pub struct TrackId(String);
 
+impl TrackId {
+    pub fn flow(self) -> SessionFlowId {
+        SessionFlowId::TrackOutput(self)
+    }
+}
+
 /// Media item on a track
 #[derive(Clone, Debug, Serialize, Deserialize, Eq, PartialEq, Ord, PartialOrd, Display, Deref, Constructor, Hash, From, FromStr)]
 #[repr(transparent)]
@@ -152,15 +163,42 @@ pub struct MediaId(String);
 #[repr(transparent)]
 pub struct MixerId(String);
 
+impl MixerId {
+    pub fn input_flow(self) -> SessionFlowId {
+        SessionFlowId::MixerInput(self)
+    }
+    pub fn output_flow(self) -> SessionFlowId {
+        SessionFlowId::MixerOutput(self)
+    }
+}
+
 /// Dynamic instance in a session
 #[derive(Clone, Debug, Serialize, Deserialize, Eq, PartialEq, Ord, PartialOrd, Display, Deref, Constructor, Hash, From, FromStr)]
 #[repr(transparent)]
 pub struct DynamicId(String);
 
+impl DynamicId {
+    pub fn input_flow(self) -> SessionFlowId {
+        SessionFlowId::DynamicInstanceInput(self)
+    }
+    pub fn output_flow(self) -> SessionFlowId {
+        SessionFlowId::DynamicInstanceOutput(self)
+    }
+}
+
 /// Fixed instance in a session
 #[derive(Clone, Debug, Serialize, Deserialize, Eq, PartialEq, Ord, PartialOrd, Display, Deref, Constructor, Hash, From, FromStr)]
 #[repr(transparent)]
 pub struct FixedId(String);
+
+impl FixedId {
+    pub fn input_flow(self) -> SessionFlowId {
+        SessionFlowId::FixedInstanceInput(self)
+    }
+    pub fn output_flow(self) -> SessionFlowId {
+        SessionFlowId::FixedInstanceOutput(self)
+    }
+}
 
 #[derive(Clone, Debug, Serialize, Deserialize, Eq, PartialEq, Ord, PartialOrd, Display, Deref, Constructor, Hash, From, FromStr)]
 #[repr(transparent)]
@@ -195,8 +233,8 @@ impl SessionId {
         static VALIDATION: OnceCell<Regex> = OnceCell::new();
 
         VALIDATION.get_or_init(|| Regex::new(r"^[a-zA-Z0-9_\-]+$").unwrap())
-                  .find(&self.0)
-                  .ok_or_else(|| CloudError::InvalidSessionId(self.to_string()))?;
+            .find(&self.0)
+            .ok_or_else(|| CloudError::InvalidSessionId(self.to_string()))?;
 
         Ok(self)
     }
@@ -205,7 +243,7 @@ impl SessionId {
 #[derive(Clone, Debug, Eq, PartialEq, Ord, PartialOrd, Display, Constructor, Hash, From)]
 #[display(fmt = "{app_id}/{session_id}")]
 pub struct AppSessionId {
-    pub app_id:     AppId,
+    pub app_id: AppId,
     pub session_id: SessionId,
 }
 
@@ -243,8 +281,8 @@ impl MediaObjectId {
         static VALIDATION: OnceCell<Regex> = OnceCell::new();
 
         VALIDATION.get_or_init(|| Regex::new(r"^[a-zA-Z0-9_\-]+$").unwrap())
-                  .find(&self.0)
-                  .ok_or_else(|| CloudError::InvalidMediaId(self.to_string()))?;
+            .find(&self.0)
+            .ok_or_else(|| CloudError::InvalidMediaId(self.to_string()))?;
 
         Ok(self)
     }
@@ -253,7 +291,7 @@ impl MediaObjectId {
 #[derive(Clone, Debug, Eq, PartialEq, Ord, PartialOrd, Display, Constructor, Hash)]
 #[display(fmt = "{app_id}/{media_id}")]
 pub struct AppMediaObjectId {
-    pub app_id:   AppId,
+    pub app_id: AppId,
     pub media_id: MediaObjectId,
 }
 
@@ -286,6 +324,7 @@ impl<'de> Deserialize<'de> for AppMediaObjectId {
         deserializer.deserialize_str(Tuple2Visitor::new())
     }
 }
+
 /// A password for session control
 #[derive(Clone, Debug, Serialize, Deserialize, Eq, PartialEq, Ord, PartialOrd, Display, Deref, Constructor, Hash, From, FromStr)]
 #[repr(transparent)]
