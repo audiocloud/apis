@@ -8,11 +8,8 @@ use thiserror::Error;
 use crate::cloud::apps::SessionSpec;
 use crate::instance::DesiredInstancePlayState;
 use crate::model::MultiChannelValue;
-use crate::newtypes::{DynamicId, FixedId, FixedInstanceId, InputId, MediaId, MediaObjectId, MixerId, ParameterId, SecureKey, TrackId};
-use crate::session::{
-    MixerInput, MixerInputValues, Session, SessionDynamicInstance, SessionFixedInstance, SessionMixer, SessionMixerId, SessionObjectId,
-    SessionTimeSegment, SessionTrack, SessionTrackChannels, SessionTrackMedia, SessionTrackMediaFormat,
-};
+use crate::newtypes::{ConnectionId, DynamicId, FixedId, FixedInstanceId, MediaId, MediaObjectId, MixerId, ParameterId, SecureKey, TrackId};
+use crate::session::{ConnectionValues, Session, SessionDynamicInstance, SessionFixedInstance, SessionMixer, SessionFlowId, SessionTimeSegment, SessionTrack, SessionTrackChannels, SessionTrackMedia, SessionTrackMediaFormat, MixerChannels, SessionConnection};
 use crate::session::{SessionMode, SessionSecurity};
 use crate::time::Timestamped;
 
@@ -26,21 +23,21 @@ pub enum ModifySessionSpec {
         channels: SessionTrackChannels,
     },
     AddTrackMedia {
-        track_id:         TrackId,
-        media_id:         MediaId,
-        channels:         SessionTrackChannels,
-        media_segment:    SessionTimeSegment,
+        track_id: TrackId,
+        media_id: MediaId,
+        channels: SessionTrackChannels,
+        media_segment: SessionTimeSegment,
         timeline_segment: SessionTimeSegment,
-        object_id:        MediaObjectId,
-        format:           SessionTrackMediaFormat,
+        object_id: MediaObjectId,
+        format: SessionTrackMediaFormat,
     },
     SetTrackMediaValues {
-        track_id:         TrackId,
-        media_id:         MediaId,
-        channels:         Option<SessionTrackChannels>,
-        media_segment:    Option<SessionTimeSegment>,
+        track_id: TrackId,
+        media_id: MediaId,
+        channels: Option<SessionTrackChannels>,
+        media_segment: Option<SessionTimeSegment>,
         timeline_segment: Option<SessionTimeSegment>,
-        object_id:        Option<MediaObjectId>,
+        object_id: Option<MediaObjectId>,
     },
     DeleteTrackMedia {
         track_id: TrackId,
@@ -51,43 +48,48 @@ pub enum ModifySessionSpec {
     },
     AddFixedInstance {
         fixed_id: FixedId,
-        process:  SessionFixedInstance,
+        process: SessionFixedInstance,
     },
     AddDynamicInstance {
         dynamic_id: DynamicId,
-        process:    SessionDynamicInstance,
+        process: SessionDynamicInstance,
     },
     AddMixer {
         mixer_id: MixerId,
-        mixer:    SessionMixer,
+        mixer: SessionMixer,
     },
     DeleteMixer {
-        mixer_id: SessionMixerId,
+        mixer_id: MixerId,
     },
-    DeleteMixerInput {
-        mixer_id: SessionMixerId,
-        input_id: InputId,
+    DeleteFixedInstance {
+        fixed_id: FixedId
     },
-    DeleteInputsReferencing {
-        source_id: SessionObjectId,
+    DeleteDynamicInstance {
+        dynamic_id: DynamicId
     },
-    AddMixerInput {
-        mixer_id: SessionMixerId,
-        input_id: InputId,
-        input:    MixerInput,
+    DeleteConnection {
+        connection_id: ConnectionId
     },
-    SetInputValues {
-        mixer_id: SessionMixerId,
-        input_id: InputId,
-        values:   MixerInputValues,
+    AddConnection {
+        connection_id: ConnectionId,
+        from: SessionFlowId,
+        to: SessionFlowId,
+        from_channels: MixerChannels,
+        to_channels: MixerChannels,
+        volume: f64,
+        pan: f64,
+    },
+    SetConnectionParameterValues {
+        connection_id: ConnectionId,
+        values: ConnectionValues,
     },
     SetFixedInstanceParameterValues {
         fixed_id: FixedId,
-        values:   HashMap<ParameterId, MultiChannelValue>,
+        values: HashMap<ParameterId, MultiChannelValue>,
     },
     SetDynamicInstanceParameterValues {
         dynamic_id: DynamicId,
-        values:     HashMap<ParameterId, MultiChannelValue>,
+        values: HashMap<ParameterId, MultiChannelValue>,
     },
 }
 
@@ -103,12 +105,13 @@ impl ModifySessionSpec {
             ModifySessionSpec::AddDynamicInstance { .. } => "add_dynamic_instance",
             ModifySessionSpec::AddMixer { .. } => "add_mixer",
             ModifySessionSpec::DeleteMixer { .. } => "delete_mixer",
-            ModifySessionSpec::DeleteMixerInput { .. } => "delete_mixer_input",
-            ModifySessionSpec::DeleteInputsReferencing { .. } => "delete_inputs_referencing",
-            ModifySessionSpec::AddMixerInput { .. } => "add_mixer_input",
-            ModifySessionSpec::SetInputValues { .. } => "set_input_values",
+            ModifySessionSpec::AddConnection { .. } => "add_mixer_input",
+            ModifySessionSpec::SetConnectionParameterValues { .. } => "set_input_values",
             ModifySessionSpec::SetFixedInstanceParameterValues { .. } => "set_fixed_instance_parameter_values",
             ModifySessionSpec::SetDynamicInstanceParameterValues { .. } => "set_dynamic_instance_parameter_values",
+            ModifySessionSpec::DeleteFixedInstance { .. } => "delete_fixed_instance",
+            ModifySessionSpec::DeleteDynamicInstance { .. } => "delete_dynamic_instance",
+            ModifySessionSpec::DeleteConnection { .. } => "delete_connection",
         }
     }
 }
@@ -197,8 +200,10 @@ impl DesiredSessionPlayState {
     pub fn to_instance(&self) -> DesiredInstancePlayState {
         match self {
             DesiredSessionPlayState::Play(play) => DesiredInstancePlayState::Playing { play_id: play.play_id },
-            DesiredSessionPlayState::Render(render) => DesiredInstancePlayState::Rendering { render_id: render.render_id,
-                                                                                             length:    render.segment.length, },
+            DesiredSessionPlayState::Render(render) => DesiredInstancePlayState::Rendering {
+                render_id: render.render_id,
+                length: render.segment.length,
+            },
             DesiredSessionPlayState::Stopped => DesiredInstancePlayState::Stopped,
         }
     }
@@ -206,38 +211,38 @@ impl DesiredSessionPlayState {
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq)]
 pub struct PlaySession {
-    pub play_id:     PlayId,
-    pub mixer_id:    MixerId,
-    pub segment:     SessionTimeSegment,
-    pub start_at:    f64,
-    pub looping:     bool,
+    pub play_id: PlayId,
+    pub mixer_id: MixerId,
+    pub segment: SessionTimeSegment,
+    pub start_at: f64,
+    pub looping: bool,
     pub sample_rate: SampleRate,
-    pub bit_depth:   PlayBitDepth,
+    pub bit_depth: PlayBitDepth,
 }
 
 #[derive(Serialize, Deserialize, Clone, Copy, Debug, PartialEq)]
 pub struct PlaySegment {
-    pub segment:  SessionTimeSegment,
-    pub looping:  bool,
+    pub segment: SessionTimeSegment,
+    pub looping: bool,
     pub start_at: f64,
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq)]
 pub struct RenderSession {
-    pub render_id:  RenderId,
-    pub mixer_id:   MixerId,
-    pub segment:    SessionTimeSegment,
-    pub object_id:  MediaObjectId,
-    pub put_url:    String,
+    pub render_id: RenderId,
+    pub mixer_id: MixerId,
+    pub segment: SessionTimeSegment,
+    pub object_id: MediaObjectId,
+    pub put_url: String,
     pub notify_url: String,
-    pub context:    String,
+    pub context: String,
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq)]
 pub struct SuccessfulRenderNotification {
     pub render_id: RenderId,
     pub object_id: MediaObjectId,
-    pub context:   String,
+    pub context: String,
 }
 
 pub type RenderNotification = Result<SuccessfulRenderNotification, String>;
@@ -278,16 +283,18 @@ impl SessionPlayState {
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq)]
 pub struct SessionState {
-    pub play_state:         Timestamped<SessionPlayState>,
+    pub play_state: Timestamped<SessionPlayState>,
     pub desired_play_state: Timestamped<DesiredSessionPlayState>,
-    pub mode:               Timestamped<SessionMode>,
+    pub mode: Timestamped<SessionMode>,
 }
 
 impl Default for SessionState {
     fn default() -> Self {
-        Self { play_state:         Timestamped::new(SessionPlayState::Stopped),
-               desired_play_state: Timestamped::new(DesiredSessionPlayState::Stopped),
-               mode:               Timestamped::new(SessionMode::Idle), }
+        Self {
+            play_state: Timestamped::new(SessionPlayState::Stopped),
+            desired_play_state: Timestamped::new(DesiredSessionPlayState::Stopped),
+            mode: Timestamped::new(SessionMode::Idle),
+        }
     }
 }
 
@@ -319,11 +326,12 @@ pub enum ModifySessionError {
     DynamicInstanceDoesNotExist(DynamicId),
     #[error("Mixer {0} does not exist")]
     MixerDoesNotExist(MixerId),
-
-    #[error("Input {1} of {0:?} already exists")]
-    InputExists(SessionMixerId, InputId),
-    #[error("Input {1} of {0:?} does not exist")]
-    InputDoesNotExist(SessionMixerId, InputId),
+    #[error("Connection {0} does not exist")]
+    ConnectionDoesNotExist(ConnectionId),
+    #[error("Connection {0} already exist")]
+    ConnectionExists(ConnectionId),
+    #[error("Connection {0} already exist: {1}")]
+    ConnectionMalformed(ConnectionId, String),
 
     #[error("Media {1} on track {0} already exists")]
     MediaExists(TrackId, MediaId),
@@ -335,7 +343,7 @@ pub enum ModifySessionError {
 }
 
 impl Session {
-    pub fn get_media_object_ids<'a>(&'a self) -> impl Iterator<Item = &'a MediaObjectId> + 'a {
+    pub fn get_media_object_ids<'a>(&'a self) -> impl Iterator<Item=&'a MediaObjectId> + 'a {
         self.spec
             .tracks
             .values()
@@ -377,20 +385,20 @@ impl Session {
 }
 
 impl SessionSpec {
-    pub fn get_fixed_instance_ids<'a>(&'a self) -> impl Iterator<Item = &'a FixedInstanceId> + 'a {
+    pub fn get_fixed_instance_ids<'a>(&'a self) -> impl Iterator<Item=&'a FixedInstanceId> + 'a {
         self.fixed.values().map(|fixed| &fixed.instance_id)
     }
 
     pub fn modify(&mut self, modify: ModifySessionSpec) -> Result<(), ModifySessionError> {
         match modify {
-            ModifySessionSpec::AddFixedInstance { fixed_id: mixer_id,
-                                                  process, } => self.add_fixed_instance(mixer_id, process),
-            ModifySessionSpec::AddDynamicInstance { dynamic_id: mixer_id,
-                                                    process, } => self.add_dynamic_instance(mixer_id, process),
+            ModifySessionSpec::AddFixedInstance {
+                fixed_id: mixer_id,
+                process, } => self.add_fixed_instance(mixer_id, process),
+            ModifySessionSpec::AddDynamicInstance {
+                dynamic_id: mixer_id,
+                process, } => self.add_dynamic_instance(mixer_id, process),
             ModifySessionSpec::AddMixer { mixer_id, mixer: channels } => self.add_mixer(mixer_id, channels),
             ModifySessionSpec::DeleteMixer { mixer_id } => self.delete_mixer(mixer_id),
-            ModifySessionSpec::DeleteMixerInput { mixer_id, input_id } => self.delete_mixer_input(mixer_id, input_id),
-            ModifySessionSpec::AddMixerInput { mixer_id, input_id, input } => self.add_mixer_input(mixer_id, input_id, input),
             ModifySessionSpec::SetFixedInstanceParameterValues { fixed_id: id, values } => {
                 self.set_fixed_instance_parameter_values(id, values)
             }
@@ -398,29 +406,40 @@ impl SessionSpec {
             ModifySessionSpec::SetDynamicInstanceParameterValues { dynamic_id: id, values } => {
                 self.set_dynamic_instance_parameter_values(id, values)
             }
-            ModifySessionSpec::DeleteInputsReferencing { source_id } => self.delete_inputs_referencing(source_id),
             ModifySessionSpec::AddTrack { track_id, channels } => self.add_track(track_id, channels),
             ModifySessionSpec::DeleteTrackMedia { track_id, media_id } => self.delete_track_media(track_id, media_id),
             ModifySessionSpec::DeleteTrack { track_id } => self.delete_track(track_id),
-            ModifySessionSpec::SetInputValues { mixer_id,
-                                                input_id,
-                                                values, } => self.set_input_values(mixer_id, input_id, values),
-            ModifySessionSpec::AddTrackMedia { track_id,
-                                               media_id,
-                                               channels,
-                                               media_segment,
-                                               timeline_segment,
-                                               object_id,
-                                               format, } => {
+            ModifySessionSpec::SetConnectionParameterValues { connection_id, values, } => self.set_connection_parameter_values(connection_id, values),
+            ModifySessionSpec::AddTrackMedia {
+                track_id,
+                media_id,
+                channels,
+                media_segment,
+                timeline_segment,
+                object_id,
+                format, } => {
                 self.add_track_media(track_id, media_id, channels, media_segment, timeline_segment, object_id, format)
             }
-            ModifySessionSpec::SetTrackMediaValues { track_id,
-                                                     media_id,
-                                                     channels,
-                                                     media_segment,
-                                                     timeline_segment,
-                                                     object_id, } => {
+            ModifySessionSpec::SetTrackMediaValues {
+                track_id,
+                media_id,
+                channels,
+                media_segment,
+                timeline_segment,
+                object_id, } => {
                 self.set_track_media_values(track_id, media_id, channels, media_segment, timeline_segment, object_id)
+            }
+            ModifySessionSpec::DeleteFixedInstance { fixed_id } => {
+                self.delete_fixed_instance(fixed_id)
+            }
+            ModifySessionSpec::DeleteDynamicInstance { dynamic_id } => {
+                self.delete_dynamic_instance(dynamic_id)
+            }
+            ModifySessionSpec::DeleteConnection { connection_id } => {
+                self.delete_connection(connection_id)
+            }
+            ModifySessionSpec::AddConnection { connection_id, from, to, from_channels, to_channels, volume, pan } => {
+                self.add_connection(connection_id, from, to, from_channels, to_channels, volume, pan)
             }
         }
     }
@@ -455,156 +474,35 @@ impl SessionSpec {
         Ok(())
     }
 
-    pub fn delete_mixer(&mut self, mixer_id: SessionMixerId) -> Result<(), ModifySessionError> {
-        use SessionObjectId::*;
-
-        match mixer_id {
-            SessionMixerId::Mixer(id) => {
-                if self.mixers.remove(&id).is_none() {
-                    Err(MixerDoesNotExist(id))
-                } else {
-                    self.delete_inputs_referencing(Mixer(id))
-                }
-            }
-            SessionMixerId::FixedInstance(id) => {
-                if self.fixed.remove(&id).is_none() {
-                    Err(FixedInstanceDoesNotExist(id))
-                } else {
-                    self.delete_inputs_referencing(FixedInstance(id))
-                }
-            }
-            SessionMixerId::DynamicInstance(id) => {
-                if self.dynamic.remove(&id).is_none() {
-                    Err(DynamicInstanceDoesNotExist(id))
-                } else {
-                    self.delete_inputs_referencing(DynamicInstance(id))
-                }
-            }
+    pub fn delete_mixer(&mut self, mixer_id: MixerId) -> Result<(), ModifySessionError> {
+        if !self.mixers.contains_key(&mixer_id) {
+            return Err(MixerDoesNotExist(mixer_id));
         }
+
+        self.mixers.remove(&mixer_id);
+
+        Ok(())
     }
 
-    pub fn delete_mixer_input(&mut self, mixer_id: SessionMixerId, input_id: InputId) -> Result<(), ModifySessionError> {
-        match &mixer_id {
-            SessionMixerId::Mixer(mixer) => {
-                let mixer = self.mixers.get_mut(&mixer).ok_or(MixerDoesNotExist(mixer.clone()))?;
-                Self::delete_input(&mut mixer.inputs, &mixer_id, input_id)
-            }
-            SessionMixerId::FixedInstance(mixer) => {
-                let mixer = self.fixed.get_mut(&mixer).ok_or(FixedInstanceDoesNotExist(mixer.clone()))?;
-                Self::delete_input(&mut mixer.inputs, &mixer_id, input_id)
-            }
-            SessionMixerId::DynamicInstance(mixer) => {
-                let mixer = self.dynamic.get_mut(&mixer).ok_or(DynamicInstanceDoesNotExist(mixer.clone()))?;
-                Self::delete_input(&mut mixer.inputs, &mixer_id, input_id)
-            }
-        }
+    pub fn is_connected(&self, from: &SessionFlowId, to: &SessionFlowId) -> bool {
+        self.connections.iter().any(|(_, connection)| {
+            &connection.from == from && &connection.to == to
+        })
     }
 
-    fn delete_input(inputs: &mut HashMap<InputId, MixerInput>,
-                    mixer_id: &SessionMixerId,
-                    input_id: InputId)
-                    -> Result<(), ModifySessionError> {
-        match inputs.remove(&input_id) {
-            None => Err(InputDoesNotExist(mixer_id.clone(), input_id)),
-            Some(_) => Ok(()),
+    pub fn set_connection_parameter_values(&mut self,
+                                           connection_id: ConnectionId,
+                                           values: ConnectionValues)
+                                           -> Result<(), ModifySessionError> {
+        let connection = self.connections.get_mut(&connection_id).ok_or(ConnectionDoesNotExist(connection_id))?;
+        if let Some(volume) = values.volume {
+            connection.volume = volume;
         }
-    }
-
-    pub fn add_mixer_input(&mut self, mixer_id: SessionMixerId, input_id: InputId, input: MixerInput) -> Result<(), ModifySessionError> {
-        match &input.source_id {
-            SessionObjectId::Mixer(id) if !self.mixers.contains_key(&id) => Err(MixerDoesNotExist(id.clone())),
-            SessionObjectId::FixedInstance(id) if !self.fixed.contains_key(&id) => Err(FixedInstanceDoesNotExist(id.clone())),
-            SessionObjectId::DynamicInstance(id) if !self.dynamic.contains_key(&id) => Err(DynamicInstanceDoesNotExist(id.clone())),
-            SessionObjectId::Track(id) if !self.tracks.contains_key(&id) => Err(TrackDoesNotExist(id.clone())),
-            _ => Ok(()),
-        }?;
-
-        if let Some(source_mixer_id) = input.source_id.clone().into() {
-            if self.is_connected(&mixer_id, &source_mixer_id) {
-                return Err(CycleDetected);
-            }
+        if let Some(pan) = values.pan {
+            connection.pan = pan;
         }
 
-        match &mixer_id {
-            SessionMixerId::Mixer(mixer) => {
-                let mixer = self.mixers.get_mut(&mixer).ok_or(MixerDoesNotExist(mixer.clone()))?;
-                Self::add_input(&mut mixer.inputs, &mixer_id, &input_id, input)
-            }
-            SessionMixerId::FixedInstance(mixer) => {
-                let mixer = self.fixed.get_mut(&mixer).ok_or(FixedInstanceDoesNotExist(mixer.clone()))?;
-                Self::add_input(&mut mixer.inputs, &mixer_id, &input_id, input)
-            }
-            SessionMixerId::DynamicInstance(mixer) => {
-                let mixer = self.dynamic.get_mut(&mixer).ok_or(DynamicInstanceDoesNotExist(mixer.clone()))?;
-                Self::add_input(&mut mixer.inputs, &mixer_id, &input_id, input)
-            }
-        }
-    }
-
-    pub fn is_connected(&self, from: &SessionMixerId, to: &SessionMixerId) -> bool {
-        if let Some(maybe_inputs) = match to {
-            SessionMixerId::Mixer(m) => self.mixers.get(&m).map(|m| &m.inputs),
-            SessionMixerId::FixedInstance(m) => self.fixed.get(&m).map(|m| &m.inputs),
-            SessionMixerId::DynamicInstance(m) => self.dynamic.get(&m).map(|m| &m.inputs),
-        } {
-            for input in maybe_inputs.values() {
-                if let Some(source_mixer_id) = input.source_id.clone().into() {
-                    if from == &source_mixer_id {
-                        return true;
-                    }
-
-                    if self.is_connected(from, &source_mixer_id) {
-                        return true;
-                    }
-                }
-            }
-        }
-
-        false
-    }
-
-    fn add_input(output: &mut HashMap<InputId, MixerInput>,
-                 mixer_id: &SessionMixerId,
-                 input_id: &InputId,
-                 input: MixerInput)
-                 -> Result<(), ModifySessionError> {
-        if output.contains_key(&input_id) {
-            Err(InputExists(mixer_id.clone(), input_id.clone()))
-        } else {
-            output.insert(input_id.clone(), input);
-            Ok(())
-        }
-    }
-
-    pub fn set_input_values(&mut self,
-                            mixer_id: SessionMixerId,
-                            input_id: InputId,
-                            values: MixerInputValues)
-                            -> Result<(), ModifySessionError> {
-        let inputs = match &mixer_id {
-            SessionMixerId::Mixer(m) => self.mixers.get_mut(&m).map(|m| &mut m.inputs).ok_or(MixerDoesNotExist(m.clone()))?,
-            SessionMixerId::FixedInstance(m) => self.fixed
-                                                    .get_mut(&m)
-                                                    .map(|m| &mut m.inputs)
-                                                    .ok_or(FixedInstanceDoesNotExist(m.clone()))?,
-            SessionMixerId::DynamicInstance(m) => self.dynamic
-                                                      .get_mut(&m)
-                                                      .map(|m| &mut m.inputs)
-                                                      .ok_or(DynamicInstanceDoesNotExist(m.clone()))?,
-        };
-
-        if let Some(input) = inputs.get_mut(&input_id) {
-            if let Some(volume) = values.volume {
-                input.volume = volume;
-            }
-            if let Some(pan) = values.pan {
-                input.pan = pan;
-            }
-
-            Ok(())
-        } else {
-            Err(InputDoesNotExist(mixer_id.clone(), input_id))
-        }
+        Ok(())
     }
 
     pub fn set_fixed_instance_parameter_values(&mut self,
@@ -625,24 +523,10 @@ impl SessionSpec {
         Ok(())
     }
 
-    pub fn delete_inputs_referencing(&mut self, source_id: SessionObjectId) -> Result<(), ModifySessionError> {
-        for mixer in self.mixers.values_mut() {
-            Self::delete_inputs_referencing_from_map(&mut mixer.inputs, &source_id);
-        }
-
-        for fixed in self.fixed.values_mut() {
-            Self::delete_inputs_referencing_from_map(&mut fixed.inputs, &source_id);
-        }
-
-        for dynamic in self.dynamic.values_mut() {
-            Self::delete_inputs_referencing_from_map(&mut dynamic.inputs, &source_id);
-        }
-
-        Ok(())
-    }
-
-    fn delete_inputs_referencing_from_map(inputs: &mut HashMap<InputId, MixerInput>, source_id: &SessionObjectId) {
-        inputs.retain(|_, v| &v.source_id != source_id);
+    pub fn delete_connections_referencing(&mut self, flow_id: SessionFlowId) {
+        self.connections.retain(|_, value| {
+            &value.from != &flow_id && &value.to != &flow_id
+        });
     }
 
     pub fn add_track(&mut self, track_id: TrackId, channels: SessionTrackChannels) -> Result<(), ModifySessionError> {
@@ -651,8 +535,10 @@ impl SessionSpec {
         }
 
         self.tracks.insert(track_id,
-                           SessionTrack { channels,
-                                          media: Default::default() });
+                           SessionTrack {
+                               channels,
+                               media: Default::default(),
+                           });
 
         Ok(())
     }
@@ -673,11 +559,13 @@ impl SessionSpec {
         }
 
         track.media.insert(media_id,
-                           SessionTrackMedia { channels,
-                                               media_segment,
-                                               timeline_segment,
-                                               object_id,
-                                               format });
+                           SessionTrackMedia {
+                               channels,
+                               media_segment,
+                               timeline_segment,
+                               object_id,
+                               format,
+                           });
 
         Ok(())
     }
@@ -693,10 +581,67 @@ impl SessionSpec {
 
     pub fn delete_track(&mut self, track_id: TrackId) -> Result<(), ModifySessionError> {
         if self.tracks.remove(&track_id).is_some() {
-            self.delete_inputs_referencing(SessionObjectId::Track(track_id))
+            self.delete_connections_referencing(SessionFlowId::TrackOutput(track_id));
+
+            Ok(())
         } else {
             Err(TrackDoesNotExist(track_id))
         }
+    }
+
+    pub fn delete_fixed_instance(&mut self, fixed_id: FixedId) -> Result<(), ModifySessionError> {
+        if self.fixed.remove(&fixed_id).is_some() {
+            self.delete_connections_referencing(SessionFlowId::FixedInstanceOutput(fixed_id.clone()));
+            self.delete_connections_referencing(SessionFlowId::FixedInstanceInput(fixed_id.clone()));
+
+            Ok(())
+        } else {
+            Err(FixedInstanceDoesNotExist(fixed_id))
+        }
+    }
+
+    pub fn delete_dynamic_instance(&mut self, dynamic_id: DynamicId) -> Result<(), ModifySessionError> {
+        if self.dynamic.remove(&dynamic_id).is_some() {
+            self.delete_connections_referencing(SessionFlowId::DynamicInstanceOutput(dynamic_id.clone()));
+            self.delete_connections_referencing(SessionFlowId::DynamicInstanceInput(dynamic_id.clone()));
+
+            Ok(())
+        } else {
+            Err(DynamicInstanceDoesNotExist(dynamic_id))
+        }
+    }
+
+    pub fn delete_connection(&mut self, connection_id: ConnectionId) -> Result<(), ModifySessionError> {
+        if self.connections.remove(&connection_id).is_some() {
+            Ok(())
+        } else {
+            Err(ConnectionDoesNotExist(connection_id))
+        }
+    }
+
+    pub fn add_connection(&mut self, connection_id: ConnectionId, from: SessionFlowId, to: SessionFlowId, from_channels: MixerChannels, to_channels: MixerChannels, volume: f64, pan: f64) -> Result<(), ModifySessionError> {
+        if self.connections.contains_key(&connection_id) {
+            return Err(ConnectionExists(connection_id));
+        }
+
+        if !from.is_output() {
+            return Err(ConnectionMalformed(connection_id, format!("{from} is not an output")));
+        }
+
+        if !to.is_input() {
+            return Err(ConnectionMalformed(connection_id, format!("{to} is not an input")));
+        }
+
+        self.connections.insert(connection_id,
+                                SessionConnection {
+                                    from,
+                                    to,
+                                    from_channels,
+                                    to_channels,
+                                    volume,
+                                    pan,
+                                });
+        Ok(())
     }
 
     pub fn set_track_media_values(&mut self,
@@ -709,8 +654,8 @@ impl SessionSpec {
                                   -> Result<(), ModifySessionError> {
         let track = self.tracks.get_mut(&track_id).ok_or(TrackDoesNotExist(track_id.clone()))?;
         let media = track.media
-                         .get_mut(&media_id)
-                         .ok_or(MediaDoesNotExist(track_id.clone(), media_id))?;
+            .get_mut(&media_id)
+            .ok_or(MediaDoesNotExist(track_id.clone(), media_id))?;
 
         if let Some(channels) = channels {
             media.channels = channels;
@@ -767,15 +712,17 @@ fn hashmap_changes<K: Hash + Eq + Clone, T: Clone + PartialEq>(existing: &HashMa
 
 #[derive(Serialize, Deserialize)]
 struct HashMapChanges<K: Hash + Eq, T> {
-    added:   HashMap<K, T>,
+    added: HashMap<K, T>,
     changed: HashMap<K, T>,
     removed: HashSet<K>,
 }
 
 impl<K: Hash + Eq, T> Default for HashMapChanges<K, T> {
     fn default() -> Self {
-        Self { added:   HashMap::new(),
-               changed: HashMap::new(),
-               removed: HashSet::new(), }
+        Self {
+            added: HashMap::new(),
+            changed: HashMap::new(),
+            removed: HashSet::new(),
+        }
     }
 }

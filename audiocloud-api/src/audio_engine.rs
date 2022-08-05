@@ -10,7 +10,7 @@ use crate::change::{ModifySessionSpec, PlayId, PlaySession, RenderId, RenderSess
 use crate::cloud::apps::SessionSpec;
 use crate::model::{MultiChannelTimestampedValue, MultiChannelValue};
 use crate::newtypes::{AppSessionId, DynamicId, ParameterId, ReportId};
-use crate::session::SessionObjectId;
+use crate::session::SessionFlowId;
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq)]
 #[serde(rename_all = "snake_case")]
@@ -52,7 +52,7 @@ pub enum AudioEngineEvent {
         session_id:      AppSessionId,
         playing:         PlaySession,
         audio:           CompressedAudio,
-        peak_meters:     HashMap<SessionObjectId, MultiChannelValue>,
+        peak_meters:     HashMap<SessionFlowId, MultiChannelValue>,
         dynamic_reports: HashMap<DynamicId, HashMap<ReportId, MultiChannelTimestampedValue>>,
     },
     PlayingFailed {
