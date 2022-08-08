@@ -1,27 +1,38 @@
 //! The API to the audio engine (from the domain side)
 
-use std::collections::HashMap;
+use std::collections::{HashMap, HashSet};
 
 use serde::{Deserialize, Serialize};
 use thiserror::Error;
-use uuid::Uuid;
 
 use crate::change::{ModifySessionSpec, PlayId, PlaySession, RenderId, RenderSession};
 use crate::cloud::apps::SessionSpec;
+use crate::cloud::domains::InstanceRouting;
 use crate::model::{MultiChannelTimestampedValue, MultiChannelValue};
-use crate::newtypes::{AppSessionId, DynamicId, ParameterId, ReportId};
+use crate::newtypes::{AppMediaObjectId, AppSessionId, DynamicId, FixedInstanceId, ModelId, ParameterId, ReportId};
 use crate::session::SessionFlowId;
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq)]
 #[serde(rename_all = "snake_case")]
 pub enum AudioEngineCommand {
     SetSpec {
-        session_id: AppSessionId,
-        spec:       SessionSpec,
+        session_id:  AppSessionId,
+        spec:        SessionSpec,
+        instances:   HashMap<FixedInstanceId, InstanceRouting>,
+        media_ready: HashMap<AppMediaObjectId, String>,
+    },
+    Media {
+        ready:   HashMap<AppMediaObjectId, String>,
+        removed: HashSet<AppMediaObjectId>,
+    },
+    Instances {
+        instances: HashMap<FixedInstanceId, InstanceRouting>,
     },
     ModifySpec {
         session_id:  AppSessionId,
         transaction: Vec<ModifySessionSpec>,
+        instances:   HashMap<FixedInstanceId, InstanceRouting>,
+        media_ready: HashMap<AppMediaObjectId, String>,
     },
     SetDynamicParameters {
         session_id: AppSessionId,
@@ -37,6 +48,9 @@ pub enum AudioEngineCommand {
         play:       PlaySession,
     },
     Stop {
+        session_id: AppSessionId,
+    },
+    Close {
         session_id: AppSessionId,
     },
 }
@@ -74,8 +88,9 @@ pub enum AudioEngineEvent {
         render_id:  RenderId,
         reason:     String,
     },
-    Exit {
-        code: i32,
+    Error {
+        session_id: AppSessionId,
+        error:      String,
     },
 }
 

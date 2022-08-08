@@ -277,6 +277,13 @@ impl Serialize for AppSessionId {
 pub struct MediaObjectId(String);
 
 impl MediaObjectId {
+    pub fn for_app(self, app_id: AppId) -> AppMediaObjectId {
+        AppMediaObjectId {
+            app_id,
+            media_id: self,
+        }
+    }
+
     pub fn validate(self) -> Result<Self, CloudError> {
         static VALIDATION: OnceCell<Regex> = OnceCell::new();
 

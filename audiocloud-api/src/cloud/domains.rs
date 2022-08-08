@@ -53,6 +53,14 @@ pub struct DomainFixedInstance {
     pub maintenance:  Vec<Maintenance>,
 }
 
+#[derive(Serialize, Deserialize, Debug, Clone, Copy, PartialEq)]
+pub struct InstanceRouting {
+    pub send_count:     usize,
+    pub send_channel:   usize,
+    pub return_count:   usize,
+    pub return_channel: usize,
+}
+
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq)]
 pub struct DomainPowerInstanceSettings {
     pub warm_up_ms:        usize,

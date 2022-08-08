@@ -1,10 +1,12 @@
 use std::collections::HashMap;
+use std::fmt::{Display, Formatter};
 use std::ops::Range;
 use std::str::FromStr;
 
 use crate::change::{PlayId, RenderId};
 use derive_more::{IsVariant, Unwrap};
 use serde::{Deserialize, Deserializer, Serialize, Serializer};
+use serde_json::Value;
 
 use crate::cloud::apps::{CreateSession, SessionSpec};
 use crate::model::{MultiChannelTimestampedValue, MultiChannelValue};
@@ -15,40 +17,34 @@ use crate::time::TimeRange;
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct Session {
     pub domain_id: DomainId,
-    pub time: TimeRange,
-    pub spec: SessionSpec,
-    pub security: HashMap<SecureKey, SessionSecurity>,
-    pub version: u64,
+    pub time:      TimeRange,
+    pub spec:      SessionSpec,
+    pub security:  HashMap<SecureKey, SessionSecurity>,
+    pub version:   u64,
 }
 
 impl From<CreateSession> for Session {
     fn from(source: CreateSession) -> Self {
-        let CreateSession {
-            time,
-            domain,
-            tracks,
-            mixers,
-            dynamic,
-            fixed,
-            security,
-            connections,
-            ..
-        } = source;
+        let CreateSession { time,
+                            domain,
+                            tracks,
+                            mixers,
+                            dynamic,
+                            fixed,
+                            security,
+                            connections,
+                            .. } = source;
 
-        Self {
-            domain_id: domain,
+        Self { domain_id: domain,
 
-            time,
-            security,
-            version: 0,
-            spec: SessionSpec {
-                tracks,
-                mixers,
-                dynamic,
-                fixed,
-                connections,
-            },
-        }
+               time,
+               security,
+               version: 0,
+               spec: SessionSpec { tracks,
+                                   mixers,
+                                   dynamic,
+                                   fixed,
+                                   connections } }
     }
 }
 
@@ -59,24 +55,25 @@ pub struct SessionMixer {
 
 #[derive(Clone, Debug, Serialize, Deserialize, PartialEq)]
 pub struct SessionDynamicInstance {
-    pub model_id: ModelId,
+    pub model_id:   ModelId,
     pub parameters: InstanceParameters,
 }
 
 #[derive(Clone, Debug, Serialize, Deserialize, PartialEq)]
 pub struct SessionFixedInstance {
     pub instance_id: FixedInstanceId,
-    pub parameters: InstanceParameters,
+    pub parameters:  InstanceParameters,
+    pub wet:         f64, // only applicable for instances with <= 2 inputs and <= 2 outputs
 }
 
 #[derive(Clone, Debug, Serialize, Deserialize, PartialEq)]
 pub struct SessionConnection {
-    pub from: SessionFlowId,
-    pub to: SessionFlowId,
+    pub from:          SessionFlowId,
+    pub to:            SessionFlowId,
     pub from_channels: MixerChannels,
-    pub to_channels: MixerChannels,
-    pub volume: f64,
-    pub pan: f64,
+    pub to_channels:   MixerChannels,
+    pub volume:        f64,
+    pub pan:           f64,
 }
 
 pub type InstanceParameters = HashMap<ParameterId, MultiChannelValue>;
@@ -85,7 +82,7 @@ pub type InstanceReports = HashMap<ReportId, MultiChannelTimestampedValue>;
 #[derive(Clone, Copy, Debug, Serialize, Deserialize, PartialEq)]
 pub struct ConnectionValues {
     pub volume: Option<f64>,
-    pub pan: Option<f64>,
+    pub pan:    Option<f64>,
 }
 
 #[derive(Clone, Copy, Debug, Serialize, Deserialize, Eq, PartialEq, IsVariant, Unwrap)]
@@ -124,11 +121,16 @@ pub enum SessionFlowId {
 
 impl SessionFlowId {
     pub fn is_input(&self) -> bool {
-        matches!(self, SessionFlowId::MixerInput(_) | SessionFlowId::FixedInstanceInput(_) | SessionFlowId::DynamicInstanceInput(_))
+        matches!(self,
+                 SessionFlowId::MixerInput(_) | SessionFlowId::FixedInstanceInput(_) | SessionFlowId::DynamicInstanceInput(_))
     }
 
     pub fn is_output(&self) -> bool {
-        matches!(self, SessionFlowId::MixerOutput(_) | SessionFlowId::FixedInstanceOutput(_) | SessionFlowId::DynamicInstanceOutput(_) | SessionFlowId::TrackOutput(_))
+        matches!(self,
+                 SessionFlowId::MixerOutput(_)
+                 | SessionFlowId::FixedInstanceOutput(_)
+                 | SessionFlowId::DynamicInstanceOutput(_)
+                 | SessionFlowId::TrackOutput(_))
     }
 }
 
@@ -147,14 +149,14 @@ impl Serialize for SessionFlowId {
         where S: Serializer
     {
         serializer.serialize_str(&match self {
-            SessionFlowId::MixerInput(mixer) => format!("mix:inp:{mixer}"),
-            SessionFlowId::FixedInstanceInput(fixed) => format!("fix:inp:{fixed}"),
-            SessionFlowId::DynamicInstanceInput(dynamic) => format!("dyn:inp:{dynamic}"),
-            SessionFlowId::MixerOutput(mixer) => format!("mix:out:{mixer}"),
-            SessionFlowId::FixedInstanceOutput(fixed) => format!("fix:out:{fixed}"),
-            SessionFlowId::DynamicInstanceOutput(dynamic) => format!("dyn:out:{dynamic}"),
-            SessionFlowId::TrackOutput(track) => format!("trk:out:{track}"),
-        })
+                                     SessionFlowId::MixerInput(mixer) => format!("mix:inp:{mixer}"),
+                                     SessionFlowId::FixedInstanceInput(fixed) => format!("fix:inp:{fixed}"),
+                                     SessionFlowId::DynamicInstanceInput(dynamic) => format!("dyn:inp:{dynamic}"),
+                                     SessionFlowId::MixerOutput(mixer) => format!("mix:out:{mixer}"),
+                                     SessionFlowId::FixedInstanceOutput(fixed) => format!("fix:out:{fixed}"),
+                                     SessionFlowId::DynamicInstanceOutput(dynamic) => format!("dyn:out:{dynamic}"),
+                                     SessionFlowId::TrackOutput(track) => format!("trk:out:{track}"),
+                                 })
     }
 }
 
@@ -192,7 +194,7 @@ impl FromStr for SessionFlowId {
 #[derive(Clone, Debug, Serialize, Deserialize, PartialEq)]
 pub struct SessionTrack {
     pub channels: SessionTrackChannels,
-    pub media: HashMap<MediaId, SessionTrackMedia>,
+    pub media:    HashMap<MediaId, SessionTrackMedia>,
 }
 
 #[derive(Clone, Copy, Debug, Serialize, Deserialize, Eq, PartialEq)]
@@ -213,11 +215,11 @@ impl SessionTrackChannels {
 
 #[derive(Clone, Debug, Serialize, Deserialize, PartialEq)]
 pub struct SessionTrackMedia {
-    pub channels: SessionTrackChannels,
-    pub media_segment: SessionTimeSegment,
+    pub channels:         SessionTrackChannels,
+    pub media_segment:    SessionTimeSegment,
     pub timeline_segment: SessionTimeSegment,
-    pub object_id: MediaObjectId,
-    pub format: SessionTrackMediaFormat,
+    pub object_id:        MediaObjectId,
+    pub format:           SessionTrackMediaFormat,
 }
 
 #[derive(Clone, Copy, Debug, Serialize, Deserialize, PartialEq)]
@@ -232,9 +234,19 @@ pub enum SessionTrackMediaFormat {
     WavPack,
 }
 
+impl Display for SessionTrackMediaFormat {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        let s = match serde_json::to_value(self).unwrap() {
+            Value::String(s) => s,
+            _ => unreachable!(),
+        };
+        f.write_str(&s)
+    }
+}
+
 #[derive(Clone, Copy, Debug, Serialize, Deserialize, PartialEq)]
 pub struct SessionTimeSegment {
-    pub start: f64,
+    pub start:  f64,
     pub length: f64,
 }
 
@@ -246,11 +258,11 @@ impl SessionTimeSegment {
 
 #[derive(Debug, Serialize, Deserialize, Clone, PartialEq)]
 pub struct SessionSecurity {
-    pub structure: bool,
-    pub media: bool,
+    pub structure:  bool,
+    pub media:      bool,
     pub parameters: bool,
-    pub transport: bool,
-    pub audio: bool,
+    pub transport:  bool,
+    pub audio:      bool,
 }
 
 // The overall state of the session state machine
