@@ -1,7 +1,7 @@
 import { Static, Type } from "@sinclair/typebox";
 import Option from "./utils/option";
-import { TrackId, FixedId, DynamicId, MixerId, InputId, MediaId, MediaObjectId, ParameterId, SecureKey } from "./new_types";
-import { MixerInput, MixerInputValues, SessionDynamicInstance, SessionFixedInstance, SessionMixer, SessionMixerId, SessionMode, SessionObjectId, SessionSecurity, SessionTimeSegment, SessionTrackChannels } from "./session";
+import { TrackId, FixedId, DynamicId, MixerId, MediaId, MediaObjectId, ParameterId, SecureKey, ConnectionId } from "./new_types";
+import { ConnectionValues, MixerChannels, SessionDynamicInstance, SessionFixedInstance, SessionFlowId, SessionMixer, SessionMixerId, SessionMode, SessionSecurity, SessionTimeSegment, SessionTrackChannels, SessionTrackMedia, SessionTrackMediaFormat } from "./session";
 import { MultiChannelValue } from "./model";
 import { Timestamped } from "./time";
 
@@ -15,11 +15,7 @@ export const ModifySessionSpec = Type.Union([
     Type.Object({
         "add_track_media":              Type.Object({
             "track_id":                 TrackId,
-            "media_id":                 MediaId,
-            "channels":                 SessionTrackChannels,
-            "media_segment":            SessionTimeSegment,
-            "timeline_segment":         SessionTimeSegment,
-            "object_id":                MediaObjectId,
+            "spec":                     SessionTrackMedia,
         })
     }),
     Type.Object({
@@ -63,32 +59,39 @@ export const ModifySessionSpec = Type.Union([
     }),
     Type.Object({
         "delete_mixer":                 Type.Object({
-            "mixer_id":                 SessionMixerId,
+            "mixer_id":                 MixerId,
         })
     }),
     Type.Object({
-        "delete_mixer_input":           Type.Object({
-            "mixer_id":                 SessionMixerId,
-            "input_id":                 InputId,
+        "delete_fixed_instance":        Type.Object({
+            "fixed_id":                 FixedId,
         })
     }),
     Type.Object({
-        "delete_inputs_referencing":    Type.Object({
-            "source_id":                SessionObjectId,
+        "delete_dynamic_instance":      Type.Object({
+            "dynamic_id":               DynamicId,
         })
     }),
     Type.Object({
-        "add_mixer_input":              Type.Object({
-            "mixer_id":                 SessionMixerId,
-            "input_id":                 InputId,
-            "input":                    MixerInput,
+        "delete_connection":            Type.Object({
+            "connection_id":            ConnectionId,
         })
     }),
     Type.Object({
-        "set_input_values":             Type.Object({
-            "mixer_id":                 SessionMixerId,
-            "input_id":                 InputId,
-            "values":                   MixerInputValues,
+        "add_connection":               Type.Object({
+            "connection_id":            ConnectionId,
+            "from":                     SessionFlowId,
+            "to":                       SessionFlowId,
+            "from_channels":            MixerChannels,
+            "to_channels":              MixerChannels,
+            "volume":                   Type.Number({default: 0}),
+            "pan":                      Type.Number({minimum: -1, maximum: 1, default: 0})
+        })
+    }),
+    Type.Object({
+        "set_connection_parameter_values":          Type.Object({
+            "connection_id":                        ConnectionId,
+            "values":                               ConnectionValues
         })
     }),
     Type.Object({
@@ -142,6 +145,7 @@ export type PlayId = Static<typeof PlayId>
 
 export const PlaySession = Type.Object({
     play_id:                    PlayId,
+    mixer_id:                   MixerId,
     segment:                    SessionTimeSegment,
     start_at:                   Type.Number(),
     looping:                    Type.Boolean(),
@@ -219,8 +223,9 @@ export const ModifySessionError = Type.Union([
     Type.Object({ "dynamic_instance_does_not_exist":    DynamicId }),
     Type.Object({ "mixer_does_not_exist":               MixerId }),
 
-    Type.Object({ "input_exists":                       Type.Tuple([SessionMixerId, InputId]) }),
-    Type.Object({ "input_does_not_exist":               Type.Tuple([SessionMixerId, InputId]) }),
+    Type.Object({ "connection_does_not_exist":          ConnectionId }),
+    Type.Object({ "connection_exists":                  ConnectionId }),
+    Type.Object({ "connection_malformed":               Type.Tuple([ConnectionId, Type.String()]) }),
 
     Type.Object({ "media_exists":                       Type.Tuple([TrackId, MediaId]) }),
     Type.Object({ "media_does_not_exist":               Type.Tuple([TrackId, MediaId]) }),

@@ -47,11 +47,11 @@ export type DynamicId = Static<typeof DynamicId>
 export const FixedId = Type.String({minLength: 1})
 export type FixedId = Static<typeof FixedId>
 
+export const ConnectionId = Type.String({minLength: 1})
+export type ConnectionId = Static<typeof ConnectionId>
+
 export const MediaId = Type.String({minLength: 1})
 export type MediaId = Static<typeof MediaId>
-
-export const InputId = Type.String({minLength: 1})
-export type InputId = Static<typeof InputId>
 
 export const SecureKey = Type.String({minLength: 8})
 export type SecureKey = Static<typeof SecureKey>

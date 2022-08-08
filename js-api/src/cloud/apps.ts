@@ -1,6 +1,6 @@
 import { Static, Type } from "@sinclair/typebox";
-import { DomainId, DynamicId, FixedId, FixedInstanceId, MixerId, ModelId, SecureKey, TrackId } from "../new_types";
-import { SessionTrack, SessionMixer, SessionDynamicInstance, SessionFixedInstance, SessionSecurity } from "../session";
+import { DomainId, DynamicId, FixedId, FixedInstanceId, MixerId, ConnectionId, ModelId, SecureKey, TrackId } from "../new_types";
+import { SessionTrack, SessionMixer, SessionDynamicInstance, SessionFixedInstance, SessionConnection, SessionSecurity } from "../session";
 import { JsonTimeRange } from "../time";
 import { DomainLimits, DynamicInstanceLimits } from "./domains";
 
@@ -36,6 +36,7 @@ export const CreateSession = Type.Object({
     mixers:             Type.Optional(Type.Record(MixerId, SessionMixer)),
     dynamic:            Type.Optional(Type.Record(DynamicId, SessionDynamicInstance)),
     fixed:              Type.Optional(Type.Record(FixedId, SessionFixedInstance)),
+    connections:        Type.Optional(Type.Record(ConnectionId, SessionConnection)),
     security:           Type.Optional(Type.Record(SecureKey, SessionSecurity)),
     dry_run:            Type.Boolean()
 })
@@ -46,5 +47,6 @@ export const SessionSpec = Type.Object ({
     mixers:             Type.Optional(Type.Record(MixerId, SessionMixer)),
     dynamic:            Type.Optional(Type.Record(DynamicId, SessionDynamicInstance)),
     fixed:              Type.Optional(Type.Record(FixedId, SessionFixedInstance)),
+    connections:        Type.Optional(Type.Record(ConnectionId, SessionConnection))
 })
 export type SessionSpec = Static<typeof SessionSpec>
