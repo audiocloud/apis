@@ -1,11 +1,12 @@
 import { Static, Type } from "@sinclair/typebox";
 import Option from "./utils/option";
 import { Uuid } from "./utils/uuid";
-import { ModifySessionSpec, PlayId, PlaySegment, PlaySession, RenderId, RenderSession } from "./change";
+import { ModifySessionSpec, PlayId, PlaySession, RenderId, RenderSession } from "./change";
 import { MultiChannelTimestampedValue, MultiChannelValue } from "./model";
-import { AppSessionId, DynamicId, ParameterId, ReportId } from "./new_types";
+import { AppMediaObjectId, AppSessionId, DynamicId, FixedInstanceId, ParameterId, ReportId } from "./new_types";
 import { SessionSpec } from "./cloud/apps";
-import { Session, SessionObjectId } from "./session";
+import { InstanceRouting } from "./cloud/domains";
+import { SessionFlowId } from "./session";
 
 export const CompressedAudio = Type.Object({
     play_id:                            PlayId,
@@ -19,13 +20,26 @@ export const AudioEngineCommand = Type.Union([
     Type.Object({
         "set_spec":                     Type.Object({
             "session_id":               AppSessionId,
-            "spec":                     SessionSpec
+            "spec":                     SessionSpec,
+            "instances":                Type.Record(FixedInstanceId, InstanceRouting),
+            "media_ready":              Type.Record(AppMediaObjectId, Type.String())
         })
+    }),
+    Type.Object({
+        "media":                        Type.Object({
+            "ready":                    Type.Record(AppMediaObjectId, Type.String()),
+            "removed":                  AppMediaObjectId,
+        })
+    }),
+    Type.Object({
+        "instances":                    Type.Record(FixedInstanceId, InstanceRouting),
     }),
     Type.Object({
         "modify_spec":                  Type.Object({
             "session_id":               AppSessionId,
-            "transaction":              Type.Array(ModifySessionSpec)
+            "transaction":              Type.Array(ModifySessionSpec),
+            "instances":                Type.Record(FixedInstanceId, InstanceRouting),
+            "media_ready":              Type.Record(AppMediaObjectId, Type.String())
         })
     }),
     Type.Object({
@@ -51,6 +65,11 @@ export const AudioEngineCommand = Type.Union([
         "stop":                         Type.Object({
             "session_id":               AppSessionId
         })
+    }),
+    Type.Object({
+        "close":                        Type.Object({
+            "session_id":               AppSessionId
+        })
     })
 ])
 export type AudioEngineCommand = Static<typeof AudioEngineCommand>
@@ -67,8 +86,15 @@ export const AudioEngineEvent = Type.Union([
             "session_id":               AppSessionId,
             "playing":                  PlaySession,
             "audio":                    CompressedAudio,
-            "peak_meters":              Type.Array(Type.Tuple([SessionObjectId, MultiChannelValue])),
+            "peak_meters":              Type.Array(Type.Tuple([SessionFlowId, MultiChannelValue])),
             "dynamic_reports":          Type.Record(DynamicId, Type.Record(ReportId, MultiChannelTimestampedValue))
+        })
+    }),
+    Type.Object({
+        "playing_failed":               Type.Object({
+            "session_id":               AppSessionId,
+            "play_id":                  PlayId,
+            "error":                    Type.String()
         })
     }),
     Type.Object({
@@ -92,8 +118,9 @@ export const AudioEngineEvent = Type.Union([
         })
     }),
     Type.Object({
-        "exit":                         Type.Object({
-            "code":                     Type.Number()
+        "error":                        Type.Object({
+            "session_id":               AppSessionId,
+            "error":                    Type.String()
         })
     }),
 ])

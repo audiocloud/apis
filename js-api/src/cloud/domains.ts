@@ -42,6 +42,14 @@ export const DomainFixedInstance = Type.Object({
 })
 export type DomainFixedInstance = Static<typeof DomainFixedInstance>
 
+export const InstanceRouting = Type.Object({
+    send_count:         Type.Integer(),
+    send_channel:       Type.Integer(),
+    return_count:       Type.Integer(),
+    return_channel:     Type.Integer(),
+})
+export type InstanceRouting = Static<typeof InstanceRouting>
+
 export const BootDomain = Type.Object({
     domain_id:          DomainId,
     event_base:         Type.Integer(),

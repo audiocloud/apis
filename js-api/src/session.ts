@@ -2,7 +2,7 @@
 
 import { Static, Type } from "@sinclair/typebox";
 import Option from "./utils/option";
-import { DomainId, DynamicId, FixedId, FixedInstanceId, InputId, MediaId, MediaObjectId, MixerId, ModelId, ParameterId, ReportId, SecureKey, TrackId } from "./new_types";
+import { DomainId, DynamicId, FixedId, FixedInstanceId, MediaId, MediaObjectId, MixerId, ModelId, ParameterId, ReportId, SecureKey, TrackId } from "./new_types";
 import { JsonTimeRange } from "./time";
 import { MultiChannelTimestampedValue, MultiChannelValue } from "./model";
 import { PlayId, RenderId } from "./change";
@@ -51,30 +51,41 @@ export const SessionObjectId = Type.Union([
 ])
 export type SessionObjectId = Static<typeof SessionObjectId>
 
+export const SessionFlowId = Type.Union([
+    Type.Object({ "mixer_input":                MixerId }),
+    Type.Object({ "mixer_output":               MixerId }),
+    Type.Object({ "fixed_instance_input":       FixedId }),
+    Type.Object({ "fixed_instance_output":      FixedId }),
+    Type.Object({ "dynamic_instance_input":     DynamicId }),
+    Type.Object({ "dynamic_instance_output":    DynamicId }),
+    Type.Object({ "track_output":               TrackId }),
+])
+export type SessionFlowId = Static<typeof SessionFlowId>
+
 export const MixerChannels = Type.Union([
     Type.Object({ "mono": Type.Integer({minimum: 0, maximum: 256}) }),
     Type.Object({ "stereo": Type.Integer({minimum: 0, maximum: 256}) }),
 ])
 export type MixerChannels = Static<typeof MixerChannels>
 
-export const MixerInput = Type.Object({
-    source_id:          SessionObjectId,
-    input_channels:     MixerChannels,
-    mixer_channels:     MixerChannels,
+export const SessionConnection = Type.Object({
+    from:               SessionFlowId,
+    to:                 SessionFlowId,
+    from_channels:      MixerChannels,
+    to_channels:        MixerChannels,
     volume:             Type.Number({default: 0}),
     pan:                Type.Number({minimum: -1, maximum: 1, default: 0}),
 })
-export type MixerInput = Static<typeof MixerInput>
+export type SessionConnection = Static<typeof SessionConnection>
 
-export const MixerInputValues =  Type.Object({
+export const ConnectionValues =  Type.Object({
     volume:             Option(Type.Number({default: 0})),
     pan:                Option(Type.Number({minimum: -1, maximum: 1, default: 0})),
 })
-export type MixerInputValues = Static<typeof MixerInputValues>
+export type ConnectionValues = Static<typeof ConnectionValues>
 
 export const SessionMixer = Type.Object({
     channels:           Type.Integer(),
-    inputs:             Type.Record(InputId, MixerInput)
 })
 export type SessionMixer = Static<typeof SessionMixer>
 
@@ -87,14 +98,13 @@ export type InstanceReports = Static<typeof InstanceReports>
 export const SessionDynamicInstance = Type.Object({
     model_id:           ModelId,
     parameters:         InstanceParameters,
-    inputs:             Type.Record(InputId, MixerInput)
 })
 export type SessionDynamicInstance = Static<typeof SessionDynamicInstance>
 
 export const SessionFixedInstance = Type.Object({
     instance_id:        FixedInstanceId,
     parameters:         InstanceParameters,
-    inputs:             Type.Record(InputId, MixerInput) 
+    wet:                Type.Number() // only applicable for instances with <= 2 inputs and <= 2 outputs
 })
 export type SessionFixedInstance = Static<typeof SessionFixedInstance>
 

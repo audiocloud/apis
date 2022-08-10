@@ -1,8 +1,7 @@
 import { Static, Type } from "@sinclair/typebox";
 import { ModifySessionError } from "../change";
 import { ResourceId } from "../model";
-import { AppId, AppMediaObjectId, AppSessionId, DomainId, DynamicId, FixedId, FixedInstanceId, InputId, MixerId, ModelId, TrackId } from "../new_types";
-import { SessionObjectId } from "../session";
+import { AppId, AppMediaObjectId, AppSessionId, DomainId, DynamicId, FixedId, FixedInstanceId, ModelId } from "../new_types";
 
 export const CloudError = Type.Union([
     Type.Literal("api_key_not_found"),
@@ -18,10 +17,6 @@ export const CloudError = Type.Union([
     Type.Object({ "overlapping_fixed_instances":        Type.Array(FixedInstanceId)}),
     Type.Object({ "domain_not_found":                   DomainId }),
     Type.Object({ "instance_not_found":                 FixedInstanceId }),
-    Type.Object({ "source_mixer_not_found":             Type.Tuple([SessionObjectId, InputId, MixerId]) }),
-    Type.Object({ "source_track_not_found":             Type.Tuple([SessionObjectId, InputId, TrackId]) }),
-    Type.Object({ "source_fixed_instance_not_found":    Type.Tuple([SessionObjectId, InputId, FixedId]) }),
-    Type.Object({ "source_dynamic_instance_not_found":  Type.Tuple([SessionObjectId, InputId, DynamicId]) }),
     Type.Object({ "instance_not_referenced":            Type.Tuple([Type.Integer(), FixedInstanceId]) }),
     Type.Object({ "dynamic_instance_not_supported":     Type.Tuple([DynamicId, DomainId, ModelId]) }),
     Type.Object({ "fixed_instance_not_supported":       Type.Tuple([ FixedId, DomainId, FixedInstanceId]) }),
