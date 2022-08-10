@@ -50,7 +50,8 @@ impl From<CreateSession> for Session {
 
 #[derive(Clone, Debug, Serialize, Deserialize, PartialEq)]
 pub struct SessionMixer {
-    pub channels: usize,
+    pub input_channels:  usize,
+    pub output_channels: usize,
 }
 
 #[derive(Clone, Debug, Serialize, Deserialize, PartialEq)]
@@ -220,6 +221,39 @@ pub struct SessionTrackMedia {
     pub timeline_segment: SessionTimeSegment,
     pub object_id:        MediaObjectId,
     pub format:           SessionTrackMediaFormat,
+}
+
+impl SessionTrackMedia {
+    pub fn update(&mut self, update: UpdateSessionTrackMedia) {
+        let UpdateSessionTrackMedia { channels,
+                                      media_segment,
+                                      timeline_segment,
+                                      object_id, } = update;
+
+        if let Some(channels) = channels {
+            self.channels = channels;
+        }
+
+        if let Some(media_segment) = media_segment {
+            self.media_segment = media_segment;
+        }
+
+        if let Some(timeline_segment) = timeline_segment {
+            self.timeline_segment = timeline_segment;
+        }
+
+        if let Some(object_id) = object_id {
+            self.object_id = object_id;
+        }
+    }
+}
+
+#[derive(Clone, Debug, Serialize, Deserialize, PartialEq)]
+pub struct UpdateSessionTrackMedia {
+    pub channels:         Option<SessionTrackChannels>,
+    pub media_segment:    Option<SessionTimeSegment>,
+    pub timeline_segment: Option<SessionTimeSegment>,
+    pub object_id:        Option<MediaObjectId>,
 }
 
 #[derive(Clone, Copy, Debug, Serialize, Deserialize, PartialEq)]

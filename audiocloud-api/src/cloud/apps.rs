@@ -156,7 +156,7 @@ impl SessionSpec {
                         .get(mixer_id)
                         .ok_or_else(|| InternalInconsistency(format!("Connection {id} flow to mixer {mixer_id} does not exist")))?;
 
-        if !channels.is_subset_of(0..mixer.channels) {
+        if !channels.is_subset_of(0..mixer.input_channels) {
             return Err(InternalInconsistency(format!("Connection {id} flow to mixer {mixer_id} has channels that do not exist")));
         }
 

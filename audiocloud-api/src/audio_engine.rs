@@ -5,12 +5,12 @@ use std::collections::{HashMap, HashSet};
 use serde::{Deserialize, Serialize};
 use thiserror::Error;
 
-use crate::change::{ModifySessionSpec, PlayId, PlaySession, RenderId, RenderSession};
+use crate::change::{ModifySessionSpec, PlayId, PlaySession, RenderId, RenderSession, UpdatePlaySession};
 use crate::cloud::apps::SessionSpec;
 use crate::cloud::domains::InstanceRouting;
 use crate::model::{MultiChannelTimestampedValue, MultiChannelValue};
-use crate::newtypes::{AppMediaObjectId, AppSessionId, DynamicId, FixedInstanceId, ModelId, ParameterId, ReportId};
-use crate::session::SessionFlowId;
+use crate::newtypes::{AppMediaObjectId, AppSessionId, DynamicId, FixedInstanceId, MixerId, ModelId, ParameterId, ReportId};
+use crate::session::{SessionFlowId, SessionTimeSegment};
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq)]
 #[serde(rename_all = "snake_case")]
@@ -47,6 +47,10 @@ pub enum AudioEngineCommand {
         session_id: AppSessionId,
         play:       PlaySession,
     },
+    UpdatePlay {
+        session_id: AppSessionId,
+        update:     UpdatePlaySession,
+    },
     Stop {
         session_id: AppSessionId,
     },
@@ -64,7 +68,7 @@ pub enum AudioEngineEvent {
     },
     Playing {
         session_id:      AppSessionId,
-        playing:         PlaySession,
+        play_id:         PlayId,
         audio:           CompressedAudio,
         peak_meters:     HashMap<SessionFlowId, MultiChannelValue>,
         dynamic_reports: HashMap<DynamicId, HashMap<ReportId, MultiChannelTimestampedValue>>,

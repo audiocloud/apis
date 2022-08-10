@@ -13,7 +13,7 @@ use crate::newtypes::{
 };
 use crate::session::{
     ConnectionValues, MixerChannels, Session, SessionConnection, SessionDynamicInstance, SessionFixedInstance, SessionFlowId, SessionMixer,
-    SessionTimeSegment, SessionTrack, SessionTrackChannels, SessionTrackMedia, SessionTrackMediaFormat,
+    SessionTimeSegment, SessionTrack, SessionTrackChannels, SessionTrackMedia, UpdateSessionTrackMedia,
 };
 use crate::session::{SessionMode, SessionSecurity};
 use crate::time::Timestamped;
@@ -29,15 +29,13 @@ pub enum ModifySessionSpec {
     },
     AddTrackMedia {
         track_id: TrackId,
+        media_id: MediaId,
         spec:     SessionTrackMedia,
     },
-    SetTrackMediaValues {
-        track_id:         TrackId,
-        media_id:         MediaId,
-        channels:         Option<SessionTrackChannels>,
-        media_segment:    Option<SessionTimeSegment>,
-        timeline_segment: Option<SessionTimeSegment>,
-        object_id:        Option<MediaObjectId>,
+    UpdateTrackMedia {
+        track_id: TrackId,
+        media_id: MediaId,
+        update:   UpdateSessionTrackMedia,
     },
     DeleteTrackMedia {
         track_id: TrackId,
@@ -98,7 +96,7 @@ impl ModifySessionSpec {
         match self {
             ModifySessionSpec::AddTrack { .. } => "add_track",
             ModifySessionSpec::AddTrackMedia { .. } => "add_track_media",
-            ModifySessionSpec::SetTrackMediaValues { .. } => "set_track_media_values",
+            ModifySessionSpec::UpdateTrackMedia { .. } => "update_track_media",
             ModifySessionSpec::DeleteTrackMedia { .. } => "delete_track_media",
             ModifySessionSpec::DeleteTrack { .. } => "delete_track",
             ModifySessionSpec::AddFixedInstance { .. } => "add_fixed_instance",
@@ -216,6 +214,15 @@ pub struct PlaySession {
     pub looping:     bool,
     pub sample_rate: SampleRate,
     pub bit_depth:   PlayBitDepth,
+}
+
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq)]
+pub struct UpdatePlaySession {
+    pub play_id:  PlayId,
+    pub mixer_id: Option<MixerId>,
+    pub segment:  Option<SessionTimeSegment>,
+    pub start_at: Option<f64>,
+    pub looping:  bool,
 }
 
 #[derive(Serialize, Deserialize, Clone, Copy, Debug, PartialEq)]
@@ -406,23 +413,10 @@ impl SessionSpec {
             ModifySessionSpec::SetConnectionParameterValues { connection_id, values } => {
                 self.set_connection_parameter_values(connection_id, values)
             }
-            ModifySessionSpec::AddTrackMedia { track_id,
-                                               media_id,
-                                               channels,
-                                               media_segment,
-                                               timeline_segment,
-                                               object_id,
-                                               format, } => {
-                self.add_track_media(track_id, media_id, channels, media_segment, timeline_segment, object_id, format)
-            }
-            ModifySessionSpec::SetTrackMediaValues { track_id,
-                                                     media_id,
-                                                     channels,
-                                                     media_segment,
-                                                     timeline_segment,
-                                                     object_id, } => {
-                self.set_track_media_values(track_id, media_id, channels, media_segment, timeline_segment, object_id)
-            }
+            ModifySessionSpec::AddTrackMedia { track_id, media_id, spec } => self.add_track_media(track_id, media_id, spec),
+            ModifySessionSpec::UpdateTrackMedia { track_id,
+                                                  media_id,
+                                                  update, } => self.update_track_media(track_id, media_id, update),
             ModifySessionSpec::DeleteFixedInstance { fixed_id } => self.delete_fixed_instance(fixed_id),
             ModifySessionSpec::DeleteDynamicInstance { dynamic_id } => self.delete_dynamic_instance(dynamic_id),
             ModifySessionSpec::DeleteConnection { connection_id } => self.delete_connection(connection_id),
@@ -535,27 +529,14 @@ impl SessionSpec {
         Ok(())
     }
 
-    pub fn add_track_media(&mut self,
-                           track_id: TrackId,
-                           media_id: MediaId,
-                           channels: SessionTrackChannels,
-                           media_segment: SessionTimeSegment,
-                           timeline_segment: SessionTimeSegment,
-                           object_id: MediaObjectId,
-                           format: SessionTrackMediaFormat)
-                           -> Result<(), ModifySessionError> {
+    pub fn add_track_media(&mut self, track_id: TrackId, media_id: MediaId, spec: SessionTrackMedia) -> Result<(), ModifySessionError> {
         let track = self.tracks.get_mut(&track_id).ok_or(TrackDoesNotExist(track_id.clone()))?;
 
         if track.media.contains_key(&media_id) {
             return Err(MediaDoesNotExist(track_id.clone(), media_id));
         }
 
-        track.media.insert(media_id,
-                           SessionTrackMedia { channels,
-                                               media_segment,
-                                               timeline_segment,
-                                               object_id,
-                                               format });
+        track.media.insert(media_id, spec);
 
         Ok(())
     }
@@ -640,34 +621,17 @@ impl SessionSpec {
         Ok(())
     }
 
-    pub fn set_track_media_values(&mut self,
-                                  track_id: TrackId,
-                                  media_id: MediaId,
-                                  channels: Option<SessionTrackChannels>,
-                                  media_segment: Option<SessionTimeSegment>,
-                                  timeline_segment: Option<SessionTimeSegment>,
-                                  object_id: Option<MediaObjectId>)
-                                  -> Result<(), ModifySessionError> {
+    pub fn update_track_media(&mut self,
+                              track_id: TrackId,
+                              media_id: MediaId,
+                              update: UpdateSessionTrackMedia)
+                              -> Result<(), ModifySessionError> {
         let track = self.tracks.get_mut(&track_id).ok_or(TrackDoesNotExist(track_id.clone()))?;
         let media = track.media
                          .get_mut(&media_id)
                          .ok_or(MediaDoesNotExist(track_id.clone(), media_id))?;
 
-        if let Some(channels) = channels {
-            media.channels = channels;
-        }
-
-        if let Some(media_segment) = media_segment {
-            media.media_segment = media_segment;
-        }
-
-        if let Some(timeline_segment) = timeline_segment {
-            media.timeline_segment = timeline_segment;
-        }
-
-        if let Some(object_id) = object_id {
-            media.object_id = object_id;
-        }
+        media.update(update);
 
         Ok(())
     }
