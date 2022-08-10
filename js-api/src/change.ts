@@ -1,7 +1,7 @@
 import { Static, Type } from "@sinclair/typebox";
 import Option from "./utils/option";
 import { TrackId, FixedId, DynamicId, MixerId, MediaId, MediaObjectId, ParameterId, SecureKey, ConnectionId } from "./new_types";
-import { ConnectionValues, MixerChannels, SessionDynamicInstance, SessionFixedInstance, SessionFlowId, SessionMixer, SessionMixerId, SessionMode, SessionSecurity, SessionTimeSegment, SessionTrackChannels, SessionTrackMedia, SessionTrackMediaFormat } from "./session";
+import { ConnectionValues, MixerChannels, SessionDynamicInstance, SessionFixedInstance, SessionFlowId, SessionMixer, SessionMode, SessionSecurity, SessionTimeSegment, SessionTrackChannels, SessionTrackMedia, UpdateSessionTrackMedia } from "./session";
 import { MultiChannelValue } from "./model";
 import { Timestamped } from "./time";
 
@@ -15,17 +15,15 @@ export const ModifySessionSpec = Type.Union([
     Type.Object({
         "add_track_media":              Type.Object({
             "track_id":                 TrackId,
+            "media_id":                 MediaId,
             "spec":                     SessionTrackMedia,
         })
     }),
     Type.Object({
-        "set_track_media_values":       Type.Object({
+        "update_track_media":       Type.Object({
             "track_id":                 TrackId,
             "media_id":                 MediaId,
-            "channels":                 Option(SessionTrackChannels),
-            "media_segment":            Option(SessionTimeSegment),
-            "timeline_segment":         Option(SessionTimeSegment),
-            "object_id":                Option(MediaObjectId),
+            "update":                   UpdateSessionTrackMedia
         })
     }),
     Type.Object({
@@ -142,6 +140,15 @@ export type PlayBitDepth = Static<typeof PlayBitDepth>
 
 export const PlayId = Type.Integer()
 export type PlayId = Static<typeof PlayId>
+
+export const UpdatePlaySession = Type.Object({
+    play_id:                                        PlayId,
+    mixer_id:                                       Option(MixerId),
+    segment:                                        Option(SessionTimeSegment),
+    start_at:                                       Option(Type.Number()),
+    looping:                                        Type.Boolean()
+})
+export type UpdatePlaySession = Static<typeof UpdatePlaySession>
 
 export const PlaySession = Type.Object({
     play_id:                    PlayId,

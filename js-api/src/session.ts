@@ -20,6 +20,14 @@ export const SessionTimeSegment = Type.Object({
 })
 export type SessionTimeSegment = Static<typeof SessionTimeSegment>
 
+export const UpdateSessionTrackMedia = Type.Object({
+    channels:               Option(SessionTrackChannels),
+    media_segment:          Option(SessionTimeSegment),
+    timeline_segment:       Option(SessionTimeSegment),
+    object_id:              Option(MediaObjectId,)
+})
+export type UpdateSessionTrackMedia = Static<typeof UpdateSessionTrackMedia>
+
 export const SessionTrackMediaFormat = Type.Union([
     Type.Literal("wav"),
     Type.Literal("mp3"),
@@ -85,7 +93,8 @@ export const ConnectionValues =  Type.Object({
 export type ConnectionValues = Static<typeof ConnectionValues>
 
 export const SessionMixer = Type.Object({
-    channels:           Type.Integer(),
+    input_channels:     Type.Integer(),
+    output_channels:    Type.Integer(),
 })
 export type SessionMixer = Static<typeof SessionMixer>
 
