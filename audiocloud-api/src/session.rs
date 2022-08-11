@@ -193,7 +193,7 @@ impl FromStr for SessionFlowId {
 }
 
 #[derive(Clone, Debug, Serialize, Deserialize, PartialEq)]
-pub struct SessionTrack {
+pub struct  SessionTrack {
     pub channels: SessionTrackChannels,
     pub media:    HashMap<MediaId, SessionTrackMedia>,
 }
