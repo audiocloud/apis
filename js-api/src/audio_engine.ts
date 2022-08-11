@@ -62,6 +62,12 @@ export const AudioEngineCommand = Type.Union([
         })
     }),
     Type.Object({
+        "update_play":                  Type.Object({
+            "session_id":               AppSessionId,
+            "play":                     PlaySession
+        })
+    }),
+    Type.Object({
         "stop":                         Type.Object({
             "session_id":               AppSessionId
         })
@@ -84,7 +90,7 @@ export const AudioEngineEvent = Type.Union([
     Type.Object({
         "playing":                      Type.Object({
             "session_id":               AppSessionId,
-            "playing":                  PlaySession,
+            "play_id":                  PlayId,
             "audio":                    CompressedAudio,
             "peak_meters":              Type.Array(Type.Tuple([SessionFlowId, MultiChannelValue])),
             "dynamic_reports":          Type.Record(DynamicId, Type.Record(ReportId, MultiChannelTimestampedValue))

@@ -1,6 +1,6 @@
 {
   "name": "@audiocloud/api",
-  "version": "0.0.11",
+  "version": "0.0.12",
   "description": "AudioCloud API models and types (shared by TypeScript SDKs)",
   "main": "dist/cjs/index.js",
   "module": "dist/esm/index.js",
