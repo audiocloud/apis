@@ -193,7 +193,7 @@ impl FromStr for SessionFlowId {
 }
 
 #[derive(Clone, Debug, Serialize, Deserialize, PartialEq)]
-pub struct  SessionTrack {
+pub struct SessionTrack {
     pub channels: SessionTrackChannels,
     pub media:    HashMap<MediaId, SessionTrackMedia>,
 }
@@ -258,8 +258,8 @@ pub struct UpdateSessionTrackMedia {
 
 #[derive(Clone, Copy, Debug, Serialize, Deserialize, PartialEq)]
 pub enum SessionTrackMediaFormat {
-    #[serde(rename = "wav")]
-    Wav,
+    #[serde(rename = "wave")]
+    Wave,
     #[serde(rename = "mp3")]
     Mp3,
     #[serde(rename = "flac")]
