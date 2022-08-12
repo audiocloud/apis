@@ -80,7 +80,8 @@ pub enum AudioEngineEvent {
     },
     Rendering {
         session_id: AppSessionId,
-        rendering:  RenderSession,
+        render_id:  RenderId,
+        completion: f64,
     },
     RenderingFinished {
         session_id: AppSessionId,
