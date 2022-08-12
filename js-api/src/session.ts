@@ -29,7 +29,7 @@ export const UpdateSessionTrackMedia = Type.Object({
 export type UpdateSessionTrackMedia = Static<typeof UpdateSessionTrackMedia>
 
 export const SessionTrackMediaFormat = Type.Union([
-    Type.Literal("wav"),
+    Type.Literal("wave"),
     Type.Literal("mp3"),
     Type.Literal("flac"),
     Type.Literal("wavpack"),
