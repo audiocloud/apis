@@ -106,7 +106,8 @@ export const AudioEngineEvent = Type.Union([
     Type.Object({
         "rendering":                    Type.Object({
             "session_id":               AppSessionId,
-            "rendering":                RenderSession
+            "rendering":                RenderId,
+            "completion":               Type.Number()
         })
     }),
     Type.Object({
