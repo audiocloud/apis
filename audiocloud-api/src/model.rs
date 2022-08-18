@@ -1,8 +1,8 @@
 use std::collections::{HashMap, HashSet};
+use std::iter;
 
-use derive_more::{Constructor, Deref, DerefMut, Display, From, IsVariant, Unwrap};
+use derive_more::{Display, IsVariant, Unwrap};
 use serde::{Deserialize, Serialize};
-use serde_with::serde_as;
 
 use crate::newtypes::{FilterId, ParameterId, ReportId};
 use crate::time::Timestamped;
@@ -139,6 +139,15 @@ pub struct Model {
     pub media:        bool,
     #[serde(default)]
     pub capabilities: HashSet<ModelCapability>,
+}
+
+impl Model {
+    pub fn default_reports(&self) -> HashMap<ReportId, MultiChannelTimestampedValue> {
+        self.reports
+            .iter()
+            .map(|(k, v)| (k.clone(), iter::repeat(None).take(v.scope.len(self)).collect()))
+            .collect()
+    }
 }
 
 #[derive(Copy, Clone, Serialize, Deserialize, Debug, PartialEq, Eq, Hash)]
@@ -283,7 +292,6 @@ pub fn enumerate_multi_channel_value_i64(val: MultiChannelValue) -> impl Iterato
 }
 
 pub mod multi_channel_value {
-    use maplit::hashmap;
     use std::iter;
 
     use crate::model::{ModelValue, MultiChannelValue};
@@ -335,15 +343,28 @@ pub enum ModelElementScope {
     Size(usize),
 }
 
+impl ModelElementScope {
+    pub fn len(self, model: &Model) -> usize {
+        match self {
+            ModelElementScope::Global => 1,
+            ModelElementScope::AllInputs => model.inputs.len(),
+            ModelElementScope::AllOutputs => model.outputs.len(),
+            ModelElementScope::Size(num) => num,
+        }
+    }
+}
+
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq)]
 pub struct ModelReport {
-    pub scope:  ModelElementScope,
+    pub scope:    ModelElementScope,
     #[serde(default)]
-    pub unit:   ModelValueUnit,
-    pub role:   ModelReportRole,
-    pub values: Vec<ModelValueOption>,
+    pub unit:     ModelValueUnit,
+    pub role:     ModelReportRole,
+    pub values:   Vec<ModelValueOption>,
     #[serde(default)]
-    pub public: bool,
+    pub public:   bool,
+    #[serde(default)]
+    pub volatile: bool,
 }
 
 #[derive(Serialize, Deserialize, Clone, Copy, Debug, PartialEq, Eq, Hash, IsVariant)]

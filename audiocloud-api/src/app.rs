@@ -4,7 +4,7 @@ use std::collections::{HashMap, HashSet};
 use chrono::Utc;
 
 use crate::audio_engine::CompressedAudio;
-use crate::change::{DesiredSessionPlayState, SessionPlayState};
+use crate::change::{DesiredSessionPlayState, PlayId, RenderId, SessionPlayState};
 use crate::instance::InstancePlayState;
 use crate::instance::InstancePowerState;
 use crate::model::MultiChannelValue;
@@ -25,7 +25,14 @@ pub struct SessionPacket {
     pub compressed_audio:      Vec<CompressedAudio>,
     pub desired_play_state:    DesiredSessionPlayState,
     pub play_state:            SessionPlayState,
-    pub audio_engine_ready:    bool,
+    pub errors:                Vec<Timestamped<SessionPacketError>>,
+}
+
+#[derive(Serialize, Deserialize, Debug, Clone)]
+#[serde(rename_all = "snake_case")]
+pub enum SessionPacketError {
+    Playing(PlayId, String),
+    Rendering(RenderId, String),
 }
 
 impl Default for SessionPacket {
@@ -40,7 +47,7 @@ impl Default for SessionPacket {
                compressed_audio:      Default::default(),
                desired_play_state:    DesiredSessionPlayState::Stopped,
                play_state:            SessionPlayState::Stopped,
-               audio_engine_ready:    false, }
+               errors:                vec![], }
     }
 }
 
@@ -56,6 +63,14 @@ impl SessionPacket {
         // }
     }
 
+    pub fn add_play_error(&mut self, play_id: PlayId, error: String) {
+        self.errors.push(Timestamped::new(SessionPacketError::Playing(play_id, error)));
+    }
+
+    pub fn add_render_error(&mut self, render_id: RenderId, error: String) {
+        self.errors.push(Timestamped::new(SessionPacketError::Rendering(render_id, error)));
+    }
+
     pub fn add_waiting_instance(&mut self, instance_id: &FixedInstanceId) {
         if !self.waiting_for_instances.contains(instance_id) {
             self.waiting_for_instances.insert(instance_id.clone());
@@ -69,7 +84,7 @@ impl SessionPacket {
     }
 
     pub fn push_fixed_error(&mut self, instance: FixedId, error: String) {
-        self.fixed.entry(instance).or_default().errors.push(error);
+        self.fixed.entry(instance).or_default().errors.push(Timestamped::new(error));
     }
 
     pub fn push_fixed_input_metering(&mut self, fixed_id: &FixedId, input: MultiChannelValue) {
@@ -128,7 +143,7 @@ impl<T> From<(Timestamp, T)> for DiffStamped<T> {
 
 #[derive(Serialize, Deserialize, Debug, Clone, Default)]
 pub struct FixedInstancePacket {
-    pub errors:            Vec<String>,
+    pub errors:            Vec<Timestamped<String>>,
     pub instance_metering: HashMap<ReportId, Vec<DiffStamped<MultiChannelValue>>>,
     pub input_metering:    Vec<DiffStamped<MultiChannelValue>>,
     pub output_metering:   Vec<DiffStamped<MultiChannelValue>>,
