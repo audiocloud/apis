@@ -84,3 +84,23 @@ pub struct DownloadFromDomain {
     // typescript: any
     pub context:    Value,
 }
+
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq)]
+pub struct ImportInDomain {
+    pub path:        String,
+    pub channels:    SessionTrackChannels,
+    pub format:      SessionTrackMediaFormat,
+    pub seconds:     f64,
+    pub sample_rate: usize,
+    pub bytes:       u64,
+}
+
+impl ImportInDomain {
+    pub fn metadata(&self) -> MediaMetadata {
+        MediaMetadata { channels:    self.channels,
+                        format:      self.format,
+                        seconds:     self.seconds,
+                        sample_rate: self.sample_rate,
+                        bytes:       self.bytes, }
+    }
+}
