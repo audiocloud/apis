@@ -1,6 +1,6 @@
 //! Communication with the on-site media library
 
-use crate::newtypes::{AppId, MediaObjectId};
+use crate::newtypes::{AppId, AppMediaObjectId, MediaObjectId};
 use crate::session::{SessionTrackChannels, SessionTrackMediaFormat};
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
@@ -103,4 +103,13 @@ impl ImportInDomain {
                         sample_rate: self.sample_rate,
                         bytes:       self.bytes, }
     }
+}
+
+#[derive(Serialize, Deserialize, Clone, Debug)]
+pub struct MediaObject {
+    pub id:       AppMediaObjectId,
+    pub metadata: Option<MediaMetadata>,
+    pub path:     Option<String>,
+    pub download: Option<MediaDownloadState>,
+    pub upload:   Option<MediaUploadState>,
 }
