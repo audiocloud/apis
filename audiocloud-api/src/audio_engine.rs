@@ -22,11 +22,12 @@ pub enum AudioEngineCommand {
         media_ready: HashMap<AppMediaObjectId, String>,
     },
     Media {
-        ready:   HashMap<AppMediaObjectId, String>,
-        removed: HashSet<AppMediaObjectId>,
+        session_id:  AppSessionId,
+        media_ready: HashMap<AppMediaObjectId, String>,
     },
     Instances {
-        instances: HashMap<FixedInstanceId, InstanceRouting>,
+        session_id: AppSessionId,
+        instances:  HashMap<FixedInstanceId, InstanceRouting>,
     },
     ModifySpec {
         session_id:  AppSessionId,

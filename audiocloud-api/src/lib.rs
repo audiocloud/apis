@@ -13,3 +13,4 @@ pub mod model;
 pub mod newtypes;
 pub mod session;
 pub mod time;
+pub mod error;
