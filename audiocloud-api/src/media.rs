@@ -62,9 +62,9 @@ pub struct UploadToDomain {
     pub sample_rate: usize,
     pub bytes:       u64,
     pub url:         String,
-    pub notify_url:  String,
+    pub notify_url:  Option<String>,
     // typescript: any
-    pub context:     Value,
+    pub context:     Option<Value>,
 }
 
 impl UploadToDomain {
@@ -80,9 +80,9 @@ impl UploadToDomain {
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq)]
 pub struct DownloadFromDomain {
     pub url:        String,
-    pub notify_url: String,
+    pub notify_url: Option<String>,
     // typescript: any
-    pub context:    Value,
+    pub context:    Option<Value>,
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq)]
