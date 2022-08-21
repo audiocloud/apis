@@ -2,16 +2,16 @@
 use std::collections::{HashMap, HashSet};
 
 use chrono::Utc;
+use serde::{Deserialize, Serialize};
 
 use crate::audio_engine::CompressedAudio;
 use crate::change::{DesiredSessionPlayState, PlayId, RenderId, SessionPlayState};
 use crate::instance::InstancePlayState;
 use crate::instance::InstancePowerState;
 use crate::model::MultiChannelValue;
-use crate::newtypes::{DynamicId, FixedId, FixedInstanceId, MediaObjectId, MixerId, ReportId, TrackId};
-use crate::session::InstanceReports;
+use crate::newtypes::{AppMediaObjectId, DynamicId, FixedId, FixedInstanceId, MixerId, ReportId, TrackId};
+use crate::session::{InstanceReports, SessionFlowId};
 use crate::time::{Timestamp, Timestamped};
-use serde::{Deserialize, Serialize};
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct SessionPacket {
@@ -21,7 +21,7 @@ pub struct SessionPacket {
     pub mixers:                HashMap<MixerId, MixerPacket>,
     pub tracks:                HashMap<TrackId, TrackPacket>,
     pub waiting_for_instances: HashSet<FixedInstanceId>,
-    pub waiting_for_media:     HashSet<MediaObjectId>,
+    pub waiting_for_media:     HashSet<AppMediaObjectId>,
     pub compressed_audio:      Vec<CompressedAudio>,
     pub desired_play_state:    DesiredSessionPlayState,
     pub play_state:            SessionPlayState,
@@ -33,7 +33,7 @@ pub struct SessionPacket {
 pub enum SessionPacketError {
     Playing(PlayId, String),
     Rendering(RenderId, String),
-    General(String)
+    General(String),
 }
 
 impl Default for SessionPacket {
@@ -64,6 +64,62 @@ impl SessionPacket {
         // }
     }
 
+    pub fn push_peak_meters(&mut self, peak_meters: HashMap<SessionFlowId, MultiChannelValue>) {
+        for (flow_id, value) in peak_meters {
+            match flow_id {
+                SessionFlowId::MixerInput(mixer_id) => {
+                    self.mixers
+                        .entry(mixer_id)
+                        .or_default()
+                        .input_metering
+                        .push(DiffStamped::new(self.created_at, value));
+                }
+                SessionFlowId::MixerOutput(mixer_id) => {
+                    self.mixers
+                        .entry(mixer_id)
+                        .or_default()
+                        .output_metering
+                        .push(DiffStamped::new(self.created_at, value));
+                }
+                SessionFlowId::FixedInstanceInput(fixed_id) => {
+                    self.fixed
+                        .entry(fixed_id)
+                        .or_default()
+                        .input_metering
+                        .push(DiffStamped::new(self.created_at, value));
+                }
+                SessionFlowId::FixedInstanceOutput(fixed_id) => {
+                    self.fixed
+                        .entry(fixed_id)
+                        .or_default()
+                        .output_metering
+                        .push(DiffStamped::new(self.created_at, value));
+                }
+                SessionFlowId::DynamicInstanceInput(dynamic_id) => {
+                    self.dynamic
+                        .entry(dynamic_id)
+                        .or_default()
+                        .input_metering
+                        .push(DiffStamped::new(self.created_at, value));
+                }
+                SessionFlowId::DynamicInstanceOutput(dynamic_id) => {
+                    self.dynamic
+                        .entry(dynamic_id)
+                        .or_default()
+                        .output_metering
+                        .push(DiffStamped::new(self.created_at, value));
+                }
+                SessionFlowId::TrackOutput(track_id) => {
+                    self.tracks
+                        .entry(track_id)
+                        .or_default()
+                        .output_metering
+                        .push(DiffStamped::new(self.created_at, value));
+                }
+            }
+        }
+    }
+
     pub fn add_play_error(&mut self, play_id: PlayId, error: String) {
         self.errors.push(Timestamped::new(SessionPacketError::Playing(play_id, error)));
     }
@@ -72,56 +128,8 @@ impl SessionPacket {
         self.errors.push(Timestamped::new(SessionPacketError::Rendering(render_id, error)));
     }
 
-    pub fn add_waiting_instance(&mut self, instance_id: &FixedInstanceId) {
-        if !self.waiting_for_instances.contains(instance_id) {
-            self.waiting_for_instances.insert(instance_id.clone());
-        }
-    }
-
-    pub fn add_waiting_media(&mut self, media_id: &MediaObjectId) {
-        if !self.waiting_for_media.contains(media_id) {
-            self.waiting_for_media.insert(media_id.clone());
-        }
-    }
-
     pub fn push_fixed_error(&mut self, instance: FixedId, error: String) {
         self.fixed.entry(instance).or_default().errors.push(Timestamped::new(error));
-    }
-
-    pub fn push_fixed_input_metering(&mut self, fixed_id: &FixedId, input: MultiChannelValue) {
-        let fixed = self.fixed.entry(fixed_id.clone()).or_default();
-
-        fixed.input_metering.push(DiffStamped::from((self.created_at, input)));
-    }
-
-    pub fn push_fixed_output_metering(&mut self, fixed_id: &FixedId, output: MultiChannelValue) {
-        let fixed = self.fixed.entry(fixed_id.clone()).or_default();
-
-        fixed.output_metering.push(DiffStamped::from((self.created_at, output)));
-    }
-
-    pub fn push_dynamic_input_metering(&mut self, dynamic_id: &DynamicId, input: MultiChannelValue) {
-        let dynamic = self.dynamic.entry(dynamic_id.clone()).or_default();
-
-        dynamic.input_metering.push(DiffStamped::from((self.created_at, input)));
-    }
-
-    pub fn push_dynamic_output_metering(&mut self, dynamic_id: &DynamicId, output: MultiChannelValue) {
-        let dynamic = self.dynamic.entry(dynamic_id.clone()).or_default();
-
-        dynamic.output_metering.push(DiffStamped::from((self.created_at, output)));
-    }
-
-    pub fn push_mixer_output_metering(&mut self, mixer_id: &MixerId, output: MultiChannelValue) {
-        let mixer = self.mixers.entry(mixer_id.clone()).or_default();
-
-        mixer.output_metering.push(DiffStamped::from((self.created_at, output)));
-    }
-
-    pub fn push_track_output_metering(&mut self, track_id: &TrackId, output: MultiChannelValue) {
-        let track = self.tracks.entry(track_id.clone()).or_default();
-
-        track.output_metering.push(DiffStamped::from((self.created_at, output)));
     }
 
     pub fn push_audio_packets(&mut self, compressed_audio: CompressedAudio) {
@@ -133,6 +141,12 @@ impl SessionPacket {
 /// The epoch in InstancePacket is the created_at field of SessionPacket
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct DiffStamped<T>(usize, T);
+
+impl<T> DiffStamped<T> {
+    pub fn new(timestamp: Timestamp, value: T) -> Self {
+        (timestamp, value).into()
+    }
+}
 
 impl<T> From<(Timestamp, T)> for DiffStamped<T> {
     fn from(value: (Timestamp, T)) -> Self {
@@ -167,5 +181,6 @@ pub struct TrackPacket {
 
 #[derive(Serialize, Deserialize, Debug, Clone, Default)]
 pub struct MixerPacket {
+    pub input_metering:  Vec<DiffStamped<MultiChannelValue>>,
     pub output_metering: Vec<DiffStamped<MultiChannelValue>>,
 }
