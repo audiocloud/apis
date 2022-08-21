@@ -33,6 +33,7 @@ pub struct SessionPacket {
 pub enum SessionPacketError {
     Playing(PlayId, String),
     Rendering(RenderId, String),
+    General(String)
 }
 
 impl Default for SessionPacket {
