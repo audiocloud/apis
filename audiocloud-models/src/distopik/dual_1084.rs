@@ -11,7 +11,7 @@ use audiocloud_api::model::ModelElementScope::AllInputs;
 use audiocloud_api::model::ModelElementScope::AllOutputs;
 use audiocloud_api::model::ModelParameterRole::{Amplifier, Filter, Global};
 use audiocloud_api::model::ModelValueUnit::{Decibels, Hertz, Toggle};
-use audiocloud_api::model::{Model, ModelElementScope, ModelParameter, ModelValueOption};
+use audiocloud_api::model::{Model, ModelParameter, ModelValueOption};
 use audiocloud_api::newtypes::FilterId::{High, HighMid, HighPass, Low, LowMid};
 use audiocloud_api::newtypes::{ModelId, ParameterId};
 

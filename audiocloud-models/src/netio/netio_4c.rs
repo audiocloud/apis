@@ -35,28 +35,32 @@ pub fn netio_power_pdu_4c_model() -> Model {
             values: values::toggle(),
             role: Power(Powered),
             unit: Toggle,
-            public: true
+            public: true,
+            volatile: true
         },
         reports::CURRENT.clone() => ModelReport {
             scope: Size(NUM_OUTPUTS),
             values: vec![values::numbers(0.0, 10.0)],
             role: Power(Current),
             unit: Amperes,
-            public: true
+            public: true,
+            volatile: false
         },
         reports::POWER_FACTOR.clone() => ModelReport {
             scope: Size(NUM_OUTPUTS),
             values: vec![values::numbers(0.0, 1.0)],
             role: Power(PowerFactor),
             unit: Unitless,
-            public: false
+            public: false,
+            volatile: false
         },
         reports::ENERGY.clone() => ModelReport {
             scope: Size(NUM_OUTPUTS),
             values: vec![values::numbers(0.0, f64::MAX)],
             role: Power(TotalEnergy),
             unit: WattHours,
-            public: false
+            public: false,
+            volatile: false
         },
     };
 

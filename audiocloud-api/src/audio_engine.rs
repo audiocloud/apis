@@ -63,7 +63,6 @@ pub enum AudioEngineCommand {
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq)]
 #[serde(rename_all = "snake_case")]
 pub enum AudioEngineEvent {
-    Loaded,
     Stopped {
         session_id: AppSessionId,
     },

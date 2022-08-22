@@ -7,8 +7,7 @@ use audiocloud_api::model::ModelElementScope::AllInputs;
 use audiocloud_api::model::ModelReportRole::Amplifier;
 use audiocloud_api::model::ModelValueUnit::Decibels;
 use audiocloud_api::model::{
-    AmplifierId, AmplifierReportRole, Model, ModelElementScope, ModelReport, ModelReportRole, ModelValueOption,
-    ModelValueUnit,
+    AmplifierId, AmplifierReportRole, Model, ModelElementScope, ModelReport, ModelReportRole, ModelValueOption, ModelValueUnit,
 };
 use audiocloud_api::newtypes::{ModelId, ReportId};
 
@@ -28,33 +27,29 @@ lazy_static! {
 pub const MAX_REPORTED_LEVEL: f64 = -60f64;
 
 pub fn audio_cloud_insert_model(input_count: usize, output_count: usize) -> Model {
-    Model {
-        inputs: standard_inputs(input_count),
-        outputs: standard_outputs(output_count),
-        reports: hashmap! {
-          PEAK_INPUT_LEVEL.clone() => peak_input_level(),
-          PEAK_OUTPUT_LEVEL.clone() => peak_output_level()
-        },
-        ..Default::default()
-    }
+    Model { inputs: standard_inputs(input_count),
+            outputs: standard_outputs(output_count),
+            reports: hashmap! {
+              PEAK_INPUT_LEVEL.clone() => peak_input_level(),
+              PEAK_OUTPUT_LEVEL.clone() => peak_output_level()
+            },
+            ..Default::default() }
 }
 
 fn peak_input_level() -> ModelReport {
-    ModelReport {
-        scope: AllInputs,
-        values: vec![ModelValueOption::to_zero(MAX_REPORTED_LEVEL)],
-        public: true,
-        role: Amplifier(InsertInput, PeakVolume),
-        unit: Decibels,
-    }
+    ModelReport { scope:    AllInputs,
+                  values:   vec![ModelValueOption::to_zero(MAX_REPORTED_LEVEL)],
+                  public:   true,
+                  role:     Amplifier(InsertInput, PeakVolume),
+                  unit:     Decibels,
+                  volatile: false, }
 }
 
 fn peak_output_level() -> ModelReport {
-    ModelReport {
-        scope: ModelElementScope::AllOutputs,
-        values: vec![ModelValueOption::to_zero(MAX_REPORTED_LEVEL)],
-        public: true,
-        role: Amplifier(InsertOutput, PeakVolume),
-        unit: Decibels,
-    }
+    ModelReport { scope:    ModelElementScope::AllOutputs,
+                  values:   vec![ModelValueOption::to_zero(MAX_REPORTED_LEVEL)],
+                  public:   true,
+                  role:     Amplifier(InsertOutput, PeakVolume),
+                  unit:     Decibels,
+                  volatile: false, }
 }
