@@ -27,12 +27,15 @@ export const AudioEngineCommand = Type.Union([
     }),
     Type.Object({
         "media":                        Type.Object({
-            "ready":                    Type.Record(AppMediaObjectId, Type.String()),
-            "removed":                  AppMediaObjectId,
+            "session_id":               AppSessionId,
+            "media_ready":              Type.Record(AppMediaObjectId, Type.String()),
         })
     }),
     Type.Object({
-        "instances":                    Type.Record(FixedInstanceId, InstanceRouting),
+        "instances":                    Type.Object({
+            "session_id":               AppSessionId,
+            "instances":                Type.Record(FixedInstanceId, InstanceRouting),
+        })
     }),
     Type.Object({
         "modify_spec":                  Type.Object({
