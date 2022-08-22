@@ -1,9 +1,9 @@
 import { Static, Type, TSchema } from "@sinclair/typebox";
 import Option from "./utils/option";
-import { DynamicId, FixedId, FixedInstanceId, MediaObjectId, MixerId, ReportId, TrackId } from "./new_types";
+import { AppMediaObjectId, DynamicId, FixedId, FixedInstanceId, MixerId, ReportId, TrackId } from "./new_types";
 import { JsonTimeStamp, Timestamped } from "./time";
 import { InstancePlayState, InstancePowerState } from "./instance";
-import { DesiredSessionPlayState, SessionPlayState } from "./change";
+import { DesiredSessionPlayState, RenderId, SessionPlayState, PlayId } from "./change";
 import { CompressedAudio } from "./audio_engine";
 import { MultiChannelValue } from "./model";
 
@@ -35,6 +35,7 @@ export const TrackPacket = Type.Object({
 export type TrackPacket = Static<typeof TrackPacket>
 
 export const MixerPacket = Type.Object({
+    input_metering:         Type.Array(DiffStamped(MultiChannelValue)),
     output_metering:        Type.Array(DiffStamped(MultiChannelValue))
 })
 export type MixerPacket = Static<typeof MixerPacket>
@@ -46,10 +47,23 @@ export const SessionPacket = Type.Object({
     mixers:                 Type.Record(MixerId, MixerPacket),
     tracks:                 Type.Record(TrackId, TrackPacket),
     waiting_for_instances:  Type.Array(FixedInstanceId),
-    waiting_for_media:      Type.Array(MediaObjectId),
+    waiting_for_media:      Type.Array(AppMediaObjectId),
     compressed_audio:       Type.Array(CompressedAudio),
     desired_play_state:     DesiredSessionPlayState,
     play_state:             SessionPlayState,
     audio_engine_ready:     Type.Boolean(),
 })
 export type SessionPacket = Static<typeof SessionPacket>
+
+export const SessionPacketError = Type.Union([
+    Type.Object({
+        "playing":              Type.Tuple([PlayId, Type.String()]),
+    }),
+    Type.Object({
+        "rendering":            Type.Tuple([RenderId, Type.String()]),
+    }),
+    Type.Object({
+        "general":              Type.String()
+    })
+])
+export type SessionPacketError = Static<typeof SessionPacketError>
