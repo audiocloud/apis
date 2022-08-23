@@ -71,8 +71,15 @@ export const AudioEngineCommand = Type.Union([
         })
     }),
     Type.Object({
-        "stop":                         Type.Object({
-            "session_id":               AppSessionId
+        "stop_render":                  Type.Object({
+            "session_id":               AppSessionId,
+            "render_id":                RenderId
+        })
+    }),
+    Type.Object({
+        "stop_play":                    Type.Object({
+            "session_id":               AppSessionId,
+            "play_id":                  PlayId
         })
     }),
     Type.Object({
@@ -84,7 +91,6 @@ export const AudioEngineCommand = Type.Union([
 export type AudioEngineCommand = Static<typeof AudioEngineCommand>
 
 export const AudioEngineEvent = Type.Union([
-    Type.Literal("loaded"),
     Type.Object({
         "stopped":                      Type.Object({
             "session_id":               AppSessionId

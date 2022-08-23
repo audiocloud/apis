@@ -9,6 +9,12 @@ export type AppId = Static<typeof AppId>
 export const SessionId = Type.String({minLength: 8, maxLength: 32})
 export type SessionId = Static<typeof SessionId>
 
+export const AudioEngineId = Type.String({minLength: 8})
+export type AudioEngineId = Static<typeof AudioEngineId>
+
+export const MediaServiceId = Type.String({minLength: 8})
+export type MediaServiceId = Static<typeof MediaServiceId>
+
 export const SocketId = Type.String({minLength: 8})
 export type SocketId = Static<typeof SocketId>
 

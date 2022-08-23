@@ -1,5 +1,5 @@
 import { Static, Type } from "@sinclair/typebox";
-import { AppMediaObjectId } from "./new_types";
+import { AppMediaObjectId, AppSessionId } from "./new_types";
 import { SessionTrackChannels, SessionTrackMediaFormat } from "./session";
 import Option from "./utils/option";
 
@@ -65,7 +65,7 @@ export const MediaMetadata = Type.Object({
 })
 export type MediaMetadata = Static<typeof MediaMetadata>
 
-export const ImportInDomain = Type.Object({
+export const ImportToDomain = Type.Object({
     path:           Type.String(),
     channels:       SessionTrackChannels,
     format:         SessionTrackMediaFormat,
@@ -73,7 +73,7 @@ export const ImportInDomain = Type.Object({
     sample_rate:    Type.Integer(),
     bytes:          Type.Integer()
 })
-export type ImportInDomain = Static<typeof ImportInDomain>
+export type ImportToDomain = Static<typeof ImportToDomain>
 
 export const MediaObject = Type.Object({
     id:             AppMediaObjectId,
@@ -83,6 +83,27 @@ export const MediaObject = Type.Object({
     upload:         Option(MediaUploadState)
 })
 export type MediaObject = Static<typeof MediaObject>
+
+export const MediaServiceEvent = Type.Union([
+    Type.Object({
+        "session_media_state":  Type.Object({
+            "session_id":       AppSessionId,
+            "media":            Type.Record(AppMediaObjectId, MediaObject)
+        })
+    })
+])
+export type MediaServiceEvent = Static<typeof MediaServiceEvent>
+
+export const MediaServiceCommand = Type.Union([
+    Type.Object({
+        "set_session_media":    AppSessionId,
+        "media":                Type.Array(AppMediaObjectId)
+    }),
+    Type.Object({
+        "delete_session":       AppSessionId
+    })
+])
+export type MediaServiceCommand = Static<typeof MediaServiceCommand>
 
 export const UploadToDomain = Type.Object({
     channels:       SessionTrackChannels,
