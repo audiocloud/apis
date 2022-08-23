@@ -1,7 +1,7 @@
 import { Static, Type } from "@sinclair/typebox";
 import Option from "./utils/option";
-import { TrackId, FixedId, DynamicId, MixerId, MediaId, MediaObjectId, ParameterId, SecureKey, ConnectionId } from "./new_types";
-import { ConnectionValues, MixerChannels, SessionDynamicInstance, SessionFixedInstance, SessionFlowId, SessionMixer, SessionMode, SessionSecurity, SessionTimeSegment, SessionTrackChannels, SessionTrackMedia, UpdateSessionTrackMedia } from "./session";
+import { TrackId, FixedId, DynamicId, MixerId, MediaId, MediaObjectId, ParameterId, SecureKey, ConnectionId, AppMediaObjectId } from "./new_types";
+import { ConnectionValues, MixerChannels, SessionDynamicInstance, SessionFixedInstance, SessionFlowId, SessionMixer, SessionSecurity, SessionTimeSegment, SessionTrackChannels, SessionTrackMedia, UpdateSessionTrackMedia } from "./session";
 import { MultiChannelValue } from "./model";
 import { Timestamped } from "./time";
 
@@ -175,7 +175,7 @@ export const RenderSession = Type.Object({
     render_id:                  RenderId,
     mixer_id:                   MixerId,
     segment:                    SessionTimeSegment,
-    object_id:                  MediaObjectId,
+    object_id:                  AppMediaObjectId,
     put_url:                    Type.String(),
     notify_url:                 Type.String(),
     context:                    Type.String(),
@@ -200,7 +200,8 @@ export const SessionPlayState = Type.Union([
     Type.Object({ "preparing_to_render":    RenderSession }),
     Type.Object({ "playing":                PlaySession }),
     Type.Object({ "rendering":              RenderSession }),
-    Type.Literal("preparing_to_stop"),
+    Type.Object({ "stopping_play":          PlayId }),
+    Type.Object({ "stopping_render":        RenderId }),
     Type.Literal("stopped"),
 ])
 export type SessionPlayState = Static<typeof SessionPlayState>
@@ -215,7 +216,6 @@ export type DesiredSessionPlayState = Static<typeof DesiredSessionPlayState>
 export const SessionState = Type.Object({
     play_state:                             Timestamped(SessionPlayState),
     desired_play_state:                     Timestamped(DesiredSessionPlayState),
-    mode:                                   Timestamped(SessionMode)
 })
 export type SessionState = Static<typeof SessionState>
 

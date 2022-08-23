@@ -141,14 +141,3 @@ export const SessionMixerId = Type.Union([
     Type.Object({ "dynamic_instance":       DynamicId })
 ])
 export type SessionMixerId = Static<typeof SessionMixerId>
-
-export const SessionMode = Type.Union([
-    Type.Object({ "stopping_render":        RenderId }),
-    Type.Object({ "stopping_play":          PlayId }),
-    Type.Object({ "preparing_to_play":      PlayId }),
-    Type.Object({ "preparing_to_render":    RenderId }),
-    Type.Object({ "rendering":              RenderId }),
-    Type.Object({ "playing":                PlayId }),
-    Type.Literal("idle"),
-])
-export type SessionMode = Static<typeof SessionMode>
