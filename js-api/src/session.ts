@@ -71,8 +71,8 @@ export const SessionFlowId = Type.Union([
 export type SessionFlowId = Static<typeof SessionFlowId>
 
 export const MixerChannels = Type.Union([
-    Type.Object({ "mono": Type.Integer({minimum: 0, maximum: 256}) }),
-    Type.Object({ "stereo": Type.Integer({minimum: 0, maximum: 256}) }),
+    Type.Object({ "mono":       Type.Integer({minimum: 0, maximum: 256}) }),
+    Type.Object({ "stereo":     Type.Integer({minimum: 0, maximum: 256}) }),
 ])
 export type MixerChannels = Static<typeof MixerChannels>
 
