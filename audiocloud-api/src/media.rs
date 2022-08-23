@@ -1,9 +1,10 @@
 //! Communication with the on-site media library
 
-use crate::newtypes::{AppId, AppMediaObjectId, MediaObjectId};
+use crate::newtypes::{AppId, AppMediaObjectId, AppSessionId, MediaObjectId};
 use crate::session::{SessionTrackChannels, SessionTrackMediaFormat};
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
+use std::collections::{HashMap, HashSet};
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case")]
@@ -86,7 +87,7 @@ pub struct DownloadFromDomain {
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq)]
-pub struct ImportInDomain {
+pub struct ImportToDomain {
     pub path:        String,
     pub channels:    SessionTrackChannels,
     pub format:      SessionTrackMediaFormat,
@@ -95,7 +96,7 @@ pub struct ImportInDomain {
     pub bytes:       u64,
 }
 
-impl ImportInDomain {
+impl ImportToDomain {
     pub fn metadata(&self) -> MediaMetadata {
         MediaMetadata { channels:    self.channels,
                         format:      self.format,
@@ -112,4 +113,31 @@ pub struct MediaObject {
     pub path:     Option<String>,
     pub download: Option<MediaDownloadState>,
     pub upload:   Option<MediaUploadState>,
+}
+
+#[derive(Serialize, Deserialize, Clone, Debug)]
+pub enum MediaServiceEvent {
+    SessionMediaState {
+        session_id: AppSessionId,
+        media:      HashMap<AppMediaObjectId, MediaObject>,
+    },
+}
+
+impl MediaServiceEvent {
+    pub fn session_id(&self) -> &AppSessionId {
+        match self {
+            MediaServiceEvent::SessionMediaState { session_id, .. } => session_id,
+        }
+    }
+}
+
+#[derive(Serialize, Deserialize, Clone, Debug)]
+pub enum MediaServiceCommand {
+    SetSessionMedia {
+        session_id: AppSessionId,
+        media:      HashSet<AppMediaObjectId>,
+    },
+    DeleteSession {
+        session_id: AppSessionId,
+    },
 }

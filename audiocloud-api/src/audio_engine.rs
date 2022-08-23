@@ -52,8 +52,13 @@ pub enum AudioEngineCommand {
         session_id: AppSessionId,
         update:     UpdatePlaySession,
     },
-    Stop {
+    StopRender {
         session_id: AppSessionId,
+        render_id:  RenderId,
+    },
+    StopPlay {
+        session_id: AppSessionId,
+        play_id:    PlayId,
     },
     Close {
         session_id: AppSessionId,
@@ -97,6 +102,20 @@ pub enum AudioEngineEvent {
         session_id: AppSessionId,
         error:      String,
     },
+}
+
+impl AudioEngineEvent {
+    pub fn session_id(&self) -> &AppSessionId {
+        match self {
+            AudioEngineEvent::Stopped { session_id } => session_id,
+            AudioEngineEvent::Playing { session_id, .. } => session_id,
+            AudioEngineEvent::PlayingFailed { session_id, .. } => session_id,
+            AudioEngineEvent::Rendering { session_id, .. } => session_id,
+            AudioEngineEvent::RenderingFinished { session_id, .. } => session_id,
+            AudioEngineEvent::RenderingFailed { session_id, .. } => session_id,
+            AudioEngineEvent::Error { session_id, .. } => session_id,
+        }
+    }
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq)]
