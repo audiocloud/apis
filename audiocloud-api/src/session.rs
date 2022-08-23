@@ -298,16 +298,3 @@ pub struct SessionSecurity {
     pub transport:  bool,
     pub audio:      bool,
 }
-
-// The overall state of the session state machine
-#[derive(Debug, Serialize, Deserialize, Clone, PartialEq)]
-#[serde(rename_all = "snake_case")]
-pub enum SessionMode {
-    StoppingRender(RenderId),
-    StoppingPlay(PlayId),
-    PreparingToPlay(PlayId),
-    PreparingToRender(RenderId),
-    Rendering(RenderId),
-    Playing(PlayId),
-    Idle,
-}

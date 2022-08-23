@@ -6,16 +6,15 @@ use serde::{Deserialize, Serialize};
 use thiserror::Error;
 
 use crate::cloud::apps::SessionSpec;
-use crate::instance::DesiredInstancePlayState;
 use crate::model::MultiChannelValue;
 use crate::newtypes::{
-    ConnectionId, DynamicId, FixedId, FixedInstanceId, MediaId, MediaObjectId, MixerId, ParameterId, SecureKey, TrackId,
+    AppMediaObjectId, ConnectionId, DynamicId, FixedId, FixedInstanceId, MediaId, MediaObjectId, MixerId, ParameterId, SecureKey, TrackId,
 };
+use crate::session::SessionSecurity;
 use crate::session::{
     ConnectionValues, MixerChannels, Session, SessionConnection, SessionDynamicInstance, SessionFixedInstance, SessionFlowId, SessionMixer,
     SessionTimeSegment, SessionTrack, SessionTrackChannels, SessionTrackMedia, UpdateSessionTrackMedia,
 };
-use crate::session::{SessionMode, SessionSecurity};
 use crate::time::Timestamped;
 
 use self::ModifySessionError::*;
@@ -187,21 +186,12 @@ impl DesiredSessionPlayState {
         matches!(self, Self::Render(_))
     }
 
-    pub fn preparing(&self) -> SessionPlayState {
-        match self {
-            DesiredSessionPlayState::Play(play) => SessionPlayState::PreparingToPlay(play.clone()),
-            DesiredSessionPlayState::Render(render) => SessionPlayState::PreparingToRender(render.clone()),
-            DesiredSessionPlayState::Stopped => SessionPlayState::PreparingToStop,
-        }
+    pub fn is_rendering_of(&self, render: &RenderSession) -> bool {
+        matches!(self, DesiredSessionPlayState::Render(desired_render) if desired_render == render)
     }
 
-    pub fn to_instance(&self) -> DesiredInstancePlayState {
-        match self {
-            DesiredSessionPlayState::Play(play) => DesiredInstancePlayState::Playing { play_id: play.play_id },
-            DesiredSessionPlayState::Render(render) => DesiredInstancePlayState::Rendering { render_id: render.render_id,
-                                                                                             length:    render.segment.length, },
-            DesiredSessionPlayState::Stopped => DesiredInstancePlayState::Stopped,
-        }
+    pub fn is_playing_of(&self, play: &PlaySession) -> bool {
+        matches!(self, DesiredSessionPlayState::Play(desired_play) if desired_play == play)
     }
 }
 
@@ -237,7 +227,7 @@ pub struct RenderSession {
     pub render_id:  RenderId,
     pub mixer_id:   MixerId,
     pub segment:    SessionTimeSegment,
-    pub object_id:  MediaObjectId,
+    pub object_id:  AppMediaObjectId,
     pub put_url:    String,
     pub notify_url: String,
     pub context:    String,
@@ -259,7 +249,8 @@ pub enum SessionPlayState {
     PreparingToRender(RenderSession),
     Playing(PlaySession),
     Rendering(RenderSession),
-    PreparingToStop,
+    StoppingPlay(PlayId),
+    StoppingRender(RenderId),
     Stopped,
 }
 
@@ -290,14 +281,12 @@ impl SessionPlayState {
 pub struct SessionState {
     pub play_state:         Timestamped<SessionPlayState>,
     pub desired_play_state: Timestamped<DesiredSessionPlayState>,
-    pub mode:               Timestamped<SessionMode>,
 }
 
 impl Default for SessionState {
     fn default() -> Self {
         Self { play_state:         Timestamped::new(SessionPlayState::Stopped),
-               desired_play_state: Timestamped::new(DesiredSessionPlayState::Stopped),
-               mode:               Timestamped::new(SessionMode::Idle), }
+               desired_play_state: Timestamped::new(DesiredSessionPlayState::Stopped), }
     }
 }
 
