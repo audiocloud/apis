@@ -1,10 +1,13 @@
 //! Communication with the on-site media library
 
-use crate::newtypes::{AppId, AppMediaObjectId, AppSessionId, MediaObjectId};
-use crate::session::{SessionTrackChannels, SessionTrackMediaFormat};
+use std::collections::{HashMap, HashSet};
+
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
-use std::collections::{HashMap, HashSet};
+
+use crate::newtypes::{AppId, AppMediaObjectId, AppSessionId, MediaObjectId};
+use crate::session::{SessionTrackChannels, SessionTrackMediaFormat};
+use crate::time::{Timestamp, Timestamped};
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case")]
@@ -111,8 +114,14 @@ pub struct MediaObject {
     pub id:       AppMediaObjectId,
     pub metadata: Option<MediaMetadata>,
     pub path:     Option<String>,
-    pub download: Option<MediaDownloadState>,
-    pub upload:   Option<MediaUploadState>,
+    pub download: Timestamped<MediaDownloadState>,
+    pub upload:   Timestamped<MediaUploadState>,
+}
+
+#[derive(Serialize, Deserialize, Clone, Debug)]
+pub struct UpdateMediaSession {
+    pub media_objects: HashSet<AppMediaObjectId>,
+    pub ends_at:       Timestamp,
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug)]

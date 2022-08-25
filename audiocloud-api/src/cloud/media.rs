@@ -19,20 +19,20 @@ pub struct MediaPlacement {
 
 #[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct CreateAppMedia {
-    pub get_url: String,
+    pub get_url:    String,
     #[serde(default)]
-    pub grouping: Option<String>,
+    pub grouping:   Option<String>,
     #[serde(default)]
-    pub grouping2: Option<String>,
-    pub sync_to: HashSet<DomainId>,
-    pub context: String,
+    pub grouping2:  Option<String>,
+    pub sync_to:    HashSet<DomainId>,
+    pub context:    String,
     pub notify_url: String,
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct UpdateAppMedia {
     #[serde(default)]
-    pub grouping: Option<String>,
+    pub grouping:  Option<String>,
     #[serde(default)]
     pub grouping2: Option<String>,
 }
@@ -40,29 +40,29 @@ pub struct UpdateAppMedia {
 #[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct QueryAppMedia {
     #[serde(default)]
-    pub grouping_is: Option<String>,
+    pub grouping_is:        Option<String>,
     #[serde(default)]
-    pub grouping_contains: Option<String>,
+    pub grouping_contains:  Option<String>,
     #[serde(default)]
-    pub grouping2_is: Option<String>,
+    pub grouping2_is:       Option<String>,
     #[serde(default)]
     pub grouping2_contains: Option<String>,
     #[serde(default)]
-    pub domain_id: Option<DomainId>,
+    pub domain_id:          Option<DomainId>,
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct ReportUploadState {
-    pub app_id: AppId,
+    pub app_id:     AppId,
     pub session_id: SessionId,
-    pub render_id: RenderId,
-    pub media_id: MediaObjectId,
-    pub state: MediaUploadState,
+    pub render_id:  RenderId,
+    pub media_id:   MediaObjectId,
+    pub state:      MediaUploadState,
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct ReportDownloadState {
-    pub app_id: AppId,
+    pub app_id:   AppId,
     pub media_id: MediaObjectId,
-    pub state: MediaDownloadState,
+    pub state:    MediaDownloadState,
 }
