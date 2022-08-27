@@ -8,7 +8,7 @@ use thiserror::Error;
 use crate::change::{PlayId, RenderId};
 use crate::instance::{DesiredInstancePlayState, InstancePlayState};
 use crate::model::MultiChannelValue;
-use crate::newtypes::{FixedInstanceId, ParameterId, ReportId};
+use crate::newtypes::{FixedInstanceId, ParameterId};
 use crate::session::InstanceReports;
 
 #[derive(PartialEq, Serialize, Deserialize, Clone, Debug)]
