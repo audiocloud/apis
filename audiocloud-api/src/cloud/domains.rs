@@ -2,33 +2,36 @@
 
 use std::collections::{HashMap, HashSet};
 
-use crate::cloud::apps::Maintenance;
 use serde::{Deserialize, Serialize};
 
+use crate::cloud::apps::Maintenance;
+use crate::media::{DownloadFromDomain, UploadToDomain};
 use crate::model::{Model, ResourceId};
-use crate::newtypes::{AppId, AppSessionId, DomainId, FixedInstanceId, ModelId};
+use crate::newtypes::{AppId, AppMediaObjectId, AppSessionId, DomainId, FixedInstanceId, ModelId};
 use crate::session::Session;
 
 /// Used by domain when it is booting
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct BootDomain {
-    pub domain_id:          DomainId,
-    pub event_base:         u64,
-    pub fixed_instances:    HashMap<FixedInstanceId, DomainFixedInstance>,
-    pub dynamic_instances:  HashMap<ModelId, DynamicInstanceLimits>,
-    pub sessions:           HashMap<AppSessionId, Session>,
-    pub models:             HashMap<ModelId, Model>,
-    pub domain_limits:      DomainLimits,
-    pub min_session_len:    f64,
-    pub native_sample_rate: usize,
-    pub public_url:         String,
-    pub cmd_topic:          String,
-    pub evt_topic:          String,
-    pub kafka_url:          String,
-    pub consume_username:   String,
-    pub consume_password:   String,
-    pub produce_username:   String,
-    pub produce_password:   String,
+    pub domain_id:            DomainId,
+    pub event_base:           u64,
+    pub fixed_instances:      HashMap<FixedInstanceId, DomainFixedInstance>,
+    pub dynamic_instances:    HashMap<ModelId, DynamicInstanceLimits>,
+    pub sessions:             HashMap<AppSessionId, Session>,
+    pub models:               HashMap<ModelId, Model>,
+    pub domain_limits:        DomainLimits,
+    pub min_session_len:      f64,
+    pub native_sample_rate:   usize,
+    pub public_url:           String,
+    pub cmd_topic:            String,
+    pub evt_topic:            String,
+    pub kafka_url:            String,
+    pub consume_username:     String,
+    pub consume_password:     String,
+    pub produce_username:     String,
+    pub produce_password:     String,
+    pub incomplete_downloads: HashMap<AppMediaObjectId, DownloadFromDomain>,
+    pub incomplete_uploads:   HashMap<AppMediaObjectId, UploadToDomain>,
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
