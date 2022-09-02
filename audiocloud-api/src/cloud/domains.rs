@@ -2,9 +2,9 @@
 
 use std::collections::{HashMap, HashSet};
 
-use crate::cloud::apps::Maintenance;
 use serde::{Deserialize, Serialize};
 
+use crate::cloud::apps::Maintenance;
 use crate::model::{Model, ResourceId};
 use crate::newtypes::{AppId, AppSessionId, DomainId, FixedInstanceId, ModelId};
 use crate::session::Session;
