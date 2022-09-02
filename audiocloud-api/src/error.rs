@@ -1,7 +1,7 @@
 use anyhow::anyhow;
 use serde::{Deserialize, Serialize};
 
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, Debug)]
 #[serde(rename_all = "snake_case")]
 pub enum SerializableResult<T = ()> {
     Ok(T),
