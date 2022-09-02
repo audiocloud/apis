@@ -6,9 +6,11 @@ use serde::{Deserialize, Serialize};
 use thiserror::Error;
 
 use crate::cloud::apps::SessionSpec;
+use crate::cloud::media::AppMedia;
 use crate::model::MultiChannelValue;
 use crate::newtypes::{
-    AppMediaObjectId, ConnectionId, DynamicId, FixedId, FixedInstanceId, MediaId, MediaObjectId, MixerId, ParameterId, SecureKey, TrackId,
+    AppId, AppMediaObjectId, ConnectionId, DynamicId, FixedId, FixedInstanceId, MediaId, MediaObjectId, MixerId, ParameterId, SecureKey,
+    TrackId,
 };
 use crate::session::SessionSecurity;
 use crate::session::{
@@ -379,6 +381,13 @@ impl Session {
 impl SessionSpec {
     pub fn get_fixed_instance_ids<'a>(&'a self) -> impl Iterator<Item = &'a FixedInstanceId> + 'a {
         self.fixed.values().map(|fixed| &fixed.instance_id)
+    }
+
+    pub fn get_media_object_ids(&self, app_id: &AppId) -> HashSet<AppMediaObjectId> {
+        self.tracks
+            .values()
+            .flat_map(|track| track.media.values().map(|media| media.object_id.clone().for_app(app_id.clone())))
+            .collect()
     }
 
     pub fn modify(&mut self, modify: ModifySessionSpec) -> Result<(), ModifySessionError> {

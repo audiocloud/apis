@@ -5,9 +5,8 @@ use std::collections::{HashMap, HashSet};
 use serde::{Deserialize, Serialize};
 
 use crate::cloud::apps::Maintenance;
-use crate::media::{DownloadFromDomain, UploadToDomain};
 use crate::model::{Model, ResourceId};
-use crate::newtypes::{AppId, AppMediaObjectId, AppSessionId, DomainId, FixedInstanceId, ModelId};
+use crate::newtypes::{AppId, AppSessionId, DomainId, FixedInstanceId, ModelId};
 use crate::session::Session;
 
 /// Used by domain when it is booting
