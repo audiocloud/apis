@@ -230,10 +230,6 @@ pub struct AudioEngineId(String);
 
 #[derive(Clone, Debug, Serialize, Deserialize, Eq, PartialEq, Ord, PartialOrd, Display, Deref, Constructor, Hash, From, FromStr)]
 #[repr(transparent)]
-pub struct MediaServiceId(String);
-
-#[derive(Clone, Debug, Serialize, Deserialize, Eq, PartialEq, Ord, PartialOrd, Display, Deref, Constructor, Hash, From, FromStr)]
-#[repr(transparent)]
 pub struct SocketId(String);
 
 impl SessionId {

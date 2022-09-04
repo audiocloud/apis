@@ -3,7 +3,7 @@ use std::collections::{HashMap, HashSet};
 use crate::change::RenderId;
 use serde::{Deserialize, Serialize};
 
-use crate::media::{MediaDownloadState, MediaUploadState};
+use crate::media::MediaJobState;
 use crate::newtypes::{AppId, DomainId, MediaObjectId, SessionId};
 
 #[derive(Serialize, Deserialize, Clone, Debug)]
@@ -13,8 +13,8 @@ pub struct AppMedia {
 
 #[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct MediaPlacement {
-    pub download: Option<MediaDownloadState>,
-    pub uploaded: Option<MediaUploadState>,
+    pub download: Option<MediaJobState>,
+    pub uploaded: Option<MediaJobState>,
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug)]
@@ -57,12 +57,12 @@ pub struct ReportUploadState {
     pub session_id: SessionId,
     pub render_id:  RenderId,
     pub media_id:   MediaObjectId,
-    pub state:      MediaUploadState,
+    pub state:      MediaJobState,
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct ReportDownloadState {
     pub app_id:   AppId,
     pub media_id: MediaObjectId,
-    pub state:    MediaDownloadState,
+    pub state:    MediaJobState,
 }

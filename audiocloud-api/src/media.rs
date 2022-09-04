@@ -5,41 +5,33 @@ use std::collections::{HashMap, HashSet};
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
 
-use crate::newtypes::{AppMediaObjectId, AppSessionId, MediaObjectId};
+use crate::newtypes::{AppMediaObjectId, AppSessionId};
 use crate::session::{SessionTrackChannels, SessionTrackMediaFormat};
-use crate::time::{Timestamp, Timestamped};
+use crate::time::{now, Timestamp, Timestamped};
 
-#[derive(Clone, Debug, Serialize, Deserialize)]
-#[serde(rename_all = "snake_case")]
-pub enum MediaDownloadState {
-    Pending,
-    Downloading {
-        progress: f64,
-        retry:    usize,
-    },
-    Completed,
-    Failed {
-        error:      String,
-        count:      usize,
-        will_retry: bool,
-    },
-    Evicted,
+#[derive(Clone, Debug, Serialize, Deserialize, PartialEq)]
+pub struct MediaJobState {
+    pub progress:    f64,
+    pub retry:       usize,
+    pub error:       Option<String>,
+    pub in_progress: bool,
+    pub updated_at:  Timestamp,
 }
 
-#[derive(Clone, Debug, Serialize, Deserialize)]
-#[serde(rename_all = "snake_case")]
-pub enum MediaUploadState {
-    Pending,
-    Uploading {
-        progress: f64,
-        retry:    usize,
-    },
-    Completed,
-    Failed {
-        error:      String,
-        count:      usize,
-        will_retry: bool,
-    },
+impl Default for MediaJobState {
+    fn default() -> Self {
+        Self { progress:    0.0,
+               retry:       0,
+               error:       None,
+               in_progress: false,
+               updated_at:  now(), }
+    }
+}
+
+impl MediaJobState {
+    pub fn is_finished_ok(&self) -> bool {
+        !self.in_progress && self.error.is_none()
+    }
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq)]
@@ -109,35 +101,31 @@ impl ImportToDomain {
     }
 }
 
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq)]
+pub struct MediaDownload {
+    pub download: DownloadFromDomain,
+    pub state:    MediaJobState,
+}
+
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq)]
+pub struct MediaUpload {
+    pub upload: UploadToDomain,
+    pub state:  MediaJobState,
+}
+
 #[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct MediaObject {
     pub id:       AppMediaObjectId,
     pub metadata: Option<MediaMetadata>,
     pub path:     Option<String>,
-    pub download: Timestamped<MediaDownloadState>,
-    pub upload:   Timestamped<MediaUploadState>,
+    pub download: Option<MediaDownload>,
+    pub upload:   Option<MediaUpload>,
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct UpdateMediaSession {
     pub media_objects: HashSet<AppMediaObjectId>,
     pub ends_at:       Timestamp,
-}
-
-#[derive(Serialize, Deserialize, Clone, Debug)]
-pub enum MediaServiceEvent {
-    SessionMediaState {
-        session_id: AppSessionId,
-        media:      HashMap<AppMediaObjectId, MediaObject>,
-    },
-}
-
-impl MediaServiceEvent {
-    pub fn session_id(&self) -> &AppSessionId {
-        match self {
-            MediaServiceEvent::SessionMediaState { session_id, .. } => session_id,
-        }
-    }
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug)]

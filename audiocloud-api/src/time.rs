@@ -9,6 +9,10 @@ pub struct TimeRange {
     pub to:   Timestamp,
 }
 
+pub fn now() -> Timestamp {
+    Utc::now()
+}
+
 impl TimeRange {
     pub fn new(from: Timestamp, to: Timestamp) -> Self {
         Self { from, to }
