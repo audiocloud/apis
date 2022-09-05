@@ -2,6 +2,7 @@ import { Static, Type } from "@sinclair/typebox"
 import { SessionPacket } from "./app"
 import { DesiredSessionPlayState, ModifySessionSpec, SessionState } from "./change"
 import { CreateSession, SessionSpec } from "./cloud/apps"
+import { SerializableResult } from "./error"
 import { DownloadMedia } from "./media"
 import { AppMediaObjectId, AppSessionId, SecureKey } from "./new_types"
 import { SessionSecurity } from "./session"
@@ -68,9 +69,8 @@ export const WebSocketEvent = Type.Union([
     Type.Object({ "packet":         Type.Tuple([AppSessionId, SessionPacket]) }),
     Type.Object({ "spec":           Type.Tuple([AppSessionId, SessionSpec]) }),
     Type.Object({ "state":          Type.Tuple([AppSessionId, SessionState]) }),
-    Type.Object({ "login_success":  AppSessionId }),
-    Type.Object({ "login_error":    Type.Tuple([AppSessionId, Type.String()]) }),
     Type.Object({ "session_error":  Type.Tuple([AppSessionId, Type.String()]) }),
+    Type.Object({ "reponse":        Type.Tuple([Type.String(), SerializableResult(Type.Null())]) })
 ])
 export type WebSocketEvent = Static<typeof WebSocketEvent>
 
@@ -80,3 +80,9 @@ export const WebSocketCommand = Type.Union([
     Type.Object({ "session":        DomainSessionCommand }),
 ])
 export type WebSocketCommand = Static<typeof WebSocketCommand>
+
+export const WebSocketCommandEnvelope = Type.Object({
+    request_id:     Type.String(),
+    command:        WebSocketCommand
+})
+export type WebSocketCommandEnvelope = Static<typeof WebSocketCommandEnvelope>
