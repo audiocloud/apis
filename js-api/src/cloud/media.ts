@@ -1,12 +1,12 @@
 import { Static, Type } from "@sinclair/typebox";
 import Option from "../utils/option";
 import { AppId, DomainId, MediaObjectId, SessionId } from "../new_types";
-import { MediaDownloadState, MediaUploadState } from "../media";
+import { MediaJobState } from "../media";
 import { RenderId } from "../change";
 
 export const MediaPlacement = Type.Object({
-    download:           Option(MediaDownloadState),
-    uploaded:           Option(MediaUploadState),
+    download:           Option(MediaJobState),
+    uploaded:           Option(MediaJobState),
 })
 export type MediaPlacement = Static<typeof MediaPlacement>
 
@@ -45,13 +45,13 @@ export const ReportUploadState = Type.Object({
     session_id:         SessionId,
     render_id:          RenderId,
     media_id:           MediaObjectId,
-    state:              MediaUploadState,
+    state:              MediaJobState,
 })
 export type ReportUploadState = Static<typeof ReportUploadState>
 
 export const ReportDownloadState = Type.Object({
     app_id:             AppId,
     media_id:           MediaObjectId,
-    state:              MediaDownloadState,
+    state:              MediaJobState,
 })
 export type ReportDownloadState = Static<typeof ReportDownloadState>

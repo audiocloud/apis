@@ -1,53 +1,17 @@
 import { Static, Type } from "@sinclair/typebox";
 import { AppMediaObjectId, AppSessionId } from "./new_types";
 import { SessionTrackChannels, SessionTrackMediaFormat } from "./session";
+import { JsonTimeStamp } from "./time";
 import Option from "./utils/option";
 
-const Uploading = Type.Object({
+export const MediaJobState = Type.Object({
     progress:       Type.Number(),
-    retry:          Type.Integer()
+    retry:          Type.Integer(),
+    error:          Option(Type.String()),
+    in_progress:    Type.Boolean(),
+    updated_at:     JsonTimeStamp
 })
-type Uploading = Static<typeof Uploading>
-
-
-export const MediaDownloadState = Type.Union([
-    Type.Literal('pending'),
-    Type.Object({
-        "downloading":      Type.Object({
-            "progress":     Type.Number(),
-            "retry":        Type.Integer()
-        })
-    }),
-    Type.Literal('completed'),
-    Type.Object({
-        "failed":           Type.Object({
-            "error":        Type.String(),
-            "count":        Type.Integer(),
-            "will_retry":   Type.Boolean()
-        })
-    }),
-    Type.Literal('evicted')
-])
-export type MediaDownloadState = Static<typeof MediaDownloadState>
-
-export const MediaUploadState = Type.Union([
-    Type.Literal('pending'),
-    Type.Object({
-        "uploading":        Type.Object({
-            "progress":     Type.Number(),
-            "retry":        Type.Integer()
-        })
-    }),
-    Type.Literal('completed'),
-    Type.Object({
-        "failed":           Type.Object({
-            "error":        Type.String(),
-            "count":        Type.Integer(),
-            "will_retry":   Type.Boolean()
-        })
-    }),
-])
-export type MediaUploadState = Static<typeof MediaUploadState>
+export type MediaJobState = Static<typeof MediaJobState>
 
 export const DownloadMedia = Type.Object({
     get_url:        Type.String(),
@@ -75,36 +39,6 @@ export const ImportToDomain = Type.Object({
 })
 export type ImportToDomain = Static<typeof ImportToDomain>
 
-export const MediaObject = Type.Object({
-    id:             AppMediaObjectId,
-    metadata:       Option(MediaMetadata),
-    path:           Option(Type.String()),
-    download:       Option(MediaDownloadState),
-    upload:         Option(MediaUploadState)
-})
-export type MediaObject = Static<typeof MediaObject>
-
-export const MediaServiceEvent = Type.Union([
-    Type.Object({
-        "session_media_state":  Type.Object({
-            "session_id":       AppSessionId,
-            "media":            Type.Record(AppMediaObjectId, MediaObject)
-        })
-    })
-])
-export type MediaServiceEvent = Static<typeof MediaServiceEvent>
-
-export const MediaServiceCommand = Type.Union([
-    Type.Object({
-        "set_session_media":    AppSessionId,
-        "media":                Type.Array(AppMediaObjectId)
-    }),
-    Type.Object({
-        "delete_session":       AppSessionId
-    })
-])
-export type MediaServiceCommand = Static<typeof MediaServiceCommand>
-
 export const UploadToDomain = Type.Object({
     channels:       SessionTrackChannels,
     format:         SessionTrackMediaFormat,
@@ -124,3 +58,39 @@ export const DownloadFromDomain = Type.Object({
 })
 export type DownloadFromDomain = Static<typeof UploadToDomain>
 
+export const MediaDownload = Type.Object({
+    download:       DownloadFromDomain,
+    state:          MediaJobState
+})
+export type MediaDownload = Static<typeof MediaDownload>
+
+export const MediaUpload = Type.Object({
+    download:       UploadToDomain,
+    state:          MediaJobState
+})
+export type MediaUpload = Static<typeof MediaUpload>
+
+export const MediaObject = Type.Object({
+    id:             AppMediaObjectId,
+    metadata:       Option(MediaMetadata),
+    path:           Option(Type.String()),
+    download:       Option(MediaDownload),
+    upload:         Option(MediaUpload)
+})
+export type MediaObject = Static<typeof MediaObject>
+
+export const UpdateMediaSession = Type.Object({
+    media_objects:  Type.Array(AppMediaObjectId),
+    ends_at:        JsonTimeStamp
+})
+
+export const MediaServiceCommand = Type.Union([
+    Type.Object({
+        "set_session_media":    AppSessionId,
+        "media":                Type.Array(AppMediaObjectId)
+    }),
+    Type.Object({
+        "delete_session":       AppSessionId
+    })
+])
+export type MediaServiceCommand = Static<typeof MediaServiceCommand>

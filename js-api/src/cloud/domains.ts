@@ -1,9 +1,10 @@
 import { Static, Type } from "@sinclair/typebox";
 import Option from "../utils/option";
 import { Model, ResourceId } from "../model";
-import { AppId, AppSessionId, DomainId, FixedInstanceId, ModelId } from "../new_types";
+import { AppId, AppMediaObjectId, AppSessionId, DomainId, FixedInstanceId, ModelId } from "../new_types";
 import { Session } from "../session";
 import { Maintenance } from "./apps";
+import { DownloadFromDomain, UploadToDomain } from "../media";
 
 export const DynamicInstanceLimits = Type.Object({
     max_instances:      Type.Integer()
