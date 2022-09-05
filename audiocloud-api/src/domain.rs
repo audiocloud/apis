@@ -8,6 +8,7 @@ use std::collections::HashMap;
 use serde::{Deserialize, Serialize};
 
 use crate::change::SessionState;
+use crate::error::SerializableResult;
 use crate::newtypes::{AppMediaObjectId, AppSessionId, SecureKey};
 use crate::session::SessionSecurity;
 use crate::{
@@ -100,9 +101,8 @@ pub enum WebSocketEvent {
     Packet(AppSessionId, SessionPacket),
     Spec(AppSessionId, SessionSpec),
     State(AppSessionId, SessionState),
-    LoginSuccess(AppSessionId),
-    LoginError(AppSessionId, String),
     SessionError(AppSessionId, String),
+    Response(String, SerializableResult<()>),
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug)]
@@ -111,4 +111,10 @@ pub enum WebSocketCommand {
     Login(AppSessionId, SecureKey),
     Logout(AppSessionId),
     Session(DomainSessionCommand),
+}
+
+#[derive(Serialize, Deserialize, Clone, Debug)]
+pub struct WebSocketCommandEnvelope {
+    pub request_id: String,
+    pub command:    WebSocketCommand,
 }

@@ -289,11 +289,21 @@ impl SessionTimeSegment {
     }
 }
 
-#[derive(Debug, Serialize, Deserialize, Clone, PartialEq)]
+#[derive(Debug, Default, Serialize, Deserialize, Clone, PartialEq)]
 pub struct SessionSecurity {
     pub structure:  bool,
     pub media:      bool,
     pub parameters: bool,
     pub transport:  bool,
     pub audio:      bool,
+}
+
+impl SessionSecurity {
+    pub fn full() -> Self {
+        SessionSecurity { structure:  true,
+                          media:      true,
+                          parameters: true,
+                          transport:  true,
+                          audio:      true, }
+    }
 }
