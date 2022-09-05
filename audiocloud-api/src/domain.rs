@@ -74,27 +74,6 @@ impl DomainSessionCommand {
     }
 }
 
-#[derive(Serialize, Deserialize, Clone, Debug, PartialEq)]
-#[serde(rename_all = "snake_case")]
-pub enum DomainMediaCommand {
-    Download {
-        app_media_id: AppMediaObjectId,
-        download:     DownloadMedia,
-    },
-    Delete {
-        app_media_id: AppMediaObjectId,
-    },
-}
-
-impl DomainMediaCommand {
-    pub fn get_app_media_object_id(&self) -> &AppMediaObjectId {
-        match self {
-            Self::Download { app_media_id, .. } => app_media_id,
-            Self::Delete { app_media_id } => app_media_id,
-        }
-    }
-}
-
 #[derive(Serialize, Deserialize, Clone, Debug)]
 #[serde(rename_all = "snake_case")]
 pub enum WebSocketEvent {
