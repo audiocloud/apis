@@ -2,12 +2,13 @@ use std::collections::{HashMap, HashSet};
 use std::iter;
 
 use derive_more::{Display, IsVariant, Unwrap};
+use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 
-use crate::newtypes::{FilterId, ParameterId, ReportId};
-use crate::time::Timestamped;
+use crate::common::time::Timestamped;
+use crate::common::{FilterId, ParameterId, ReportId};
 
-#[derive(Serialize, Deserialize, Clone, Copy, Eq, PartialEq, Debug, IsVariant)]
+#[derive(Serialize, Deserialize, Clone, Copy, Eq, PartialEq, Debug, IsVariant, JsonSchema)]
 pub enum ModelValueUnit {
     #[serde(rename = "no")]
     Unitless,
@@ -33,7 +34,7 @@ impl Default for ModelValueUnit {
     }
 }
 
-#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, IsVariant, Unwrap)]
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, IsVariant, Unwrap, JsonSchema)]
 #[serde(untagged)]
 pub enum ModelValueOption {
     Single(ModelValue),
@@ -54,7 +55,7 @@ impl ModelValueOption {
     }
 }
 
-#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, IsVariant, Unwrap)]
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, IsVariant, Unwrap, JsonSchema)]
 #[serde(untagged)]
 pub enum ModelValue {
     String(String),
@@ -106,7 +107,7 @@ impl ModelValue {
     }
 }
 
-#[derive(Serialize, Deserialize, Clone, Copy, Debug, PartialEq, IsVariant)]
+#[derive(Serialize, Deserialize, Clone, Copy, Debug, PartialEq, IsVariant, JsonSchema)]
 #[serde(rename_all = "snake_case")]
 pub enum ModelInput {
     Audio(ControlChannels),
@@ -114,7 +115,7 @@ pub enum ModelInput {
     Midi,
 }
 
-#[derive(Serialize, Deserialize, Clone, Copy, Debug, PartialEq, IsVariant)]
+#[derive(Serialize, Deserialize, Clone, Copy, Debug, PartialEq, IsVariant, JsonSchema)]
 #[serde(rename_all = "snake_case")]
 pub enum ModelOutput {
     Audio(ControlChannels),
@@ -128,7 +129,7 @@ pub type ModelParameters = HashMap<ParameterId, ModelParameter>;
 pub type ModelReports = HashMap<ReportId, ModelReport>;
 
 /// A model describes the parameters and reprots of a processor
-#[derive(Clone, Debug, Serialize, Deserialize, Default)]
+#[derive(Clone, Debug, Serialize, Deserialize, Default, JsonSchema)]
 pub struct Model {
     #[serde(default)]
     pub resources:    HashMap<ResourceId, f64>,
@@ -150,7 +151,7 @@ impl Model {
     }
 }
 
-#[derive(Copy, Clone, Serialize, Deserialize, Debug, PartialEq, Eq, Hash)]
+#[derive(Copy, Clone, Serialize, Deserialize, Debug, PartialEq, Eq, Hash, JsonSchema)]
 pub enum ModelCapability {
     PowerDistributor,
     AudioRouter,
@@ -158,7 +159,7 @@ pub enum ModelCapability {
     DigitalInputOutput,
 }
 
-#[derive(Serialize, Deserialize, Clone, Copy, Debug, Eq, PartialEq, IsVariant, Unwrap)]
+#[derive(Serialize, Deserialize, Clone, Copy, Debug, Eq, PartialEq, IsVariant, Unwrap, JsonSchema)]
 #[serde(rename_all = "snake_case")]
 pub enum ModelParameterRole {
     #[unwrap(ignore)]
@@ -171,20 +172,20 @@ pub enum ModelParameterRole {
     Filter(FilterId, FilterParameterRole),
 }
 
-#[derive(Serialize, Deserialize, Clone, Copy, Debug, Eq, PartialEq, IsVariant)]
+#[derive(Serialize, Deserialize, Clone, Copy, Debug, Eq, PartialEq, IsVariant, JsonSchema)]
 #[serde(rename_all = "snake_case")]
 pub enum ChannelParameterRole {
     Pan,
 }
 
-#[derive(Serialize, Deserialize, Clone, Copy, Debug, Eq, PartialEq, IsVariant)]
+#[derive(Serialize, Deserialize, Clone, Copy, Debug, Eq, PartialEq, IsVariant, JsonSchema)]
 #[serde(rename_all = "snake_case")]
 pub enum GlobalParameterRole {
     Enable,
     Bypass,
 }
 
-#[derive(Serialize, Deserialize, Clone, Copy, Debug, Eq, PartialEq, IsVariant)]
+#[derive(Serialize, Deserialize, Clone, Copy, Debug, Eq, PartialEq, IsVariant, JsonSchema)]
 #[serde(rename_all = "snake_case")]
 pub enum AmplifierParameterRole {
     Enable,
@@ -193,7 +194,7 @@ pub enum AmplifierParameterRole {
     SlewRate,
 }
 
-#[derive(Serialize, Deserialize, Clone, Copy, Debug, Eq, PartialEq, IsVariant)]
+#[derive(Serialize, Deserialize, Clone, Copy, Debug, Eq, PartialEq, IsVariant, JsonSchema)]
 #[serde(rename_all = "snake_case")]
 pub enum DynamicsParameterRole {
     Ratio,
@@ -211,7 +212,7 @@ pub enum DynamicsParameterRole {
     MidEmphasis,
 }
 
-#[derive(Serialize, Deserialize, Clone, Copy, Debug, Eq, PartialEq, IsVariant)]
+#[derive(Serialize, Deserialize, Clone, Copy, Debug, Eq, PartialEq, IsVariant, JsonSchema)]
 #[serde(rename_all = "snake_case")]
 pub enum FilterParameterRole {
     Gain,
@@ -221,7 +222,7 @@ pub enum FilterParameterRole {
     Type,
 }
 
-#[derive(Serialize, Deserialize, Clone, Copy, Debug, Eq, PartialEq, IsVariant, Unwrap)]
+#[derive(Serialize, Deserialize, Clone, Copy, Debug, Eq, PartialEq, IsVariant, Unwrap, JsonSchema)]
 #[serde(rename_all = "snake_case")]
 pub enum ModelReportRole {
     #[unwrap(ignore)]
@@ -231,7 +232,7 @@ pub enum ModelReportRole {
     Dynamics(DynamicsId, DynamicsReportRole),
 }
 
-#[derive(Serialize, Deserialize, Clone, Copy, Debug, Eq, PartialEq, IsVariant)]
+#[derive(Serialize, Deserialize, Clone, Copy, Debug, Eq, PartialEq, IsVariant, JsonSchema)]
 #[serde(rename_all = "snake_case")]
 pub enum PowerReportRole {
     Powered,
@@ -240,7 +241,7 @@ pub enum PowerReportRole {
     TotalEnergy,
 }
 
-#[derive(Serialize, Deserialize, Clone, Copy, Debug, Eq, PartialEq, IsVariant)]
+#[derive(Serialize, Deserialize, Clone, Copy, Debug, Eq, PartialEq, IsVariant, JsonSchema)]
 #[serde(rename_all = "snake_case")]
 pub enum AmplifierReportRole {
     PeakVolume,
@@ -250,7 +251,7 @@ pub enum AmplifierReportRole {
     LufsVolumeIntegrated,
 }
 
-#[derive(Serialize, Deserialize, Clone, Copy, Debug, Eq, PartialEq, IsVariant)]
+#[derive(Serialize, Deserialize, Clone, Copy, Debug, Eq, PartialEq, IsVariant, JsonSchema)]
 #[serde(rename_all = "snake_case")]
 pub enum DynamicsReportRole {
     GainReduction,
@@ -294,7 +295,7 @@ pub fn enumerate_multi_channel_value_i64(val: MultiChannelValue) -> impl Iterato
 pub mod multi_channel_value {
     use std::iter;
 
-    use crate::model::{ModelValue, MultiChannelValue};
+    use crate::common::model::{ModelValue, MultiChannelValue};
 
     pub fn single(channel: usize, value: ModelValue) -> MultiChannelValue {
         iter::repeat(None).take(channel - 1).chain(Some(Some(value)).into_iter()).collect()
@@ -325,7 +326,7 @@ pub mod multi_channel_value {
     }
 }
 
-#[derive(Serialize, Deserialize, Clone, Debug, PartialEq)]
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
 pub struct ModelParameter {
     pub scope:  ModelElementScope,
     #[serde(default)]
@@ -334,7 +335,7 @@ pub struct ModelParameter {
     pub values: Vec<ModelValueOption>,
 }
 
-#[derive(Serialize, Deserialize, Clone, Copy, Debug, PartialEq)]
+#[derive(Serialize, Deserialize, Clone, Copy, Debug, PartialEq, JsonSchema)]
 #[serde(rename_all = "snake_case")]
 pub enum ModelElementScope {
     Global,
@@ -354,7 +355,7 @@ impl ModelElementScope {
     }
 }
 
-#[derive(Serialize, Deserialize, Clone, Debug, PartialEq)]
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
 pub struct ModelReport {
     pub scope:    ModelElementScope,
     #[serde(default)]
@@ -367,7 +368,7 @@ pub struct ModelReport {
     pub volatile: bool,
 }
 
-#[derive(Serialize, Deserialize, Clone, Copy, Debug, PartialEq, Eq, Hash, IsVariant)]
+#[derive(Serialize, Deserialize, Clone, Copy, Debug, PartialEq, Eq, Hash, IsVariant, JsonSchema)]
 #[serde(rename_all = "snake_case")]
 pub enum ControlChannels {
     Global,
@@ -376,7 +377,7 @@ pub enum ControlChannels {
     Generic,
 }
 
-#[derive(Clone, Copy, Debug, Serialize, Deserialize, Eq, PartialEq, Hash, Display)]
+#[derive(Clone, Copy, Debug, Serialize, Deserialize, Eq, PartialEq, Hash, Display, JsonSchema)]
 pub enum ResourceId {
     // in GiB
     #[serde(rename = "ram")]
@@ -395,7 +396,7 @@ pub enum ResourceId {
     UniversalAudioDSP,
 }
 
-#[derive(Serialize, Deserialize, Clone, Copy, Debug, Eq, PartialEq, IsVariant)]
+#[derive(Serialize, Deserialize, Clone, Copy, Debug, Eq, PartialEq, IsVariant, JsonSchema)]
 #[serde(rename_all = "snake_case")]
 pub enum AmplifierId {
     Input,
@@ -405,7 +406,7 @@ pub enum AmplifierId {
     InsertOutput,
 }
 
-#[derive(Serialize, Deserialize, Clone, Copy, Debug, Eq, PartialEq, IsVariant)]
+#[derive(Serialize, Deserialize, Clone, Copy, Debug, Eq, PartialEq, IsVariant, JsonSchema)]
 #[serde(rename_all = "snake_case")]
 pub enum DynamicsId {
     Total,

@@ -73,8 +73,8 @@ pub trait Transferable {
 mod test {
     use serde_json::json;
 
-    use crate::audio_engine::AudioEngineCommand;
-    use crate::codec::{Codec, Json, MsgPack};
+    use crate::audio_engine::command::AudioEngineCommand;
+    use crate::api::codec::{Codec, Json, MsgPack};
 
     #[test]
     pub fn test_err_json() {

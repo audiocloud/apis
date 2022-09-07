@@ -1,13 +1,13 @@
 use maplit::{hashmap, hashset};
 
-pub use audiocloud_api::instance::power::{params, reports};
-use audiocloud_api::model::ModelCapability::PowerDistributor;
-use audiocloud_api::model::ModelElementScope::Size;
-use audiocloud_api::model::ModelParameterRole::Power as PowerOnOff;
-use audiocloud_api::model::ModelReportRole::Power;
-use audiocloud_api::model::ModelValueUnit::*;
-use audiocloud_api::model::PowerReportRole::*;
-use audiocloud_api::model::{Model, ModelParameter, ModelReport};
+pub use audiocloud_api::common::instance::power::{params, reports};
+use audiocloud_api::common::model::ModelCapability::PowerDistributor;
+use audiocloud_api::common::model::ModelElementScope::Size;
+use audiocloud_api::common::model::ModelParameterRole::Power as PowerOnOff;
+use audiocloud_api::common::model::ModelReportRole::Power;
+use audiocloud_api::common::model::ModelValueUnit::*;
+use audiocloud_api::common::model::PowerReportRole::*;
+use audiocloud_api::common::model::{Model, ModelParameter, ModelReport};
 use audiocloud_api::newtypes::ModelId;
 
 use crate::values;

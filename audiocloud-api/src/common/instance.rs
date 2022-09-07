@@ -1,8 +1,8 @@
 use serde::{Deserialize, Serialize};
 
-use crate::change::{PlayId, RenderId};
-use crate::driver::InstanceDriverCommand;
-use crate::time::Timestamped;
+use crate::common::media::{PlayId, RenderId};
+use crate::instance_driver::InstanceDriverCommand;
+use crate::common::time::Timestamped;
 
 #[derive(PartialEq, Serialize, Deserialize, Copy, Clone, Debug)]
 #[serde(rename_all = "snake_case")]
@@ -108,7 +108,7 @@ pub struct ReportInstancePlayState {
 
 pub mod power {
     pub mod params {
-        use crate::newtypes::ParameterId;
+        use crate::common::ParameterId;
 
         lazy_static::lazy_static! {
             pub static ref POWER: ParameterId = ParameterId::from("power");
@@ -116,7 +116,7 @@ pub mod power {
     }
 
     pub mod reports {
-        use crate::newtypes::ReportId;
+        use crate::common::ReportId;
 
         lazy_static::lazy_static! {
             pub static ref POWER: ReportId = ReportId::from("power");

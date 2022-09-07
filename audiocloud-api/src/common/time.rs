@@ -1,9 +1,10 @@
 use chrono::{DateTime, Duration, Utc};
+use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 
 pub type Timestamp = DateTime<Utc>;
 
-#[derive(Clone, Copy, Debug, Serialize, Deserialize, Eq, PartialEq, Hash)]
+#[derive(Clone, Copy, Debug, Serialize, Deserialize, Eq, PartialEq, Hash, JsonSchema)]
 pub struct TimeRange {
     pub from: Timestamp,
     pub to:   Timestamp,

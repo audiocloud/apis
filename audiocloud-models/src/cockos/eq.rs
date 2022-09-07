@@ -3,12 +3,12 @@ use std::collections::HashMap;
 use lazy_static::lazy_static;
 use maplit::hashmap;
 
-use audiocloud_api::model::FilterParameterRole::{Frequency, Gain};
-use audiocloud_api::model::ModelElementScope::AllInputs;
-use audiocloud_api::model::ModelParameterRole::Filter;
-use audiocloud_api::model::ModelValueUnit::Decibels;
-use audiocloud_api::model::ResourceId::CPU;
-use audiocloud_api::model::{Model, ModelParameter, ModelValueOption, ResourceId};
+use audiocloud_api::common::model::FilterParameterRole::{Frequency, Gain};
+use audiocloud_api::common::model::ModelElementScope::AllInputs;
+use audiocloud_api::common::model::ModelParameterRole::Filter;
+use audiocloud_api::common::model::ModelValueUnit::Decibels;
+use audiocloud_api::common::model::ResourceId::CPU;
+use audiocloud_api::common::model::{Model, ModelParameter, ModelValueOption, ResourceId};
 use audiocloud_api::newtypes::FilterId::Low;
 use audiocloud_api::newtypes::{ModelId, ParameterId};
 

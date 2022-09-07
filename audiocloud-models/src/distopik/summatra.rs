@@ -1,16 +1,16 @@
 use lazy_static::lazy_static;
 use maplit::{hashmap, hashset};
 
-use audiocloud_api::model::AmplifierId::Input;
-use audiocloud_api::model::AmplifierParameterRole::Gain;
-use audiocloud_api::model::ChannelParameterRole::Pan;
-use audiocloud_api::model::ModelCapability::AudioMixer;
-use audiocloud_api::model::ModelElementScope::AllInputs;
-use audiocloud_api::model::ModelParameterRole::{Amplifier, Channel, NoRole};
-use audiocloud_api::model::ModelValue::Number;
-use audiocloud_api::model::ModelValueOption::{Range, Single};
-use audiocloud_api::model::ModelValueUnit::{Decibels, Unitless};
-use audiocloud_api::model::{Model, ModelParameter, ModelValueOption};
+use audiocloud_api::common::model::AmplifierId::Input;
+use audiocloud_api::common::model::AmplifierParameterRole::Gain;
+use audiocloud_api::common::model::ChannelParameterRole::Pan;
+use audiocloud_api::common::model::ModelCapability::AudioMixer;
+use audiocloud_api::common::model::ModelElementScope::AllInputs;
+use audiocloud_api::common::model::ModelParameterRole::{Amplifier, Channel, NoRole};
+use audiocloud_api::common::model::ModelValue::Number;
+use audiocloud_api::common::model::ModelValueOption::{Range, Single};
+use audiocloud_api::common::model::ModelValueUnit::{Decibels, Unitless};
+use audiocloud_api::common::model::{Model, ModelParameter, ModelValueOption};
 use audiocloud_api::newtypes::{ModelId, ParameterId};
 
 use crate::Manufacturers::Distopik;

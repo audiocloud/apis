@@ -1,31 +1,31 @@
 //! Various IDs and wrappers
 
+use schemars::JsonSchema;
 use std::fmt::Formatter;
 use std::marker::PhantomData;
 use std::str::FromStr;
 
-use crate::cloud::CloudError;
-use derive_more::*;
+use derive_more::{Constructor, Deref, Display, From, FromStr, IsVariant};
 use once_cell::sync::OnceCell;
 use regex::Regex;
 use serde::{Deserialize, Deserializer, Serialize, Serializer};
 use serde_json::Value;
-use crate::session::SessionFlowId;
+
+use crate::cloud::CloudError;
+use crate::common::task::NodePadId;
 
 #[derive(Clone, Debug, Eq, PartialEq, Hash, Display, Constructor)]
-#[display(fmt = "{manufacturer}/{name}/{instance}")]
+#[display(fmt = "{manufacturer}:{name}:{instance}")]
 pub struct FixedInstanceId {
     pub manufacturer: String,
-    pub name: String,
-    pub instance: String,
+    pub name:         String,
+    pub instance:     String,
 }
 
 impl FixedInstanceId {
     pub fn model_id(&self) -> ModelId {
-        ModelId {
-            manufacturer: self.manufacturer.to_string(),
-            name: self.name.to_string(),
-        }
+        ModelId { manufacturer: self.manufacturer.to_string(),
+                  name:         self.name.to_string(), }
     }
 
     pub fn from_model_id(model_id: ModelId, instance: String) -> Self {
@@ -41,16 +41,14 @@ impl<'de> Deserialize<'de> for FixedInstanceId {
         let err = |msg| serde::de::Error::custom(msg);
 
         let s = String::deserialize(deserializer)?;
-        let mut s = s.split('/');
+        let mut s = s.split(':');
         let manufacturer = s.next().ok_or(err("expected manufacturer"))?;
         let name = s.next().ok_or(err("expected manufacturer"))?;
         let instance = s.next().ok_or(err("expected instance"))?;
 
-        Ok(Self {
-            manufacturer: manufacturer.to_string(),
-            name: name.to_string(),
-            instance: instance.to_string(),
-        })
+        Ok(Self { manufacturer: manufacturer.to_string(),
+                  name:         name.to_string(),
+                  instance:     instance.to_string(), })
     }
 }
 
@@ -63,10 +61,10 @@ impl Serialize for FixedInstanceId {
 }
 
 #[derive(Clone, Debug, Display, Eq, PartialEq, Hash, Constructor)]
-#[display(fmt = "{manufacturer}/{name}")]
+#[display(fmt = "{manufacturer}:{name}")]
 pub struct ModelId {
     pub manufacturer: String,
-    pub name: String,
+    pub name:         String,
 }
 
 impl ModelId {
@@ -93,11 +91,11 @@ impl Serialize for ModelId {
     fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
         where S: Serializer
     {
-        serializer.serialize_str(&format!("{}/{}", &self.manufacturer, &self.name))
+        serializer.serialize_str(&self.to_string())
     }
 }
 
-#[derive(Serialize, Deserialize, Clone, Copy, Debug, Eq, PartialEq, IsVariant)]
+#[derive(Serialize, Deserialize, Clone, Copy, Debug, Eq, PartialEq, IsVariant, JsonSchema)]
 #[serde(rename_all = "snake_case")]
 pub enum FilterId {
     HighPass,
@@ -134,78 +132,78 @@ impl<'de, K, V, T> serde::de::Visitor<'de> for Tuple2Visitor<K, V, T>
     fn visit_str<E>(self, v: &str) -> Result<Self::Value, E>
         where E: serde::de::Error
     {
-        let mut split = v.split('/');
-        let manufacturer = split.next().ok_or(E::custom("could not extract first string"))?;
-        let name = split.next().ok_or(E::custom("could not extract second string"))?;
+        let mut split = v.split(':');
+        let first = split.next().ok_or(E::custom("could not extract first string"))?;
+        let second = split.next().ok_or(E::custom("could not extract second string"))?;
 
-        Ok(T::from((K::from(manufacturer.to_string()), V::from(name.to_string()))))
+        Ok(T::from((K::from(first.to_string()), V::from(second.to_string()))))
     }
 }
 
 /// Track in a session
 #[derive(Clone, Debug, Serialize, Deserialize, Eq, PartialEq, Ord, PartialOrd, Display, Deref, Constructor, Hash, From, FromStr)]
 #[repr(transparent)]
-pub struct TrackId(String);
+pub struct TrackNodeId(String);
 
-impl TrackId {
-    pub fn flow(self) -> SessionFlowId {
-        SessionFlowId::TrackOutput(self)
+impl TrackNodeId {
+    pub fn flow(self) -> NodePadId {
+        NodePadId::TrackOutput(self)
     }
 }
 
 /// Media item on a track
 #[derive(Clone, Debug, Serialize, Deserialize, Eq, PartialEq, Ord, PartialOrd, Display, Deref, Constructor, Hash, From, FromStr)]
 #[repr(transparent)]
-pub struct MediaId(String);
+pub struct TrackMediaId(String);
 
 /// Mixer in a session
 #[derive(Clone, Debug, Serialize, Deserialize, Eq, PartialEq, Ord, PartialOrd, Display, Deref, Constructor, Hash, From, FromStr)]
 #[repr(transparent)]
-pub struct MixerId(String);
+pub struct MixerNodeId(String);
 
-impl MixerId {
-    pub fn input_flow(self) -> SessionFlowId {
-        SessionFlowId::MixerInput(self)
+impl MixerNodeId {
+    pub fn input_flow(self) -> NodePadId {
+        NodePadId::MixerInput(self)
     }
-    pub fn output_flow(self) -> SessionFlowId {
-        SessionFlowId::MixerOutput(self)
+    pub fn output_flow(self) -> NodePadId {
+        NodePadId::MixerOutput(self)
     }
 }
 
 /// Dynamic instance in a session
 #[derive(Clone, Debug, Serialize, Deserialize, Eq, PartialEq, Ord, PartialOrd, Display, Deref, Constructor, Hash, From, FromStr)]
 #[repr(transparent)]
-pub struct DynamicId(String);
+pub struct DynamicInstanceNodeId(String);
 
-impl DynamicId {
-    pub fn input_flow(self) -> SessionFlowId {
-        SessionFlowId::DynamicInstanceInput(self)
+impl DynamicInstanceNodeId {
+    pub fn input_flow(self) -> NodePadId {
+        NodePadId::DynamicInstanceInput(self)
     }
-    pub fn output_flow(self) -> SessionFlowId {
-        SessionFlowId::DynamicInstanceOutput(self)
+    pub fn output_flow(self) -> NodePadId {
+        NodePadId::DynamicInstanceOutput(self)
     }
 }
 
 /// Fixed instance in a session
 #[derive(Clone, Debug, Serialize, Deserialize, Eq, PartialEq, Ord, PartialOrd, Display, Deref, Constructor, Hash, From, FromStr)]
 #[repr(transparent)]
-pub struct FixedId(String);
+pub struct FixedInstanceNodeId(String);
 
-impl FixedId {
-    pub fn input_flow(self) -> SessionFlowId {
-        SessionFlowId::FixedInstanceInput(self)
+impl FixedInstanceNodeId {
+    pub fn input_flow(self) -> NodePadId {
+        NodePadId::FixedInstanceInput(self)
     }
-    pub fn output_flow(self) -> SessionFlowId {
-        SessionFlowId::FixedInstanceOutput(self)
+    pub fn output_flow(self) -> NodePadId {
+        NodePadId::FixedInstanceOutput(self)
     }
 }
 
 #[derive(Clone, Debug, Serialize, Deserialize, Eq, PartialEq, Ord, PartialOrd, Display, Deref, Constructor, Hash, From, FromStr)]
 #[repr(transparent)]
-pub struct ConnectionId(String);
+pub struct NodeConnectionId(String);
 
 /// App
-#[derive(Clone, Debug, Serialize, Deserialize, Eq, PartialEq, Ord, PartialOrd, Display, Deref, Constructor, Hash, From, FromStr)]
+#[derive(Clone, Debug, Serialize, Deserialize, Eq, PartialEq, Ord, PartialOrd, Display, Deref, Constructor, Hash, From)]
 #[repr(transparent)]
 pub struct AppId(String);
 
@@ -222,7 +220,7 @@ impl AppId {
 /// Session of an App on a Domain
 #[derive(Clone, Debug, Serialize, Deserialize, Eq, PartialEq, Ord, PartialOrd, Display, Deref, Constructor, Hash, From, FromStr)]
 #[repr(transparent)]
-pub struct SessionId(String);
+pub struct TaskId(String);
 
 #[derive(Clone, Debug, Serialize, Deserialize, Eq, PartialEq, Ord, PartialOrd, Display, Deref, Constructor, Hash, From, FromStr)]
 #[repr(transparent)]
@@ -232,26 +230,26 @@ pub struct AudioEngineId(String);
 #[repr(transparent)]
 pub struct SocketId(String);
 
-impl SessionId {
+impl TaskId {
     pub fn validate(self) -> Result<Self, CloudError> {
         static VALIDATION: OnceCell<Regex> = OnceCell::new();
 
         VALIDATION.get_or_init(|| Regex::new(r"^[a-zA-Z0-9_\-]+$").unwrap())
-            .find(&self.0)
-            .ok_or_else(|| CloudError::InvalidSessionId(self.to_string()))?;
+                  .find(&self.0)
+                  .ok_or_else(|| CloudError::InvalidAppTaskId(self.to_string()))?;
 
         Ok(self)
     }
 }
 
 #[derive(Clone, Debug, Eq, PartialEq, Ord, PartialOrd, Display, Constructor, Hash, From)]
-#[display(fmt = "{app_id}/{session_id}")]
-pub struct AppSessionId {
-    pub app_id: AppId,
-    pub session_id: SessionId,
+#[display(fmt = "{app_id}:{task_id}")]
+pub struct AppTaskId {
+    pub app_id:  AppId,
+    pub task_id: TaskId,
 }
 
-impl FromStr for AppSessionId {
+impl FromStr for AppTaskId {
     type Err = serde_json::Error;
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
@@ -259,7 +257,7 @@ impl FromStr for AppSessionId {
     }
 }
 
-impl<'de> Deserialize<'de> for AppSessionId {
+impl<'de> Deserialize<'de> for AppTaskId {
     fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
         where D: Deserializer<'de>
     {
@@ -267,11 +265,11 @@ impl<'de> Deserialize<'de> for AppSessionId {
     }
 }
 
-impl Serialize for AppSessionId {
+impl Serialize for AppTaskId {
     fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
         where S: Serializer
     {
-        serializer.serialize_str(&format!("{}/{}", &self.app_id, &self.session_id))
+        serializer.serialize_str(&self.to_string())
     }
 }
 
@@ -282,27 +280,24 @@ pub struct MediaObjectId(String);
 
 impl MediaObjectId {
     pub fn for_app(self, app_id: AppId) -> AppMediaObjectId {
-        AppMediaObjectId {
-            app_id,
-            media_id: self,
-        }
+        AppMediaObjectId { app_id, media_id: self }
     }
 
     pub fn validate(self) -> Result<Self, CloudError> {
         static VALIDATION: OnceCell<Regex> = OnceCell::new();
 
         VALIDATION.get_or_init(|| Regex::new(r"^[a-zA-Z0-9_\-]+$").unwrap())
-            .find(&self.0)
-            .ok_or_else(|| CloudError::InvalidMediaId(self.to_string()))?;
+                  .find(&self.0)
+                  .ok_or_else(|| CloudError::InvalidAppMediaObjectId(self.to_string()))?;
 
         Ok(self)
     }
 }
 
 #[derive(Clone, Debug, Eq, PartialEq, Ord, PartialOrd, Display, Constructor, Hash)]
-#[display(fmt = "{app_id}/{media_id}")]
+#[display(fmt = "{app_id}:{media_id}")]
 pub struct AppMediaObjectId {
-    pub app_id: AppId,
+    pub app_id:   AppId,
     pub media_id: MediaObjectId,
 }
 
@@ -324,7 +319,7 @@ impl Serialize for AppMediaObjectId {
     fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
         where S: Serializer
     {
-        serializer.serialize_str(&format!("{}/{}", &self.app_id, &self.media_id))
+        serializer.serialize_str(&self.to_string())
     }
 }
 
@@ -367,3 +362,38 @@ impl From<&str> for ReportId {
         Self::new(s.to_string())
     }
 }
+
+#[macro_export]
+macro_rules! json_schema_new_type {
+    ($($i:ident), *) => {
+        $(
+            impl schemars::JsonSchema for $i {
+                fn schema_name() -> String {
+                    std::stringify!($i).to_string()
+                }
+
+                fn json_schema(_gen: &mut schemars::gen::SchemaGenerator) -> schemars::schema::Schema {
+                        schemars::schema::SchemaObject { instance_type: Some(schemars::schema::InstanceType::String.into()),
+                                                         ..Default::default() }.into()
+                }
+            }
+        )*
+    }
+}
+
+json_schema_new_type!(AppId,
+                      AppTaskId,
+                      MediaObjectId,
+                      AppMediaObjectId,
+                      FixedInstanceId,
+                      TrackNodeId,
+                      TrackMediaId,
+                      MixerNodeId,
+                      DynamicInstanceNodeId,
+                      FixedInstanceNodeId,
+                      SecureKey,
+                      DomainId,
+                      ParameterId,
+                      ReportId,
+                      ModelId,
+                      TaskId);

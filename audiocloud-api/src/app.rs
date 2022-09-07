@@ -5,26 +5,27 @@ use chrono::Utc;
 use serde::{Deserialize, Serialize};
 
 use crate::audio_engine::CompressedAudio;
-use crate::change::{DesiredSessionPlayState, PlayId, RenderId, SessionPlayState};
-use crate::instance::InstancePlayState;
-use crate::instance::InstancePowerState;
-use crate::model::MultiChannelValue;
-use crate::newtypes::{AppMediaObjectId, DynamicId, FixedId, FixedInstanceId, MixerId, ReportId, TrackId};
-use crate::session::{InstanceReports, SessionFlowId};
-use crate::time::{Timestamp, Timestamped};
+use crate::common::change::{DesiredTaskPlayState, TaskPlayState};
+use crate::common::task::{InstanceReports, NodePadId};
+use crate::common::time::{Timestamp, Timestamped};
+use crate::common::{
+    AppMediaObjectId, DynamicInstanceNodeId, FixedInstanceId, FixedInstanceNodeId, InstancePlayState, InstancePowerState, MixerNodeId,
+    MultiChannelValue, ReportId, TrackNodeId,
+};
+use crate::common::media::{PlayId, RenderId};
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct SessionPacket {
     pub created_at:            Timestamp,
-    pub fixed:                 HashMap<FixedId, FixedInstancePacket>,
-    pub dynamic:               HashMap<DynamicId, DynamicInstancePacket>,
-    pub mixers:                HashMap<MixerId, MixerPacket>,
-    pub tracks:                HashMap<TrackId, TrackPacket>,
+    pub fixed:                 HashMap<FixedInstanceNodeId, FixedInstancePacket>,
+    pub dynamic:               HashMap<DynamicInstanceNodeId, DynamicInstancePacket>,
+    pub mixers:                HashMap<MixerNodeId, MixerPacket>,
+    pub tracks:                HashMap<TrackNodeId, TrackPacket>,
     pub waiting_for_instances: HashSet<FixedInstanceId>,
     pub waiting_for_media:     HashSet<AppMediaObjectId>,
     pub compressed_audio:      Vec<CompressedAudio>,
-    pub desired_play_state:    DesiredSessionPlayState,
-    pub play_state:            SessionPlayState,
+    pub desired_play_state: DesiredTaskPlayState,
+    pub play_state: TaskPlayState,
     pub errors:                Vec<Timestamped<SessionPacketError>>,
 }
 
@@ -46,14 +47,14 @@ impl Default for SessionPacket {
                waiting_for_instances: Default::default(),
                waiting_for_media:     Default::default(),
                compressed_audio:      Default::default(),
-               desired_play_state:    DesiredSessionPlayState::Stopped,
-               play_state:            SessionPlayState::Stopped,
+               desired_play_state:    DesiredTaskPlayState::Stopped,
+               play_state:            TaskPlayState::Stopped,
                errors:                vec![], }
     }
 }
 
 impl SessionPacket {
-    pub fn push_fixed_instance_reports(&mut self, instance: FixedId, reports: InstanceReports) {
+    pub fn push_fixed_instance_reports(&mut self, instance: FixedInstanceNodeId, reports: InstanceReports) {
         let fixed = self.fixed.entry(instance).or_default();
 
         // for (report_id, value) in reports {
@@ -64,52 +65,52 @@ impl SessionPacket {
         // }
     }
 
-    pub fn push_peak_meters(&mut self, peak_meters: HashMap<SessionFlowId, MultiChannelValue>) {
+    pub fn push_peak_meters(&mut self, peak_meters: HashMap<NodePadId, MultiChannelValue>) {
         for (flow_id, value) in peak_meters {
             match flow_id {
-                SessionFlowId::MixerInput(mixer_id) => {
+                NodePadId::MixerInput(mixer_id) => {
                     self.mixers
                         .entry(mixer_id)
                         .or_default()
                         .input_metering
                         .push(DiffStamped::new(self.created_at, value));
                 }
-                SessionFlowId::MixerOutput(mixer_id) => {
+                NodePadId::MixerOutput(mixer_id) => {
                     self.mixers
                         .entry(mixer_id)
                         .or_default()
                         .output_metering
                         .push(DiffStamped::new(self.created_at, value));
                 }
-                SessionFlowId::FixedInstanceInput(fixed_id) => {
+                NodePadId::FixedInstanceInput(fixed_id) => {
                     self.fixed
                         .entry(fixed_id)
                         .or_default()
                         .input_metering
                         .push(DiffStamped::new(self.created_at, value));
                 }
-                SessionFlowId::FixedInstanceOutput(fixed_id) => {
+                NodePadId::FixedInstanceOutput(fixed_id) => {
                     self.fixed
                         .entry(fixed_id)
                         .or_default()
                         .output_metering
                         .push(DiffStamped::new(self.created_at, value));
                 }
-                SessionFlowId::DynamicInstanceInput(dynamic_id) => {
+                NodePadId::DynamicInstanceInput(dynamic_id) => {
                     self.dynamic
                         .entry(dynamic_id)
                         .or_default()
                         .input_metering
                         .push(DiffStamped::new(self.created_at, value));
                 }
-                SessionFlowId::DynamicInstanceOutput(dynamic_id) => {
+                NodePadId::DynamicInstanceOutput(dynamic_id) => {
                     self.dynamic
                         .entry(dynamic_id)
                         .or_default()
                         .output_metering
                         .push(DiffStamped::new(self.created_at, value));
                 }
-                SessionFlowId::TrackOutput(track_id) => {
+                NodePadId::TrackOutput(track_id) => {
                     self.tracks
                         .entry(track_id)
                         .or_default()
@@ -128,7 +129,7 @@ impl SessionPacket {
         self.errors.push(Timestamped::new(SessionPacketError::Rendering(render_id, error)));
     }
 
-    pub fn push_fixed_error(&mut self, instance: FixedId, error: String) {
+    pub fn push_fixed_error(&mut self, instance: FixedInstanceNodeId, error: String) {
         self.fixed.entry(instance).or_default().errors.push(Timestamped::new(error));
     }
 

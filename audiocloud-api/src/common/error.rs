@@ -18,7 +18,11 @@ impl<T> Into<anyhow::Result<T>> for SerializableResult<T> {
 }
 
 impl<T> From<anyhow::Result<T>> for SerializableResult<T> {
-    fn from(_: anyhow::Result<T>) -> Self {
-        todo!()
+    fn from(res: anyhow::Result<T>) -> Self {
+        match res {
+            Ok(ok) => Self::Ok(ok),
+            Err(err) => Self::Err { code:    500,
+                                    message: err.to_string(), },
+        }
     }
 }

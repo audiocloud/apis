@@ -3,15 +3,15 @@
 use lazy_static::lazy_static;
 use maplit::hashmap;
 
-use audiocloud_api::model::AmplifierId::{Input, Output};
-use audiocloud_api::model::AmplifierParameterRole::Gain as AmpGain;
-use audiocloud_api::model::FilterParameterRole::{Bandwidth, Frequency, Gain as FilterGain};
-use audiocloud_api::model::GlobalParameterRole::Bypass;
-use audiocloud_api::model::ModelElementScope::AllInputs;
-use audiocloud_api::model::ModelElementScope::AllOutputs;
-use audiocloud_api::model::ModelParameterRole::{Amplifier, Filter, Global};
-use audiocloud_api::model::ModelValueUnit::{Decibels, Hertz, Toggle};
-use audiocloud_api::model::{Model, ModelParameter, ModelValueOption};
+use audiocloud_api::common::model::AmplifierId::{Input, Output};
+use audiocloud_api::common::model::AmplifierParameterRole::Gain as AmpGain;
+use audiocloud_api::common::model::FilterParameterRole::{Bandwidth, Frequency, Gain as FilterGain};
+use audiocloud_api::common::model::GlobalParameterRole::Bypass;
+use audiocloud_api::common::model::ModelElementScope::AllInputs;
+use audiocloud_api::common::model::ModelElementScope::AllOutputs;
+use audiocloud_api::common::model::ModelParameterRole::{Amplifier, Filter, Global};
+use audiocloud_api::common::model::ModelValueUnit::{Decibels, Hertz, Toggle};
+use audiocloud_api::common::model::{Model, ModelParameter, ModelValueOption};
 use audiocloud_api::newtypes::FilterId::{High, HighMid, HighPass, Low, LowMid};
 use audiocloud_api::newtypes::{ModelId, ParameterId};
 

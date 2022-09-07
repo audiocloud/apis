@@ -1,12 +1,12 @@
 use lazy_static::lazy_static;
 use maplit::hashmap;
 
-use audiocloud_api::model::AmplifierId::{InsertInput, InsertOutput};
-use audiocloud_api::model::AmplifierReportRole::PeakVolume;
-use audiocloud_api::model::ModelElementScope::AllInputs;
-use audiocloud_api::model::ModelReportRole::Amplifier;
-use audiocloud_api::model::ModelValueUnit::Decibels;
-use audiocloud_api::model::{
+use audiocloud_api::common::model::AmplifierId::{InsertInput, InsertOutput};
+use audiocloud_api::common::model::AmplifierReportRole::PeakVolume;
+use audiocloud_api::common::model::ModelElementScope::AllInputs;
+use audiocloud_api::common::model::ModelReportRole::Amplifier;
+use audiocloud_api::common::model::ModelValueUnit::Decibels;
+use audiocloud_api::common::model::{
     AmplifierId, AmplifierReportRole, Model, ModelElementScope, ModelReport, ModelReportRole, ModelValueOption, ModelValueUnit,
 };
 use audiocloud_api::newtypes::{ModelId, ReportId};

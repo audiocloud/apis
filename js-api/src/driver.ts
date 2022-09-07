@@ -46,7 +46,7 @@ export const InstanceDriverError = Type.Union([
 export type InstanceDriverError = Static<typeof InstanceDriverError>
 
 export const InstanceDriverEvent = Type.Union([
-    /// Sent when the driver has started
+    /// Sent when the instance_driver has started
     Type.Literal("started"),
 
     /// If an I/O error happened during communication with device

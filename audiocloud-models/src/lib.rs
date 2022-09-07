@@ -4,7 +4,7 @@ use std::iter;
 use lazy_static::lazy_static;
 use maplit::hashmap;
 
-use audiocloud_api::model::{ControlChannels, Model, ModelInput, ModelInputs, ModelOutput, ModelOutputs};
+use audiocloud_api::common::model::{ControlChannels, Model, ModelInput, ModelInputs, ModelOutput, ModelOutputs};
 use audiocloud_api::newtypes::ModelId;
 
 use crate::audio_cloud::insert::{audio_cloud_insert_id, audio_cloud_insert_model};
@@ -92,7 +92,7 @@ pub fn repeat_channels<R: Copy>(count: usize, role: R) -> Vec<R> {
 }
 
 pub mod values {
-    use audiocloud_api::model::{ModelValue, ModelValueOption};
+    use audiocloud_api::common::model::{ModelValue, ModelValueOption};
 
     pub fn number(value: f64) -> ModelValueOption {
         ModelValueOption::Single(ModelValue::Number(value))

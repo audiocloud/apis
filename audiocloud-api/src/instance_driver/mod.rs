@@ -1,15 +1,15 @@
-//! Types used to communicate with the driver
+//! Types used to communicate with the instance_driver
 
 use std::collections::HashMap;
 
 use serde::{Deserialize, Serialize};
 use thiserror::Error;
 
-use crate::change::{PlayId, RenderId};
-use crate::instance::{DesiredInstancePlayState, InstancePlayState};
-use crate::model::MultiChannelValue;
+use crate::common::instance::{DesiredInstancePlayState, InstancePlayState};
+use crate::common::media::{PlayId, RenderId};
+use crate::common::model::MultiChannelValue;
 use crate::newtypes::{FixedInstanceId, ParameterId};
-use crate::session::InstanceReports;
+use crate::common::task::InstanceReports;
 
 #[derive(PartialEq, Serialize, Deserialize, Clone, Debug)]
 #[serde(rename_all = "snake_case")]
@@ -44,7 +44,7 @@ pub enum InstanceDriverError {
 #[derive(PartialEq, Serialize, Deserialize, Clone, Debug)]
 #[serde(rename_all = "snake_case")]
 pub enum InstanceDriverEvent {
-    /// Sent when the driver has started
+    /// Sent when the instance_driver has started
     Started,
 
     /// If an I/O error happened during communication with device

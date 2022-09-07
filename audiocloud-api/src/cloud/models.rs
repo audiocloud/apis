@@ -1,10 +1,11 @@
 use std::collections::HashSet;
 
 use serde::{Deserialize, Serialize};
+use schemars::JsonSchema;
 
-use crate::newtypes::ModelId;
+use crate::common::ModelId;
 
-#[derive(Serialize, Deserialize, Debug, Clone, Default)]
+#[derive(Serialize, Deserialize, Debug, Clone, Default, JsonSchema)]
 pub struct ModelFilter {
     pub manufacturer_is: Option<String>,
     pub name_contains:   Option<String>,
