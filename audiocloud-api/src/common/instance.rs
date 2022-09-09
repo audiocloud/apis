@@ -1,10 +1,11 @@
+use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 
 use crate::common::media::{PlayId, RenderId};
-use crate::instance_driver::InstanceDriverCommand;
 use crate::common::time::Timestamped;
+use crate::instance_driver::InstanceDriverCommand;
 
-#[derive(PartialEq, Serialize, Deserialize, Copy, Clone, Debug)]
+#[derive(PartialEq, Serialize, Deserialize, Copy, Clone, Debug, JsonSchema)]
 #[serde(rename_all = "snake_case")]
 pub enum InstancePlayState {
     PreparingToPlay { play_id: PlayId },
@@ -16,7 +17,7 @@ pub enum InstancePlayState {
     Stopped,
 }
 
-#[derive(PartialEq, Serialize, Deserialize, Copy, Clone, Debug)]
+#[derive(PartialEq, Serialize, Deserialize, Copy, Clone, Debug, JsonSchema)]
 #[serde(rename_all = "snake_case")]
 pub enum DesiredInstancePlayState {
     Playing { play_id: PlayId },
@@ -47,7 +48,7 @@ impl InstancePlayState {
     }
 }
 
-#[derive(Serialize, Deserialize, Clone, Copy, Debug, PartialEq)]
+#[derive(Serialize, Deserialize, Clone, Copy, Debug, PartialEq, JsonSchema)]
 #[serde(rename_all = "snake_case")]
 pub enum InstancePowerState {
     PoweringUp,

@@ -2,16 +2,20 @@
 
 use std::collections::HashMap;
 
+use schemars::schema::RootSchema;
+use schemars::{schema_for, JsonSchema};
 use serde::{Deserialize, Serialize};
 use thiserror::Error;
+use utoipa::OpenApi;
 
 use crate::common::instance::{DesiredInstancePlayState, InstancePlayState};
 use crate::common::media::{PlayId, RenderId};
 use crate::common::model::MultiChannelValue;
-use crate::newtypes::{FixedInstanceId, ParameterId};
 use crate::common::task::InstanceReports;
+use crate::merge_schemas;
+use crate::newtypes::{FixedInstanceId, ParameterId};
 
-#[derive(PartialEq, Serialize, Deserialize, Clone, Debug)]
+#[derive(PartialEq, Serialize, Deserialize, Clone, Debug, JsonSchema)]
 #[serde(rename_all = "snake_case")]
 pub enum InstanceDriverCommand {
     CheckConnection,
@@ -22,7 +26,12 @@ pub enum InstanceDriverCommand {
     SetParameters(HashMap<ParameterId, MultiChannelValue>),
 }
 
-#[derive(PartialEq, Serialize, Deserialize, Clone, Debug, Error)]
+#[derive(PartialEq, Serialize, Deserialize, Clone, Debug, JsonSchema)]
+pub struct SetInstanceParameters {
+    pub parameters: HashMap<ParameterId, MultiChannelValue>,
+}
+
+#[derive(PartialEq, Serialize, Deserialize, Clone, Debug, Error, JsonSchema)]
 #[serde(rename_all = "snake_case")]
 pub enum InstanceDriverError {
     #[error("Instance {0} does not exist")]
@@ -65,4 +74,78 @@ pub enum InstanceDriverEvent {
         current: InstancePlayState,
         media:   Option<f64>,
     },
+}
+
+#[derive(Serialize, Deserialize, Clone, Debug, JsonSchema)]
+pub struct InstanceWithStatus {
+    pub id:         FixedInstanceId,
+    pub play_state: Option<InstancePlayState>,
+}
+
+pub type InstanceWithStatusList = Vec<InstanceWithStatus>;
+
+#[derive(Serialize, Deserialize, Clone, Debug, JsonSchema)]
+#[serde(rename_all = "snake_case")]
+pub enum InstanceParametersUpdated {
+    Updated { id: FixedInstanceId },
+}
+
+#[derive(Serialize, Deserialize, Clone, Debug, JsonSchema)]
+#[serde(rename_all = "snake_case")]
+pub enum InstanceCommandAccepted {
+    Updated { id: FixedInstanceId },
+}
+
+mod instance {
+    /// Set desired play state
+    ///
+    /// If the instance has media capabilities, set an instance's desired play state.
+    #[utoipa::path(
+     put,
+     request_body = InstanceDriverCommand,
+     path = "/v1/instances/{manufacturer}/{name}/{instance}/play-state",
+     responses(
+      (status = 200, description = "Success", body = InstanceCommandAccepted),
+      (status = 404, description = "Not found", body = InstanceDriverError),
+     ))]
+    fn accept_command() {}
+
+    /// Set parameters
+    ///
+    /// Update instance parameter values.
+    #[utoipa::path(
+     patch,
+     request_body = SetInstanceParameters,
+     path = "/v1/instances/{manufacturer}/{name}/{instance}/parameters",
+     responses(
+      (status = 200, description = "Success", body = InstanceParametersUpdated),
+      (status = 404, description = "Not found", body = InstanceDriverError),
+     ))]
+    fn set_parameters() {}
+}
+
+mod driver {
+    /// List running instances
+    ///
+    /// List instances running on this driver enddpoint.
+    #[utoipa::path(
+     get,
+     path = "/v1/instances",
+     responses(
+      (status = 200, description = "Success", body = InstanceWithStatusList),
+     ))]
+    fn list_instances() {}
+}
+
+#[derive(OpenApi)]
+#[openapi(paths(instance::accept_command, instance::set_parameters, driver::list_instances))]
+pub struct InstanceDriverApi;
+
+pub fn schemas() -> RootSchema {
+    merge_schemas([schema_for!(InstanceDriverError),
+                   schema_for!(InstanceDriverCommand),
+                   schema_for!(InstanceCommandAccepted),
+                   schema_for!(InstanceParametersUpdated),
+                   schema_for!(SetInstanceParameters),
+                   schema_for!(InstanceWithStatusList)].into_iter())
 }

@@ -396,4 +396,5 @@ json_schema_new_type!(AppId,
                       ParameterId,
                       ReportId,
                       ModelId,
-                      TaskId);
+                      TaskId,
+                      AudioEngineId);
