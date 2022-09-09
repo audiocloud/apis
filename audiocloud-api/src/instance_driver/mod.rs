@@ -107,7 +107,12 @@ mod instance {
      responses(
       (status = 200, description = "Success", body = InstanceCommandAccepted),
       (status = 404, description = "Not found", body = InstanceDriverError),
-     ))]
+     ),
+    params(
+     ("manufacturer" = String, Path, description = "Model manufacturer"),
+     ("name" = String, Path, description = "Model product name"),
+     ("instance" = String, Path, description = "Unique instance identifier"),
+    ))]
     fn accept_command() {}
 
     /// Set parameters
@@ -120,7 +125,11 @@ mod instance {
      responses(
       (status = 200, description = "Success", body = InstanceParametersUpdated),
       (status = 404, description = "Not found", body = InstanceDriverError),
-     ))]
+     ), params(
+      ("manufacturer" = String, Path, description = "Model manufacturer"),
+      ("name" = String, Path, description = "Model product name"),
+      ("instance" = String, Path, description = "Unique instance identifier"),
+    ))]
     fn set_parameters() {}
 }
 

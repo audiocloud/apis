@@ -7,87 +7,138 @@ use serde::{Deserialize, Serialize};
 use thiserror::Error;
 
 use crate::common::model::MultiChannelValue;
-use crate::common::task::TaskSecurity;
+use crate::common::task::TaskPermissions;
 use crate::common::task::{
     ConnectionValues, DynamicInstanceNode, FixedInstanceNode, MediaChannels, MixerChannels, MixerNode, NodeConnection, NodePadId, Task,
     TaskSpec, TimeSegment, TrackMedia, TrackNode, UpdateTaskTrackMedia,
 };
 use crate::common::time::Timestamped;
-use crate::json_schema_new_type;
 use crate::newtypes::{
     AppId, AppMediaObjectId, DynamicInstanceNodeId, FixedInstanceId, FixedInstanceNodeId, MediaObjectId, MixerNodeId, NodeConnectionId,
     ParameterId, SecureKey, TrackMediaId, TrackNodeId,
 };
+use crate::{json_schema_new_type, ChannelMask};
 
 use self::ModifyTaskError::*;
 
+/// Modify task structure
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
 #[serde(rename_all = "snake_case")]
 pub enum ModifyTaskSpec {
+    /// Add a track node to the task
     AddTrack {
+        /// New track node id
         track_id: TrackNodeId,
+        /// Number of channels for the track node
         channels: MediaChannels,
     },
+    /// Add media to a track node
     AddTrackMedia {
+        /// Track node id
         track_id: TrackNodeId,
+        /// Media id within the track node
         media_id: TrackMediaId,
+        /// Media object specification
         spec:     TrackMedia,
     },
+    /// Update track media on a track node
     UpdateTrackMedia {
+        /// Track node id
         track_id: TrackNodeId,
+        /// Media id within the track node
         media_id: TrackMediaId,
+        /// Media object update
         update:   UpdateTaskTrackMedia,
     },
+    /// Delete track media from a track node
     DeleteTrackMedia {
+        /// Track node id
         track_id: TrackNodeId,
+        /// Media id within the track node
         media_id: TrackMediaId,
     },
+    /// Delete a track node from the task (including all media and referencing connections)
     DeleteTrack {
+        /// Track node id
         track_id: TrackNodeId,
     },
+    /// Add a fixed instance node to the task
     AddFixedInstance {
+        /// Fixed instance node id
         fixed_id: FixedInstanceNodeId,
-        process:  FixedInstanceNode,
+        /// Fixed instance node processing specification
+        spec:     FixedInstanceNode,
     },
+    /// Add a dynamic instance node to the task
     AddDynamicInstance {
+        /// Dynamic instance node id
         dynamic_id: DynamicInstanceNodeId,
-        process:    DynamicInstanceNode,
+        /// Dynamic instance node processing specification
+        spec:       DynamicInstanceNode,
     },
+    /// Add a mixer node to the task
     AddMixer {
+        /// Mixer node id
         mixer_id: MixerNodeId,
-        mixer:    MixerNode,
+        /// Mixer node processing specification
+        spec:     MixerNode,
     },
+    /// Delete a mixer node from the task (including all referencing connections)
     DeleteMixer {
+        /// Moxer node id
         mixer_id: MixerNodeId,
     },
+    /// Delete a fixed instance node from the task (including all referencing connections)
     DeleteFixedInstance {
+        /// Fixed instance node id
         fixed_id: FixedInstanceNodeId,
     },
+    /// Delete dynamic instance node from the task (including all referencing connections)
     DeleteDynamicInstance {
+        /// Dynamic instance node id
         dynamic_id: DynamicInstanceNodeId,
     },
+    /// Delete a connection from the task (preserving the referenced nodes even if they are now unconnected)
     DeleteConnection {
+        /// Connection id
         connection_id: NodeConnectionId,
     },
+    /// Add a connection to the task
     AddConnection {
+        /// Connection id
         connection_id: NodeConnectionId,
+        /// Source node pad
         from:          NodePadId,
+        /// Destination node pad
         to:            NodePadId,
-        from_channels: MixerChannels,
-        to_channels:   MixerChannels,
+        /// Source channel mask
+        from_channels: ChannelMask,
+        /// Destination channel mask
+        to_channels:   ChannelMask,
+        /// Volume adjustment on audio passing through the connection
         volume:        f64,
+        /// Panning adjustment on the audio passing through the connection
         pan:           f64,
     },
+    /// Set connection values
     SetConnectionParameterValues {
+        /// Connection id
         connection_id: NodeConnectionId,
+        /// Values (parameters) on the connection
         values:        ConnectionValues,
     },
+    /// Set fixed instance node values
     SetFixedInstanceParameterValues {
+        /// Fixed instance node id
         fixed_id: FixedInstanceNodeId,
+        /// Values to set
         values:   HashMap<ParameterId, MultiChannelValue>,
     },
+    /// Set dynamic instance node values
     SetDynamicInstanceParameterValues {
+        /// Dynamic instance node id
         dynamic_id: DynamicInstanceNodeId,
+        /// Values to set
         values:     HashMap<ParameterId, MultiChannelValue>,
     },
 }
@@ -115,14 +166,30 @@ impl ModifyTaskSpec {
     }
 }
 
+/// Modify a task
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
 #[serde(rename_all = "snake_case")]
 pub enum ModifyTask {
-    Spec(ModifyTaskSpec),
-    SetSecurity { key: SecureKey, security: TaskSecurity },
-    RevokeSecurity { key: SecureKey },
+    /// Modify task specification
+    Spec {
+        /// Specification change
+        spec: ModifyTaskSpec,
+    },
+    /// Add or overwrite task security
+    SetSecurity {
+        /// Secure key to add or overwrite
+        key:      SecureKey,
+        /// Permissions to set for the secure key
+        security: TaskPermissions,
+    },
+    /// Revoke task security
+    RevokeSecurity {
+        /// Secure key to revoke
+        key: SecureKey,
+    },
 }
 
+/// A desired state for the task play state
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
 #[serde(rename_all = "snake_case")]
 pub enum DesiredTaskPlayState {
@@ -131,6 +198,8 @@ pub enum DesiredTaskPlayState {
 
     /// Rendering is always a F32 WAV at full sample rate, so nothing else needs to happen here
     Render(RequestRender),
+
+    /// Stopped
     Stopped,
 }
 
@@ -152,16 +221,21 @@ impl DesiredTaskPlayState {
     }
 }
 
+/// Update task play configuration
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
 pub struct UpdateTaskPlay {
+    /// Play identifier
     pub play_id:  PlayId,
+    /// If not null, change the mixer node monitored during playback
     pub mixer_id: Option<MixerNodeId>,
+    /// If not null, change the time segment within the task timeline
     pub segment:  Option<TimeSegment>,
+    /// if not null, seek to a specified location within the task timeline
     pub start_at: Option<f64>,
-    pub looping:  bool,
+    /// If not null, overwrite if the task playback is looping or not
+    pub looping:  Option<bool>,
 }
 
-#[derive(Serialize, Deserialize, Clone, Debug, PartialEq)]
 pub struct SuccessfulRenderNotification {
     pub render_id: RenderId,
     pub object_id: MediaObjectId,
@@ -271,8 +345,8 @@ impl Task {
 
     pub fn apply_change(&mut self, modify: ModifyTask) -> Result<(), ModifyTaskError> {
         match modify {
-            ModifyTask::Spec(spec_change) => {
-                self.spec.modify(spec_change)?;
+            ModifyTask::Spec { spec } => {
+                self.spec.modify(spec)?;
             }
             ModifyTask::SetSecurity { key, security } => {
                 self.set_security(key, security)?;
@@ -285,7 +359,7 @@ impl Task {
         Ok(())
     }
 
-    pub fn set_security(&mut self, key: SecureKey, security: TaskSecurity) -> Result<(), ModifyTaskError> {
+    pub fn set_security(&mut self, key: SecureKey, security: TaskPermissions) -> Result<(), ModifyTaskError> {
         self.security.insert(key, security);
         Ok(())
     }
@@ -311,10 +385,10 @@ impl TaskSpec {
     pub fn modify(&mut self, modify: ModifyTaskSpec) -> Result<(), ModifyTaskError> {
         match modify {
             ModifyTaskSpec::AddFixedInstance { fixed_id: mixer_id,
-                                               process, } => self.add_fixed_instance(mixer_id, process),
+                                               spec: process, } => self.add_fixed_instance(mixer_id, process),
             ModifyTaskSpec::AddDynamicInstance { dynamic_id: mixer_id,
-                                                 process, } => self.add_dynamic_instance(mixer_id, process),
-            ModifyTaskSpec::AddMixer { mixer_id, mixer: channels } => self.add_mixer(mixer_id, channels),
+                                                 spec: process, } => self.add_dynamic_instance(mixer_id, process),
+            ModifyTaskSpec::AddMixer { mixer_id, spec: channels } => self.add_mixer(mixer_id, channels),
             ModifyTaskSpec::DeleteMixer { mixer_id } => self.delete_mixer(mixer_id),
             ModifyTaskSpec::SetFixedInstanceParameterValues { fixed_id: id, values } => {
                 self.set_fixed_instance_parameter_values(id, values)
@@ -508,8 +582,8 @@ impl TaskSpec {
                           connection_id: NodeConnectionId,
                           from: NodePadId,
                           to: NodePadId,
-                          from_channels: MixerChannels,
-                          to_channels: MixerChannels,
+                          from_channels: ChannelMask,
+                          to_channels: ChannelMask,
                           volume: f64,
                           pan: f64)
                           -> Result<(), ModifyTaskError> {
@@ -551,7 +625,7 @@ impl TaskSpec {
     }
 }
 
-fn security_changes(rv: &mut Vec<ModifyTask>, existing: &HashMap<SecureKey, TaskSecurity>, new: &HashMap<SecureKey, TaskSecurity>) {
+fn security_changes(rv: &mut Vec<ModifyTask>, existing: &HashMap<SecureKey, TaskPermissions>, new: &HashMap<SecureKey, TaskPermissions>) {
     let changes = hashmap_changes(existing, new);
     for (key, security) in changes.changed.into_iter().chain(changes.added.into_iter()) {
         rv.push(ModifyTask::SetSecurity { key, security })

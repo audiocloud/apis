@@ -35,13 +35,23 @@ pub fn openapi_with_schemas_to_json(api: OpenApi, merged: RootSchema, title: &st
                                                        "schemas": schemas,
                                                    }));
 
+    let info = api.as_object_mut()
+                  .expect("as object")
+                  .get_mut("info")
+                  .expect("info")
+                  .as_object_mut()
+                  .expect("as_object");
+
+    info.insert("title".to_owned(), Value::String(title.to_owned()));
+    info.insert("license".to_owned(),
+                json!({
+                  "name": "Apache 2.0",
+                  "url": "https://www.apache.org/licenses/LICENSE-2.0.html"
+                }));
+
     api.as_object_mut()
        .expect("as object")
-       .get_mut("info")
-       .expect("info")
-       .as_object_mut()
-       .expect("as_object")
-       .insert("title".to_owned(), Value::String(title.to_owned()));
+       .insert("openapi".to_owned(), Value::String("3.1.0".to_owned()));
 
     Ok(serde_json::to_string_pretty(&api)?.replace("#/definitions/", "#/components/schemas/"))
 }

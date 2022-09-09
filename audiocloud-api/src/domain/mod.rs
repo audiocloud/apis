@@ -18,11 +18,11 @@ use crate::cloud::tasks::CreateTask;
 use crate::common::change::SessionState;
 use crate::common::change::{DesiredTaskPlayState, ModifyTaskSpec};
 use crate::common::error::SerializableResult;
-use crate::common::task::TaskSecurity;
+use crate::common::task::TaskPermissions;
 use crate::common::task::TaskSpec;
 use crate::instance_driver::InstanceDriverError;
 use crate::newtypes::{AppTaskId, SecureKey};
-use crate::{merge_schemas, AppId, AudioEngineId, FixedInstanceId, TaskId};
+use crate::{merge_schemas, AppId, EngineId, FixedInstanceId, TaskId};
 
 pub mod streaming;
 pub mod tasks;
@@ -42,7 +42,7 @@ pub enum DomainSessionCommand {
     SetSecurity {
         app_session_id: AppTaskId,
         version:        u64,
-        security:       HashMap<SecureKey, TaskSecurity>,
+        security:       HashMap<SecureKey, TaskPermissions>,
     },
     Modify {
         app_session_id: AppTaskId,
@@ -113,7 +113,7 @@ pub enum DomainError {
     InstanceDriver(FixedInstanceId, InstanceDriverError),
 
     #[error("Audio engine {0}: {1}")]
-    AudioEngine(AudioEngineId, AudioEngineError),
+    AudioEngine(EngineId, AudioEngineError),
 }
 
 #[derive(OpenApi)]

@@ -79,7 +79,7 @@ impl TaskSpec {
     fn check_channel_exists(&self,
                             id: &NodeConnectionId,
                             flow_id: &NodePadId,
-                            channels: &MixerChannels,
+                            channels: &ChannelMask,
                             models: &HashMap<ModelId, Model>)
                             -> Result<(), CloudError> {
         match flow_id {
@@ -93,11 +93,7 @@ impl TaskSpec {
         }
     }
 
-    fn check_channel_exists_mixer(&self,
-                                  id: &NodeConnectionId,
-                                  mixer_id: &MixerNodeId,
-                                  channels: &MixerChannels)
-                                  -> Result<(), CloudError> {
+    fn check_channel_exists_mixer(&self, id: &NodeConnectionId, mixer_id: &MixerNodeId, channels: &ChannelMask) -> Result<(), CloudError> {
         let mixer = self.mixers
                         .get(mixer_id)
                         .ok_or_else(|| InternalInconsistency(format!("Connection {id} flow to mixer {mixer_id} does not exist")))?;
@@ -112,7 +108,7 @@ impl TaskSpec {
     fn check_channel_exists_fixed(&self,
                                   id: &NodeConnectionId,
                                   fixed_id: &FixedInstanceNodeId,
-                                  channels: &MixerChannels,
+                                  channels: &ChannelMask,
                                   output: bool,
                                   models: &HashMap<ModelId, Model>)
                                   -> Result<(), CloudError> {
@@ -135,7 +131,7 @@ impl TaskSpec {
     fn check_channel_exists_dynamic(&self,
                                     id: &NodeConnectionId,
                                     dynamic_id: &DynamicInstanceNodeId,
-                                    channels: &MixerChannels,
+                                    channels: &ChannelMask,
                                     output: bool,
                                     models: &HashMap<ModelId, Model>)
                                     -> Result<(), CloudError> {
@@ -155,11 +151,7 @@ impl TaskSpec {
         Ok(())
     }
 
-    fn check_channel_exists_track(&self,
-                                  id: &NodeConnectionId,
-                                  track_id: &TrackNodeId,
-                                  channels: &MixerChannels)
-                                  -> Result<(), CloudError> {
+    fn check_channel_exists_track(&self, id: &NodeConnectionId, track_id: &TrackNodeId, channels: &ChannelMask) -> Result<(), CloudError> {
         let track = self.tracks
                         .get(track_id)
                         .ok_or_else(|| InternalInconsistency(format!("Connection {id} references track {track_id} which does not exist")))?;
@@ -177,7 +169,7 @@ pub struct Task {
     pub domain_id: DomainId,
     pub time:      TimeRange,
     pub spec:      TaskSpec,
-    pub security:  HashMap<SecureKey, TaskSecurity>,
+    pub security:  HashMap<SecureKey, TaskPermissions>,
     pub version:   u64,
 }
 
@@ -229,8 +221,8 @@ pub struct FixedInstanceNode {
 pub struct NodeConnection {
     pub from:          NodePadId,
     pub to:            NodePadId,
-    pub from_channels: MixerChannels,
-    pub to_channels:   MixerChannels,
+    pub from_channels: ChannelMask,
+    pub to_channels:   ChannelMask,
     pub volume:        f64,
     pub pan:           f64,
 }
@@ -251,6 +243,13 @@ pub enum MixerChannels {
     Stereo(usize),
 }
 
+#[derive(Clone, Copy, Debug, Serialize, Deserialize, Eq, PartialEq, IsVariant, Unwrap, JsonSchema)]
+#[serde(rename_all = "snake_case")]
+pub enum ChannelMask {
+    Mono(usize),
+    Stereo(usize),
+}
+
 impl MixerChannels {
     pub fn to_count_and_index(self) -> (usize, usize) {
         match self {
@@ -263,6 +262,22 @@ impl MixerChannels {
         match self {
             MixerChannels::Mono(ch) => range.contains(&ch),
             MixerChannels::Stereo(ch) => range.contains(&ch) && range.contains(&(ch + 1)),
+        }
+    }
+}
+
+impl ChannelMask {
+    pub fn to_count_and_index(self) -> (usize, usize) {
+        match self {
+            Self::Mono(ch) => (1, ch),
+            Self::Stereo(ch) => (2, ch),
+        }
+    }
+
+    pub fn is_subset_of(self, range: Range<usize>) -> bool {
+        match self {
+            Self::Mono(ch) => range.contains(&ch),
+            Self::Stereo(ch) => range.contains(&ch) && range.contains(&(ch + 1)),
         }
     }
 }
@@ -449,7 +464,7 @@ impl TimeSegment {
 }
 
 #[derive(Debug, Default, Serialize, Deserialize, Clone, PartialEq, JsonSchema)]
-pub struct TaskSecurity {
+pub struct TaskPermissions {
     pub structure:  bool,
     pub media:      bool,
     pub parameters: bool,
@@ -457,13 +472,13 @@ pub struct TaskSecurity {
     pub audio:      bool,
 }
 
-impl TaskSecurity {
+impl TaskPermissions {
     pub fn full() -> Self {
-        TaskSecurity { structure:  true,
-                       media:      true,
-                       parameters: true,
-                       transport:  true,
-                       audio:      true, }
+        TaskPermissions { structure:  true,
+                          media:      true,
+                          parameters: true,
+                          transport:  true,
+                          audio:      true, }
     }
 }
 

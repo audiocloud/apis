@@ -2,57 +2,100 @@
 
 use std::collections::{HashMap, HashSet};
 
-use serde::{Deserialize, Serialize};
+use crate::EngineId;
 use schemars::JsonSchema;
+use serde::{Deserialize, Serialize};
 
 use crate::common::model::{Model, ResourceId};
 use crate::common::task::Task;
 use crate::newtypes::{AppId, AppTaskId, DomainId, FixedInstanceId, ModelId};
 use crate::time::{TimeRange, Timestamp};
 
-/// Used by domain when it is booting
+/// Used by domain for booting
 #[derive(Serialize, Deserialize, Debug, Clone, JsonSchema)]
 pub struct BootDomainResponse {
-    pub domain_id:          DomainId,
-    pub event_base:         u64,
-    pub fixed_instances:    HashMap<FixedInstanceId, DomainFixedInstance>,
-    pub dynamic_instances:  HashMap<ModelId, DynamicInstanceLimits>,
-    pub models:             HashMap<ModelId, Model>,
-    pub tasks:              HashMap<AppTaskId, Task>,
-    pub maintenance:        Vec<Maintenance>,
-    pub domain_limits:      DomainLimits,
-    pub min_session_len:    f64,
-    pub native_sample_rate: usize,
-    pub public_url:         String,
-    pub cmd_topic:          String,
-    pub evt_topic:          String,
-    pub kafka_url:          String,
-    pub consume_username:   String,
-    pub consume_password:   String,
-    pub produce_username:   String,
-    pub produce_password:   String,
+    /// Id of the domain
+    pub domain_id:            DomainId,
+    /// Read after this event offset from event stream
+    pub event_base:           u64,
+    /// Fixed instances configured on the domain
+    pub fixed_instances:      HashMap<FixedInstanceId, DomainFixedInstance>,
+    /// Dynamic instances configured on the domain, with associated limits
+    pub dynamic_instances:    HashMap<ModelId, DynamicInstanceLimits>,
+    /// Engines configured on the domain
+    pub engines:              HashMap<EngineId, DomainEngine>,
+    /// All model information for parameter and report validation
+    pub models:               HashMap<ModelId, Model>,
+    /// Currently configured tasks
+    pub tasks:                HashMap<AppTaskId, Task>,
+    /// Configured maintenance time windows during which the domain should not serve requests
+    pub maintenance:          Vec<Maintenance>,
+    /// Apps allowed to access the domain
+    pub apps:                 HashSet<AppId>,
+    /// Maximum number of concurrent tasks (when lower than the sum of tasks available on engines)
+    pub max_concurrent_tasks: usize,
+    /// Minimum Task length
+    pub min_task_len:         f64,
+    /// The base URL where domain API is visible to the outside world
+    pub public_url:           String,
+    /// Topic where commands to the domain will be sent
+    pub cmd_topic:            String,
+    /// Topic where events from the domain may be sent
+    pub evt_topic:            String,
+    /// Kafka broker list to be used for commands and events
+    pub kafka_url:            String,
+    /// Username used to consume commands
+    pub consume_username:     String,
+    /// SASL SCRAM password used to consume commands
+    pub consume_password:     String,
+    /// Username used to produce events
+    pub produce_username:     String,
+    /// SASL SCRAM password used to produce events
+    pub produce_password:     String,
 }
 
+/// Information about a media engine within a domain
+#[derive(Serialize, Deserialize, Debug, Clone, JsonSchema)]
+pub struct DomainEngine {
+    /// Dynamic instances configured on the audio engine, with associated limits
+    pub dynamic_instances:    HashMap<ModelId, DynamicInstanceLimits>,
+    /// Maximum number of concurrent tasks
+    pub max_concurrent_tasks: usize,
+    /// Resources available on the domain
+    pub resources:            HashMap<ResourceId, f64>,
+    /// Native audio sample rate
+    pub native_sample_rate:   usize,
+}
+
+/// Limits on dynamic instances
 #[derive(Serialize, Deserialize, Debug, Clone, JsonSchema)]
 pub struct DynamicInstanceLimits {
+    /// Maximum number of concurrent dynamic instances
+    ///
+    /// Takes precedence over over total resource usage. For example, there may be more resources
+    /// but licensing limits the amount of instances.
     pub max_instances: usize,
 }
 
-#[derive(Serialize, Deserialize, Debug, Clone, JsonSchema)]
-pub struct DomainLimits {
-    pub max_sessions: usize,
-    pub resources:    HashMap<ResourceId, f64>,
-}
-
+/// Configuration of a fixed instance
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
 pub struct DomainFixedInstance {
-    pub input_start:  Option<u32>,
-    pub output_start: Option<u32>,
-    pub sidecars:     HashSet<ModelId>,
-    pub power:        Option<DomainPowerInstanceSettings>,
-    pub media:        Option<DomainMediaInstanceSettings>,
-    pub apps:         Vec<AppId>,
-    pub maintenance:  Vec<Maintenance>,
+    /// Engine hosting the instance
+    pub engine_id:     EngineId,
+    /// Instance inputs start at index on engine
+    pub input_start:   Option<u32>,
+    /// Instance outputs start at index on engine
+    pub output_start:  Option<u32>,
+    /// Additional models with parameters or reports that are merged with the instance model
+    pub sidecars:      HashSet<ModelId>,
+    /// Optional configuration to powers on/off instance to conserve energy
+    pub power:         Option<DomainPowerInstanceSettings>,
+    /// Optional configuration if instance handles media (such as tape machines)
+    pub media:         Option<DomainMediaInstanceSettings>,
+    /// Apps allowed to access the instance or null if the domain defaults are used
+    pub apps_override: Option<HashSet<AppId>>,
+    /// Maintenance windows on this instance
+    pub maintenance:   Vec<Maintenance>,
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone, Copy, PartialEq)]
@@ -63,45 +106,71 @@ pub struct InstanceRouting {
     pub return_channel: usize,
 }
 
+/// Instance power settings
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
 pub struct DomainPowerInstanceSettings {
+    /// Number of milliseconds to wait to warm up after powering on
     pub warm_up_ms:        usize,
+    /// Number of milliseconds to wait to cool down after powering down
     pub cool_down_ms:      usize,
+    /// Number of milliseconds to wait before automatically powering down after idle
     pub idle_off_delay_ms: usize,
+    /// Power instance used to distribute power to this instance
     pub instance:          FixedInstanceId,
+    /// Which channel on the power instance is distributing power to this instance
     pub channel:           usize,
 }
 
+/// Instance media settings
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
 pub struct DomainMediaInstanceSettings {
-    pub length:          f64,
-    pub rewind_to_start: bool,
+    /// Lenght of the inserted media in milliseconds
+    pub length_ms:               usize,
+    /// WHen rewinding to make space for contiguous renders, should the driver rewind to start or just enough to start rendering
+    pub renders_rewind_to_start: bool,
+    /// Behaviour of playing back (streaming) and hitting end of media
+    ///
+    /// - If null, rewind to start
+    /// - Otherwise, rewind by specified amount of milliseconds
+    pub play_rewind:             Option<usize>,
 }
 
-/// Used by APIs for Apps
+/// Domain summary for apps
 #[derive(Serialize, Deserialize, Debug, Clone, JsonSchema)]
 pub struct GetDomainResponse {
-    pub fixed_instances:    HashMap<FixedInstanceId, AppFixedInstance>,
-    pub dynamic_instances:  HashMap<ModelId, DynamicInstanceLimits>,
-    pub domain_limits:      DomainLimits,
-    pub min_session_len:    f64,
-    pub public_url:         String,
-    pub native_sample_rate: usize,
-    pub maintenance:        Vec<Maintenance>,
-    pub enabled:            bool,
+    /// FIxed instances available on the domain
+    pub fixed_instances: HashMap<FixedInstanceId, AppFixedInstance>,
+    /// Engines available on the domain
+    pub engines:         HashMap<EngineId, DomainEngine>,
+    /// Minimum task duration
+    pub min_task_len:    f64,
+    /// Base public URL for domain API
+    pub public_url:      String,
+    /// Configured maintenance time windows during which the domain should not serve requests
+    pub maintenance:     Vec<Maintenance>,
+    /// If true, the domain is enabled and will serve requests if not in maitenance
+    pub enabled:         bool,
 }
 
+/// Maintenance window
 #[derive(Serialize, Deserialize, Debug, Clone, PartialEq, JsonSchema)]
 pub struct Maintenance {
+    /// Time during which maintenance is taking place (may overlap with others)
     pub time:   TimeRange,
+    /// Human readable string about it, or URL to a web page detailing more information
     pub reason: String,
 }
 
+/// Fixed instance summary for apps
 #[derive(Serialize, Deserialize, Debug, Clone, JsonSchema)]
 pub struct AppFixedInstance {
+    /// If true, the instance may need to be powered up
     pub power:       bool,
+    /// If true, the instance is using media and may rewind
     pub media:       bool,
+    /// Additional models with parameters or reports that are merged with the instance model
     pub sidecars:    HashSet<ModelId>,
+    /// Configured maintenance time windows during which the instance should not serve requests
     pub maintenance: Vec<Maintenance>,
 }
 
@@ -119,24 +188,36 @@ impl From<DomainFixedInstance> for AppFixedInstance {
     }
 }
 
+/// Add maintenance to an object
 #[derive(Serialize, Deserialize, Debug, Clone, JsonSchema)]
 pub struct AddMaintenance {
+    /// When is it taking place
     pub time:   TimeRange,
+    /// WHat is the reason for maintenance (human readable string or URL with more information
     pub reason: String,
 }
 
+/// Clear maintenance from an object
 #[derive(Serialize, Deserialize, Debug, Clone, JsonSchema)]
-pub struct DeleteMaintenance {
+pub struct ClearMaintenance {
+    /// If not null, clear all maitnenance before this timestamp
     pub before: Option<Timestamp>,
+    /// If not null, clear all maitnenance after this timestamp
     pub after:  Option<Timestamp>,
 }
 
+/// The domain has been updated
 #[derive(Serialize, Deserialize, Debug, Clone, JsonSchema)]
 #[serde(rename_all = "snake_case")]
 pub enum DomainUpdated {
+    /// Updated normally
     Updated(DomainId),
 }
 
+/// Get domain details
+///
+/// Get details about a domain. Available to owners, administrators and apps where the app has
+/// permission to access domain details.
 #[utoipa::path(
   get,
   path = "/v1/domains/{domain_id}",
@@ -148,8 +229,13 @@ pub enum DomainUpdated {
   params(
     ("domain_id" = DomainId, Path, description = "Domain to get")
   ))]
-pub(crate) fn get() {}
+pub(crate) fn get_domain() {}
 
+/// Domain requests to boot
+///
+/// When a domain starts in cloud mode, it will get the details of its configuration from the cloud.
+/// This endpoint delivers all of the cloud information about the domain, including instances,
+/// audio engines and cloud synchronization endpoints.
 #[utoipa::path(
   get,
   path = "/v1/domains/{domain_id}/boot",
@@ -161,66 +247,82 @@ pub(crate) fn get() {}
   params(
     ("domain_id" = DomainId, Path, description = "Domain to get")
   ))]
-pub(crate) fn boot() {}
+pub(crate) fn boot_domain() {}
 
+/// Add maitenance time to domain
+///
+/// Add a designated time of maitnenance to the whole domain. When a domain is in maintenance, it
+/// cannot serve API requests or process tasks. Apps will not be able to create bookings against the
+/// domain that intersect with maintenance windows.
 #[utoipa::path(
   post,
   path = "/v1/domains/{domain_id}/maintenance",
+  request_body = AddMaintenance,
   responses(
     (status = 200, description = "Success", body = DomainUpdated),
     (status = 401, description = "Not authorized", body = CloudError),
     (status = 404, description = "Not found", body = CloudError),
   ),
   params(
-    ("domain_id" = DomainId, Path, description = "Domain to get"),
-    ("maintenance" = AddMaintenance, description = "Maintenance to add")
+    ("domain_id" = DomainId, Path, description = "Domain to add maintenance to"),
   ))]
-pub(crate) fn add_maintenance() {}
+pub(crate) fn add_domain_maintenance() {}
 
+/// Clear domain maintenance time
+///
+/// Clear any maitnenance on the domain that matches the time predicates provided.
 #[utoipa::path(
   delete,
   path = "/v1/domains/{domain_id}/maintenance",
+  request_body = ClearMaintenance,
   responses(
     (status = 200, description = "Success", body = DomainUpdated),
     (status = 401, description = "Not authorized", body = CloudError),
     (status = 404, description = "Not found", body = CloudError),
   ),
   params(
-    ("domain_id" = DomainId, Path, description = "Domain to get"),
-    ("delete" = DeleteMaintenance, description = "Delete maintenances in this range")
+    ("domain_id" = DomainId, Path, description = "Domain to clear maitnenance on"),
   ))]
-pub(crate) fn delete_maintenance() {}
+pub(crate) fn clear_domain_maintenance() {}
 
+/// Add maitenance time to instance
+///
+/// Add a designated time of maitnenance to an instance in a domain. When an instance is in
+/// maintenance, it cannot process tasks. Apps will not be able to create bookings against the
+/// instance that intersect with maintenance windows.
 #[utoipa::path(
   post,
   path = "/v1/domains/{domain_id}/instances/{manufacturer}/{name}/{instance}/maintenance",
+  request_body = AddMaintenance,
   responses(
     (status = 200, description = "Success", body = DomainUpdated),
     (status = 401, description = "Not authorized", body = CloudError),
     (status = 404, description = "Not found", body = CloudError),
   ),
   params(
-    ("domain_id" = DomainId, Path, description = "Domain to get"),
-    ("manufacturer" = String, Path, description = "Manufacture"),
-    ("name" = String, Path, description = "Name"),
-    ("instance" = String, Path, description = "Instance"),
-    ("maintenance" = AddMaintenance, description = "Maintenance to add")
+    ("domain_id" = DomainId, Path, description = "Domain hosting the instance"),
+    ("manufacturer" = String, Path, description = "Instance manufacturer"),
+    ("name" = String, Path, description = "Instance (product) name"),
+    ("instance" = String, Path, description = "Instance unique identifier"),
   ))]
 pub(crate) fn add_fixed_instance_maintenance() {}
 
+/// Clear instance maintenance time
+///
+/// Clear any maitnenance on the instance that matches the time predicates provided.
 #[utoipa::path(
   delete,
   path = "/v1/domains/{domain_id}/instances/{manufacturer}/{name}/{instance}/maintenance",
+  request_body = ClearMaintenance,
   responses(
     (status = 200, description = "Success", body = DomainUpdated),
     (status = 401, description = "Not authorized", body = CloudError),
     (status = 404, description = "Not found", body = CloudError),
   ),
   params(
-    ("domain_id" = DomainId, Path, description = "Domain to get"),
-    ("manufacturer" = String, Path, description = "Manufacture"),
-    ("name" = String, Path, description = "Name"),
-    ("instance" = String, Path, description = "Instance"),
-    ("delete" = DeleteMaintenance, description = "Delete maintenances in this range")
+    ("domain_id" = DomainId, Path, description = "Domain hosting the instance"),
+    ("manufacturer" = String, Path, description = "Instance manufacturer"),
+    ("name" = String, Path, description = "Instance (product) name"),
+    ("instance" = String, Path, description = "Instance unique identifier"),
   ))]
-pub(crate) fn delete_fixed_instance_maintenance() {}
+pub(crate) fn clear_fixed_instance_maintenance() {}

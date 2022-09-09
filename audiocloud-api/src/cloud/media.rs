@@ -8,11 +8,13 @@ use crate::common::{AppId, DomainId, MediaObjectId, TaskId};
 #[derive(Serialize, Deserialize, Clone, Debug, JsonSchema)]
 #[serde(rename_all = "snake_case")]
 pub enum ReportMediaJobProgress {
+    /// Reporting upload progress
     UploadFromDomain {
         app_id:   AppId,
         media_id: MediaObjectId,
         state:    MediaJobState,
     },
+    /// Reporting download progress
     DownloadToDomain {
         app_id:   AppId,
         task_id:  Option<TaskId>,
@@ -21,24 +23,30 @@ pub enum ReportMediaJobProgress {
     },
 }
 
+/// Confirming upload is created
 #[derive(Serialize, Deserialize, Clone, Debug, JsonSchema)]
 #[serde(rename_all = "snake_case")]
 pub enum UploadCreated {
     Created { media_id: AppMediaObjectId, domain_id: DomainId },
 }
 
+/// Confirming download is created
 #[derive(Serialize, Deserialize, Clone, Debug, JsonSchema)]
 #[serde(rename_all = "snake_case")]
 pub enum DownloadCreated {
     Created { media_id: AppMediaObjectId, domain_id: DomainId },
 }
 
+/// Confirming media object is scheduled for deletion
 #[derive(Serialize, Deserialize, Clone, Debug, JsonSchema)]
 #[serde(rename_all = "snake_case")]
 pub enum MediaObjectDeleted {
     Deleted { media_id: AppMediaObjectId },
 }
 
+/// Uplod a media object
+///
+/// Upload or replace content of a domain object from an app's private storage.
 #[utoipa::path(
   put,
   path = "/v1/domains/{domain_id}/media/{app_id}/{object_id}/upload",
@@ -55,6 +63,9 @@ pub enum MediaObjectDeleted {
   ))]
 pub(crate) fn upload_media_object() {}
 
+/// Download a media object
+///
+/// Download a media object from a domain to an app's private storage.
 #[utoipa::path(
   put,
   path = "/v1/domains/{domain_id}/media/{app_id}/{object_id}/download",
@@ -71,6 +82,9 @@ pub(crate) fn upload_media_object() {}
   ))]
 pub(crate) fn download_media_object() {}
 
+/// Delete a media object
+///
+/// Delete a media object form all domains that have a copy.
 #[utoipa::path(
   delete,
   path = "/v1/apps/{app_id}/media/{object_id}",
@@ -86,6 +100,9 @@ pub(crate) fn download_media_object() {}
   ))]
 pub(crate) fn delete_media_object() {}
 
+/// Update upload/download progress
+///
+/// Used by domains to communicate upload or download progress.
 #[utoipa::path(
   put,
   path = "/v1/domains/{domain_id}/media/{app_id}/{object_id}/report",

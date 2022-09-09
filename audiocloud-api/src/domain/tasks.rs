@@ -1,6 +1,6 @@
 use crate::{
-    AppMediaObjectId, AppTaskId, FixedInstanceId, InstancePlayState, MediaObject, ModifyTaskSpec, PlayId, RenderId, SecureKey,
-    TaskPlayState, TaskSecurity, TaskSpec, TimeRange,
+  AppMediaObjectId, AppTaskId, FixedInstanceId, InstancePlayState, MediaObject, ModifyTaskSpec, PlayId, RenderId, SecureKey,
+  TaskPlayState, TaskPermissions, TaskSpec, TimeRange,
 };
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
@@ -30,7 +30,7 @@ pub struct CreateTask {
     pub id:       AppTaskId,
     pub spec:     TaskSpec,
     pub time:     TimeRange,
-    pub security: HashMap<SecureKey, TaskSecurity>,
+    pub security: HashMap<SecureKey, TaskPermissions>,
 }
 
 #[derive(Serialize, Deserialize, JsonSchema)]

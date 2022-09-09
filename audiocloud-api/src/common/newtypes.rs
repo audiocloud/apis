@@ -14,11 +14,15 @@ use serde_json::Value;
 use crate::cloud::CloudError;
 use crate::common::task::NodePadId;
 
+/// Id of a fixed instance
 #[derive(Clone, Debug, Eq, PartialEq, Hash, Display, Constructor)]
 #[display(fmt = "{manufacturer}:{name}:{instance}")]
 pub struct FixedInstanceId {
+    /// manufacturer name, may not contain ':' or whitespace
     pub manufacturer: String,
+    /// product name, may not contain ':' or whitespace
     pub name:         String,
+    /// unique instance name (given the same manufacturer and product name), may not contain ':' or whitespace
     pub instance:     String,
 }
 
@@ -60,10 +64,13 @@ impl Serialize for FixedInstanceId {
     }
 }
 
+/// Id of a product that may be instanced, either dynamically (software) or in fixed instances (hardware)
 #[derive(Clone, Debug, Display, Eq, PartialEq, Hash, Constructor)]
 #[display(fmt = "{manufacturer}:{name}")]
 pub struct ModelId {
+    /// manufacturer name, may not contain ':' or whitespace
     pub manufacturer: String,
+    /// product name, may not contain ':' or whitespace
     pub name:         String,
 }
 
@@ -95,6 +102,7 @@ impl Serialize for ModelId {
     }
 }
 
+/// What kind of filter
 #[derive(Serialize, Deserialize, Clone, Copy, Debug, Eq, PartialEq, IsVariant, JsonSchema)]
 #[serde(rename_all = "snake_case")]
 pub enum FilterId {
@@ -140,7 +148,7 @@ impl<'de, K, V, T> serde::de::Visitor<'de> for Tuple2Visitor<K, V, T>
     }
 }
 
-/// Track in a session
+/// Id of a media track node in a task
 #[derive(Clone, Debug, Serialize, Deserialize, Eq, PartialEq, Ord, PartialOrd, Display, Deref, Constructor, Hash, From, FromStr)]
 #[repr(transparent)]
 pub struct TrackNodeId(String);
@@ -156,7 +164,7 @@ impl TrackNodeId {
 #[repr(transparent)]
 pub struct TrackMediaId(String);
 
-/// Mixer in a session
+/// Id of a mixer node in a task
 #[derive(Clone, Debug, Serialize, Deserialize, Eq, PartialEq, Ord, PartialOrd, Display, Deref, Constructor, Hash, From, FromStr)]
 #[repr(transparent)]
 pub struct MixerNodeId(String);
@@ -170,7 +178,7 @@ impl MixerNodeId {
     }
 }
 
-/// Dynamic instance in a session
+/// Id of a dynamic instance node in a task
 #[derive(Clone, Debug, Serialize, Deserialize, Eq, PartialEq, Ord, PartialOrd, Display, Deref, Constructor, Hash, From, FromStr)]
 #[repr(transparent)]
 pub struct DynamicInstanceNodeId(String);
@@ -184,7 +192,7 @@ impl DynamicInstanceNodeId {
     }
 }
 
-/// Fixed instance in a session
+/// Id of a fixed instance node in a task
 #[derive(Clone, Debug, Serialize, Deserialize, Eq, PartialEq, Ord, PartialOrd, Display, Deref, Constructor, Hash, From, FromStr)]
 #[repr(transparent)]
 pub struct FixedInstanceNodeId(String);
@@ -202,7 +210,7 @@ impl FixedInstanceNodeId {
 #[repr(transparent)]
 pub struct NodeConnectionId(String);
 
-/// App
+/// Id of an app registered with the cloud
 #[derive(Clone, Debug, Serialize, Deserialize, Eq, PartialEq, Ord, PartialOrd, Display, Deref, Constructor, Hash, From)]
 #[repr(transparent)]
 pub struct AppId(String);
@@ -217,15 +225,17 @@ impl AppId {
     }
 }
 
-/// Session of an App on a Domain
+/// Id of a task
 #[derive(Clone, Debug, Serialize, Deserialize, Eq, PartialEq, Ord, PartialOrd, Display, Deref, Constructor, Hash, From, FromStr)]
 #[repr(transparent)]
 pub struct TaskId(String);
 
+/// Id of an audio engine (there may be more than one in a domain)
 #[derive(Clone, Debug, Serialize, Deserialize, Eq, PartialEq, Ord, PartialOrd, Display, Deref, Constructor, Hash, From, FromStr)]
 #[repr(transparent)]
-pub struct AudioEngineId(String);
+pub struct EngineId(String);
 
+/// Id of a socket (there may be more than one streaming connection per task in a domain)
 #[derive(Clone, Debug, Serialize, Deserialize, Eq, PartialEq, Ord, PartialOrd, Display, Deref, Constructor, Hash, From, FromStr)]
 #[repr(transparent)]
 pub struct SocketId(String);
@@ -242,10 +252,13 @@ impl TaskId {
     }
 }
 
+/// A task by an app
 #[derive(Clone, Debug, Eq, PartialEq, Ord, PartialOrd, Display, Constructor, Hash, From)]
 #[display(fmt = "{app_id}:{task_id}")]
 pub struct AppTaskId {
+    /// App registering the task
     pub app_id:  AppId,
+    /// Task id
     pub task_id: TaskId,
 }
 
@@ -273,7 +286,7 @@ impl Serialize for AppTaskId {
     }
 }
 
-/// Media of an App
+/// Id of a media object
 #[derive(Clone, Debug, Serialize, Deserialize, Eq, PartialEq, Ord, PartialOrd, Display, Deref, Constructor, Hash, From, FromStr)]
 #[repr(transparent)]
 pub struct MediaObjectId(String);
@@ -294,10 +307,13 @@ impl MediaObjectId {
     }
 }
 
+/// Media object owned by an app
 #[derive(Clone, Debug, Eq, PartialEq, Ord, PartialOrd, Display, Constructor, Hash)]
 #[display(fmt = "{app_id}:{media_id}")]
 pub struct AppMediaObjectId {
+    /// App owner
     pub app_id:   AppId,
+    /// Media object Id
     pub media_id: MediaObjectId,
 }
 
@@ -331,17 +347,17 @@ impl<'de> Deserialize<'de> for AppMediaObjectId {
     }
 }
 
-/// A password for session control
+/// A password for direct task control on the domain
 #[derive(Clone, Debug, Serialize, Deserialize, Eq, PartialEq, Ord, PartialOrd, Display, Deref, Constructor, Hash, From, FromStr)]
 #[repr(transparent)]
 pub struct SecureKey(String);
 
-/// Domain
+/// Domain Id
 #[derive(Clone, Debug, Serialize, Deserialize, Eq, PartialEq, Ord, PartialOrd, Display, Deref, Constructor, Hash, From, FromStr)]
 #[repr(transparent)]
 pub struct DomainId(String);
 
-/// Parameter of a model
+/// Parameter Id within a model
 #[derive(Clone, Debug, Serialize, Deserialize, Eq, PartialEq, Ord, PartialOrd, Display, Deref, Constructor, Hash, From, FromStr)]
 #[repr(transparent)]
 pub struct ParameterId(String);
@@ -352,7 +368,7 @@ impl From<&str> for ParameterId {
     }
 }
 
-/// Report of a model
+/// Report Id within a model
 #[derive(Clone, Debug, Serialize, Deserialize, Eq, PartialEq, Ord, PartialOrd, Display, Deref, Constructor, Hash, From, FromStr)]
 #[repr(transparent)]
 pub struct ReportId(String);
@@ -397,4 +413,4 @@ json_schema_new_type!(AppId,
                       ReportId,
                       ModelId,
                       TaskId,
-                      AudioEngineId);
+                      EngineId);
