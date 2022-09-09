@@ -124,6 +124,7 @@ pub enum DomainError {
                 tasks::delete,
                 tasks::render,
                 tasks::play,
+                tasks::seek,
                 tasks::cancel_render,
                 tasks::stop_playing,
                 streaming::stream_packets))]

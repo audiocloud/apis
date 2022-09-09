@@ -180,6 +180,24 @@ pub(crate) fn render() {}
   ))]
 pub(crate) fn play() {}
 
+/// Seek while task is playing
+///
+/// If the task is playing, change the playing position.
+#[utoipa::path(
+  post,
+  path = "/v1/tasks/{app_id}/{task_id}/transport/seek",
+  request_body = RequestSeek,
+  responses(
+    (status = 200, description = "Success", body = TaskSought),
+    (status = 401, description = "Not authorized", body = DomainError),
+    (status = 404, description = "Task Not found", body = DomainError),
+  ),
+  params(
+    ("app_id" = AppId, Path, description = "App id"),
+    ("task_id" = TaskId, Path, description = "Task id")
+  ))]
+pub(crate) fn seek() {}
+
 /// Cancel rendering a task
 ///
 /// Request to stop (cancel) rendering if the task is rendering.
