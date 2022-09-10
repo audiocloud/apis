@@ -293,36 +293,39 @@ impl Default for SessionState {
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Error, JsonSchema)]
-#[serde(rename_all = "snake_case")]
+#[serde(rename_all = "snake_case", tag = "type")]
 pub enum ModifyTaskError {
-    #[error("Track {0} already exists")]
-    TrackExists(TrackNodeId),
-    #[error("Fixed instance {0} already exists")]
-    FixedInstanceExists(FixedInstanceNodeId),
-    #[error("Dynamic instance {0} already exists")]
-    DynamicInstanceExists(DynamicInstanceNodeId),
-    #[error("Mixer {0} already exists")]
-    MixerExists(MixerNodeId),
+    #[error("Track {node_id} already exists")]
+    TrackExists { node_id: TrackNodeId },
+    #[error("Fixed instance node {node_id} already exists")]
+    FixedInstanceExists { node_id: FixedInstanceNodeId },
+    #[error("Dynamic instance node {node_id} already exists")]
+    DynamicInstanceExists { node_id: DynamicInstanceNodeId },
+    #[error("Mixer node {node_id} already exists")]
+    MixerExists { node_id: MixerNodeId },
 
-    #[error("Track {0} does not exist")]
-    TrackDoesNotExist(TrackNodeId),
-    #[error("Fixed instance {0} does not exist")]
-    FixedInstanceDoesNotExist(FixedInstanceNodeId),
-    #[error("Dynamic instance {0} does not exist")]
-    DynamicInstanceDoesNotExist(DynamicInstanceNodeId),
-    #[error("Mixer {0} does not exist")]
-    MixerDoesNotExist(MixerNodeId),
-    #[error("Connection {0} does not exist")]
-    ConnectionDoesNotExist(NodeConnectionId),
-    #[error("Connection {0} already exist")]
-    ConnectionExists(NodeConnectionId),
-    #[error("Connection {0} already exist: {1}")]
-    ConnectionMalformed(NodeConnectionId, String),
+    #[error("Track {node_id} does not exist")]
+    TrackDoesNotExist { node_id: TrackNodeId },
+    #[error("Fixed instance {node_id} does not exist")]
+    FixedInstanceDoesNotExist { node_id: FixedInstanceNodeId },
+    #[error("Dynamic instance {node_id} does not exist")]
+    DynamicInstanceDoesNotExist { node_id: DynamicInstanceNodeId },
+    #[error("Mixer {node_id} does not exist")]
+    MixerDoesNotExist { node_id: MixerNodeId },
+    #[error("Connection {connection_id} does not exist")]
+    ConnectionDoesNotExist { connection_id: NodeConnectionId },
+    #[error("Connection {connection_id} already exist")]
+    ConnectionExists { connection_id: NodeConnectionId },
+    #[error("Connection {connection_id} already exist: {message}")]
+    ConnectionMalformed {
+        connection_id: NodeConnectionId,
+        message:       String,
+    },
 
-    #[error("Media {1} on track {0} already exists")]
-    MediaExists(TrackNodeId, TrackMediaId),
-    #[error("Media {1} on track {0} does not exist")]
-    MediaDoesNotExist(TrackNodeId, TrackMediaId),
+    #[error("Media {media_id} on track node {node_id} already exists")]
+    MediaExists { node_id: TrackNodeId, media_id: TrackMediaId },
+    #[error("Media {media_id} on track node {node_id} does not exist")]
+    MediaDoesNotExist { node_id: TrackNodeId, media_id: TrackMediaId },
 
     #[error("Refusing to add connection - cycle detected")]
     CycleDetected,
@@ -422,7 +425,7 @@ impl TaskSpec {
 
     pub fn add_fixed_instance(&mut self, fixed_id: FixedInstanceNodeId, instance: FixedInstanceNode) -> Result<(), ModifyTaskError> {
         if self.fixed.contains_key(&fixed_id) {
-            return Err(FixedInstanceExists(fixed_id));
+            return Err(FixedInstanceExists { node_id: fixed_id });
         }
 
         self.fixed.insert(fixed_id, instance);
@@ -432,7 +435,7 @@ impl TaskSpec {
 
     pub fn add_dynamic_instance(&mut self, dynamic_id: DynamicInstanceNodeId, dynamic: DynamicInstanceNode) -> Result<(), ModifyTaskError> {
         if self.dynamic.contains_key(&dynamic_id) {
-            return Err(DynamicInstanceExists(dynamic_id));
+            return Err(DynamicInstanceExists { node_id: dynamic_id });
         }
 
         self.dynamic.insert(dynamic_id, dynamic);
@@ -442,7 +445,7 @@ impl TaskSpec {
 
     pub fn add_mixer(&mut self, mixer_id: MixerNodeId, mixer: MixerNode) -> Result<(), ModifyTaskError> {
         if self.mixers.contains_key(&mixer_id) {
-            return Err(MixerExists(mixer_id));
+            return Err(MixerExists { node_id: mixer_id });
         }
 
         self.mixers.insert(mixer_id, mixer);
@@ -452,7 +455,7 @@ impl TaskSpec {
 
     pub fn delete_mixer(&mut self, mixer_id: MixerNodeId) -> Result<(), ModifyTaskError> {
         if !self.mixers.contains_key(&mixer_id) {
-            return Err(MixerDoesNotExist(mixer_id));
+            return Err(MixerDoesNotExist { node_id: mixer_id });
         }
 
         self.mixers.remove(&mixer_id);
@@ -472,7 +475,7 @@ impl TaskSpec {
                                            -> Result<(), ModifyTaskError> {
         let connection = self.connections
                              .get_mut(&connection_id)
-                             .ok_or(ConnectionDoesNotExist(connection_id))?;
+                             .ok_or(ConnectionDoesNotExist { connection_id })?;
         if let Some(volume) = values.volume {
             connection.volume = volume;
         }
@@ -484,19 +487,19 @@ impl TaskSpec {
     }
 
     pub fn set_fixed_instance_parameter_values(&mut self,
-                                               fixed_id: FixedInstanceNodeId,
+                                               node_id: FixedInstanceNodeId,
                                                parameters: HashMap<ParameterId, MultiChannelValue>)
                                                -> Result<(), ModifyTaskError> {
-        let fixed = self.fixed.get_mut(&fixed_id).ok_or(FixedInstanceDoesNotExist(fixed_id))?;
+        let fixed = self.fixed.get_mut(&node_id).ok_or(FixedInstanceDoesNotExist { node_id })?;
         fixed.parameters.extend(parameters.into_iter());
         Ok(())
     }
 
     pub fn set_dynamic_instance_parameter_values(&mut self,
-                                                 dynamic_id: DynamicInstanceNodeId,
+                                                 node_id: DynamicInstanceNodeId,
                                                  parameters: HashMap<ParameterId, MultiChannelValue>)
                                                  -> Result<(), ModifyTaskError> {
-        let dynamic = self.dynamic.get_mut(&dynamic_id).ok_or(DynamicInstanceDoesNotExist(dynamic_id))?;
+        let dynamic = self.dynamic.get_mut(&node_id).ok_or(DynamicInstanceDoesNotExist { node_id })?;
         dynamic.parameters.extend(parameters.into_iter());
         Ok(())
     }
@@ -507,7 +510,7 @@ impl TaskSpec {
 
     pub fn add_track(&mut self, track_id: TrackNodeId, channels: MediaChannels) -> Result<(), ModifyTaskError> {
         if self.tracks.contains_key(&track_id) {
-            return Err(TrackExists(track_id));
+            return Err(TrackExists { node_id: track_id });
         }
 
         self.tracks.insert(track_id,
@@ -518,10 +521,13 @@ impl TaskSpec {
     }
 
     pub fn add_track_media(&mut self, track_id: TrackNodeId, media_id: TrackMediaId, spec: TrackMedia) -> Result<(), ModifyTaskError> {
-        let track = self.tracks.get_mut(&track_id).ok_or(TrackDoesNotExist(track_id.clone()))?;
+        let track = self.tracks
+                        .get_mut(&track_id)
+                        .ok_or(TrackDoesNotExist { node_id: track_id.clone() })?;
 
         if track.media.contains_key(&media_id) {
-            return Err(MediaDoesNotExist(track_id.clone(), media_id));
+            return Err(MediaDoesNotExist { node_id: track_id.clone(),
+                                           media_id });
         }
 
         track.media.insert(media_id, spec);
@@ -530,43 +536,46 @@ impl TaskSpec {
     }
 
     pub fn delete_track_media(&mut self, track_id: TrackNodeId, media_id: TrackMediaId) -> Result<(), ModifyTaskError> {
-        let track = self.tracks.get_mut(&track_id).ok_or(TrackDoesNotExist(track_id.clone()))?;
+        let track = self.tracks
+                        .get_mut(&track_id)
+                        .ok_or(TrackDoesNotExist { node_id: track_id.clone() })?;
         if track.media.remove(&media_id).is_none() {
-            Err(MediaDoesNotExist(track_id.clone(), media_id))
+            Err(MediaDoesNotExist { node_id: track_id.clone(),
+                                    media_id })
         } else {
             Ok(())
         }
     }
 
-    pub fn delete_track(&mut self, track_id: TrackNodeId) -> Result<(), ModifyTaskError> {
-        if self.tracks.remove(&track_id).is_some() {
-            self.delete_connections_referencing(NodePadId::TrackOutput(track_id));
+    pub fn delete_track(&mut self, node_id: TrackNodeId) -> Result<(), ModifyTaskError> {
+        if self.tracks.remove(&node_id).is_some() {
+            self.delete_connections_referencing(NodePadId::TrackOutput(node_id));
 
             Ok(())
         } else {
-            Err(TrackDoesNotExist(track_id))
+            Err(TrackDoesNotExist { node_id })
         }
     }
 
-    pub fn delete_fixed_instance(&mut self, fixed_id: FixedInstanceNodeId) -> Result<(), ModifyTaskError> {
-        if self.fixed.remove(&fixed_id).is_some() {
-            self.delete_connections_referencing(NodePadId::FixedInstanceOutput(fixed_id.clone()));
-            self.delete_connections_referencing(NodePadId::FixedInstanceInput(fixed_id.clone()));
+    pub fn delete_fixed_instance(&mut self, node_id: FixedInstanceNodeId) -> Result<(), ModifyTaskError> {
+        if self.fixed.remove(&node_id).is_some() {
+            self.delete_connections_referencing(NodePadId::FixedInstanceOutput(node_id.clone()));
+            self.delete_connections_referencing(NodePadId::FixedInstanceInput(node_id.clone()));
 
             Ok(())
         } else {
-            Err(FixedInstanceDoesNotExist(fixed_id))
+            Err(FixedInstanceDoesNotExist { node_id })
         }
     }
 
-    pub fn delete_dynamic_instance(&mut self, dynamic_id: DynamicInstanceNodeId) -> Result<(), ModifyTaskError> {
-        if self.dynamic.remove(&dynamic_id).is_some() {
-            self.delete_connections_referencing(NodePadId::DynamicInstanceOutput(dynamic_id.clone()));
-            self.delete_connections_referencing(NodePadId::DynamicInstanceInput(dynamic_id.clone()));
+    pub fn delete_dynamic_instance(&mut self, node_id: DynamicInstanceNodeId) -> Result<(), ModifyTaskError> {
+        if self.dynamic.remove(&node_id).is_some() {
+            self.delete_connections_referencing(NodePadId::DynamicInstanceOutput(node_id.clone()));
+            self.delete_connections_referencing(NodePadId::DynamicInstanceInput(node_id.clone()));
 
             Ok(())
         } else {
-            Err(DynamicInstanceDoesNotExist(dynamic_id))
+            Err(DynamicInstanceDoesNotExist { node_id })
         }
     }
 
@@ -574,7 +583,7 @@ impl TaskSpec {
         if self.connections.remove(&connection_id).is_some() {
             Ok(())
         } else {
-            Err(ConnectionDoesNotExist(connection_id))
+            Err(ConnectionDoesNotExist { connection_id })
         }
     }
 
@@ -588,15 +597,17 @@ impl TaskSpec {
                           pan: f64)
                           -> Result<(), ModifyTaskError> {
         if self.connections.contains_key(&connection_id) {
-            return Err(ConnectionExists(connection_id));
+            return Err(ConnectionExists { connection_id });
         }
 
         if !from.is_output() {
-            return Err(ConnectionMalformed(connection_id, format!("{from} is not an output")));
+            return Err(ConnectionMalformed { connection_id,
+                                             message: format!("{from} is not an output") });
         }
 
         if !to.is_input() {
-            return Err(ConnectionMalformed(connection_id, format!("{to} is not an input")));
+            return Err(ConnectionMalformed { connection_id,
+                                             message: format!("{to} is not an input") });
         }
 
         self.connections.insert(connection_id,
@@ -614,10 +625,11 @@ impl TaskSpec {
                               media_id: TrackMediaId,
                               update: UpdateTaskTrackMedia)
                               -> Result<(), ModifyTaskError> {
-        let track = self.tracks.get_mut(&track_id).ok_or(TrackDoesNotExist(track_id.clone()))?;
-        let media = track.media
-                         .get_mut(&media_id)
-                         .ok_or(MediaDoesNotExist(track_id.clone(), media_id))?;
+        let track = self.tracks
+                        .get_mut(&track_id)
+                        .ok_or(TrackDoesNotExist { node_id: track_id.clone() })?;
+        let media = track.media.get_mut(&media_id).ok_or(MediaDoesNotExist { node_id: track_id.clone(),
+                                                                              media_id })?;
 
         media.update(update);
 

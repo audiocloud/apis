@@ -7,5 +7,7 @@ fn main() {
         let ModelId { manufacturer, name } = id;
         let file_name = format!("generated/{manufacturer}_{name}.yaml",);
         serde_yaml::to_writer(File::create(file_name).expect("open yaml"), model).expect("YAML write");
+
+        // TODO: for each model, generate typescript types and all that shit
     }
 }

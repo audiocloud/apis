@@ -127,7 +127,7 @@ pub(crate) fn modify() {}
 
 /// Delete a task
 ///
-/// Delete a task and release all connected resources.
+/// Delete a task and release all referenced resources.
 #[utoipa::path(
   delete,
   path = "/v1/tasks/{app_id}/{task_id}",

@@ -246,7 +246,7 @@ impl TaskId {
 
         VALIDATION.get_or_init(|| Regex::new(r"^[a-zA-Z0-9_\-]+$").unwrap())
                   .find(&self.0)
-                  .ok_or_else(|| CloudError::InvalidAppTaskId(self.to_string()))?;
+                  .ok_or_else(|| CloudError::InvalidAppTaskId { task_id: self.to_string() })?;
 
         Ok(self)
     }
@@ -301,7 +301,7 @@ impl MediaObjectId {
 
         VALIDATION.get_or_init(|| Regex::new(r"^[a-zA-Z0-9_\-]+$").unwrap())
                   .find(&self.0)
-                  .ok_or_else(|| CloudError::InvalidAppMediaObjectId(self.to_string()))?;
+                  .ok_or_else(|| CloudError::InvalidAppMediaObjectId { object_id: self.to_string(), })?;
 
         Ok(self)
     }

@@ -106,6 +106,10 @@ pub struct AdjustTaskTime {
 /// A list of tasks
 pub type ModifyTaskList = Vec<ModifyTask>;
 
+/// Create a task
+///
+/// The task will be checked against exclusivity with other tasks, as well as resources and other
+/// limits imposed by the domain configuration.
 #[utoipa::path(
   post,
   path = "/v1/apps/{app_id}/tasks",
@@ -121,6 +125,10 @@ pub type ModifyTaskList = Vec<ModifyTask>;
   ))]
 pub(crate) fn create_task() {}
 
+/// Modify existing task spec
+///
+/// Submit modifications to the task. This generic request can be used to update most aspects of the
+/// session: adjusting parameters, creating, deleting, reconnecting nodes, changing media, etc.
 #[utoipa::path(
   put,
   path = "/v1/apps/{app_id}/tasks/{task_id}/spec",
@@ -137,6 +145,9 @@ pub(crate) fn create_task() {}
   ))]
 pub(crate) fn modify_task_spec() {}
 
+/// Modify existing task time
+///
+/// Submit modifications to the task reservation time. Can be used to extend, move start or end early.
 #[utoipa::path(
   put,
   path = "/v1/apps/{app_id}/tasks/{task_id}/time",
@@ -154,6 +165,9 @@ pub(crate) fn modify_task_spec() {}
   ))]
 pub(crate) fn adjust_task_time() {}
 
+/// Delete a task
+///
+/// Delete a task and release all referenced resources.
 #[utoipa::path(
   delete,
   path = "/v1/apps/{app_id}/tasks/{task_id}",

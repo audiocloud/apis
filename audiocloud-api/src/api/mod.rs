@@ -25,7 +25,7 @@ pub fn merge_schemas(x: impl Iterator<Item = RootSchema>) -> RootSchema {
     root
 }
 
-pub fn openapi_with_schemas_to_json(api: OpenApi, merged: RootSchema, title: &str) -> anyhow::Result<String> {
+pub fn openapi_with_schemas_to_json(api: OpenApi, merged: RootSchema, patch: Value) -> anyhow::Result<String> {
     let mut api: serde_json::Value = serde_json::from_str(&api.to_json()?)?;
 
     let schemas = serde_json::to_value(&merged.definitions)?;
@@ -35,23 +35,52 @@ pub fn openapi_with_schemas_to_json(api: OpenApi, merged: RootSchema, title: &st
                                                        "schemas": schemas,
                                                    }));
 
-    let info = api.as_object_mut()
-                  .expect("as object")
-                  .get_mut("info")
-                  .expect("info")
-                  .as_object_mut()
-                  .expect("as_object");
-
-    info.insert("title".to_owned(), Value::String(title.to_owned()));
-    info.insert("license".to_owned(),
-                json!({
-                  "name": "Apache 2.0",
-                  "url": "https://www.apache.org/licenses/LICENSE-2.0.html"
-                }));
-
-    api.as_object_mut()
-       .expect("as object")
-       .insert("openapi".to_owned(), Value::String("3.1.0".to_owned()));
+    let patches: Vec<jatch::Patch> = serde_json::from_value(patch)?;
+    let api = jatch::apply(api, patches)?;
 
     Ok(serde_json::to_string_pretty(&api)?.replace("#/definitions/", "#/components/schemas/"))
+}
+
+pub fn openapi_set_version(version: &str) -> serde_json::Value {
+    json!({
+        "op": "replace",
+        "path": "/openapi",
+        "value": version
+    })
+}
+
+pub fn openapi_set_info_title(title: &str) -> serde_json::Value {
+    json!({
+        "op": "replace",
+        "path": "/info/title",
+        "value": title
+    })
+}
+
+pub fn openapi_add_apache_license() -> serde_json::Value {
+    json!({
+    "op": "replace",
+    "path": "/info/license",
+    "value": json!({
+        "name": "Apache 2.0",
+        "url": "https://www.apache.org/licenses/LICENSE-2.0.html"
+    })})
+}
+
+pub fn openapi_create_empty_servers() -> serde_json::Value {
+    json!({
+        "op": "replace",
+        "path": "/servers",
+        "value": []
+    })
+}
+
+pub fn openapi_add_server(url: &str, description: &str) -> serde_json::Value {
+    json!({
+    "op": "add",
+    "path": "/servers/-",
+    "value": {
+        "description": description,
+        "url": url
+    }})
 }

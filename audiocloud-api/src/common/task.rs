@@ -35,7 +35,8 @@ pub struct TaskSpec {
 impl TaskSpec {
     pub fn validate(&self, models: &HashMap<ModelId, Model>) -> Result<(), CloudError> {
         if self.fixed.is_empty() && self.dynamic.is_empty() && self.mixers.is_empty() && self.tracks.is_empty() {
-            return Err(InternalInconsistency(format!("No tracks, mixers, dynamic instances, or fixed instances declared in task spec")));
+            return Err(InternalInconsistency { message:
+                                                   format!("No tracks, mixers, dynamic instances, or fixed instances declared in task spec"), });
         }
 
         for (connection_id, connection) in self.connections.iter() {
@@ -63,11 +64,11 @@ impl TaskSpec {
         let from = &connection.from;
 
         if !from.is_output() {
-            return Err(InternalInconsistency(format!("Connection {id} flow from {from} is not an output")));
+            return Err(InternalInconsistency { message: format!("Connection {id} flow from {from} is not an output"), });
         }
 
         if !to.is_input() {
-            return Err(InternalInconsistency(format!("Connection {id} flow to {to} is not an input")));
+            return Err(InternalInconsistency { message: format!("Connection {id} flow to {to} is not an input"), });
         }
 
         self.check_channel_exists(id, &connection.from, &connection.from_channels, models)?;
@@ -94,12 +95,13 @@ impl TaskSpec {
     }
 
     fn check_channel_exists_mixer(&self, id: &NodeConnectionId, mixer_id: &MixerNodeId, channels: &ChannelMask) -> Result<(), CloudError> {
-        let mixer = self.mixers
-                        .get(mixer_id)
-                        .ok_or_else(|| InternalInconsistency(format!("Connection {id} flow to mixer {mixer_id} does not exist")))?;
+        let mixer =
+            self.mixers
+                .get(mixer_id)
+                .ok_or_else(|| InternalInconsistency { message: format!("Connection {id} flow to mixer {mixer_id} does not exist"), })?;
 
         if !channels.is_subset_of(0..mixer.input_channels) {
-            return Err(InternalInconsistency(format!("Connection {id} flow to mixer {mixer_id} has channels that do not exist")));
+            return Err(InternalInconsistency { message: format!("Connection {id} flow to mixer {mixer_id} has channels that do not exist"), });
         }
 
         Ok(())
@@ -114,15 +116,15 @@ impl TaskSpec {
                                   -> Result<(), CloudError> {
         let fixed = self.fixed
                         .get(fixed_id)
-                        .ok_or_else(|| InternalInconsistency(format!("Connection {id} references fixed {fixed_id} which does not exist")))?;
+                        .ok_or_else(|| InternalInconsistency { message: format!("Connection {id} references fixed {fixed_id} which does not exist")})?;
 
         let model_id = fixed.instance_id.model_id();
         let model = models.get(&model_id).ok_or_else(|| {
-            InternalInconsistency(format!("Connection {id} references fixed instance labelled {fixed_id} which references model {model_id} which does not exist"))
+            InternalInconsistency { message: format!("Connection {id} references fixed instance labelled {fixed_id} which references model {model_id} which does not exist")}
         })?;
 
         if !channels.is_subset_of(0..(if output { model.outputs.len() } else { model.inputs.len() })) {
-            return Err(InternalInconsistency(format!("Connection {id} references fixed instance labelled {fixed_id} which has channels that do not exist")));
+            return Err(InternalInconsistency { message: format!("Connection {id} references fixed instance labelled {fixed_id} which has channels that do not exist")});
         }
 
         Ok(())
@@ -136,16 +138,16 @@ impl TaskSpec {
                                     models: &HashMap<ModelId, Model>)
                                     -> Result<(), CloudError> {
         let dynamic = self.dynamic.get(dynamic_id).ok_or_else(|| {
-            InternalInconsistency(format!("Connection {id} references dynamic instance labelled {dynamic_id} which does not exist"))
+            InternalInconsistency{message: format!("Connection {id} references dynamic instance labelled {dynamic_id} which does not exist")}
         })?;
 
         let model_id = &dynamic.model_id;
         let model = models.get(&model_id).ok_or_else(|| {
-            InternalInconsistency(format!("Connection {id} references dynamic instance labelled {dynamic_id} which references model {model_id} which does not exist"))
+            InternalInconsistency{ message: format!("Connection {id} references dynamic instance labelled {dynamic_id} which references model {model_id} which does not exist")}
         })?;
 
         if !channels.is_subset_of(0..(if output { model.outputs.len() } else { model.inputs.len() })) {
-            return Err(InternalInconsistency(format!("Connection {id} references dynamic instance labelled {dynamic_id} which has channels that do not exist")));
+            return Err(InternalInconsistency{ message: format!("Connection {id} references dynamic instance labelled {dynamic_id} which has channels that do not exist")});
         }
 
         Ok(())
@@ -154,10 +156,10 @@ impl TaskSpec {
     fn check_channel_exists_track(&self, id: &NodeConnectionId, track_id: &TrackNodeId, channels: &ChannelMask) -> Result<(), CloudError> {
         let track = self.tracks
                         .get(track_id)
-                        .ok_or_else(|| InternalInconsistency(format!("Connection {id} references track {track_id} which does not exist")))?;
+                        .ok_or_else(|| InternalInconsistency { message: format!("Connection {id} references track {track_id} which does not exist")})?;
 
         if !channels.is_subset_of(0..track.channels.num_channels()) {
-            return Err(InternalInconsistency(format!("Connection {id} references track {track_id} which has channels that do not exist")));
+            return Err(InternalInconsistency{ message: format!("Connection {id} references track {track_id} which has channels that do not exist")});
         }
 
         Ok(())
