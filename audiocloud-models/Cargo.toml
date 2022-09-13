@@ -9,9 +9,25 @@ name = "audiocloud_models"
 [dependencies]
 maplit = "1"
 lazy_static = "1"
+schemars = "0.8"
+
+[dependencies.serde]
+version = "1"
+features = ["derive"]
 
 [dependencies.audiocloud-api]
 path = "../audiocloud-api"
 
+[build-dependencies.audiocloud-api]
+path = "../audiocloud-api"
+
 [dev-dependencies]
-serde_yaml = "0.8"
+serde_yaml = "0.9"
+serde_json = "1"
+
+[build-dependencies]
+serde_yaml = "0.9"
+globwalk = "0.8"
+rm_rf = "0.6"
+convert_case = "0.6"
+askama = "0.11"

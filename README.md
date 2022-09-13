@@ -24,3 +24,4 @@ Inside `audiocloud-api/src` you will find the following directories:
 
 # Generated clients
 
+OpenAPI 3.1 documents are generated 

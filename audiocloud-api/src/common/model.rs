@@ -1,3 +1,4 @@
+use anyhow::anyhow;
 use std::collections::{HashMap, HashSet};
 use std::iter;
 
@@ -53,6 +54,20 @@ impl ModelValueOption {
     pub fn to_zero(min: f64) -> Self {
         Self::num_range(min, 0f64)
     }
+
+    pub fn get_simple_type(&self) -> anyhow::Result<SimpleModelValueType> {
+        match self {
+            ModelValueOption::Single(value) => Ok(value.get_simple_type()),
+            ModelValueOption::Range(first, second) => {
+                if first.is_number() && second.is_number() {
+                    Ok(SimpleModelValueType::Number { signed:  true,
+                                                      integer: false, })
+                } else {
+                    Err(anyhow!("Only numeric ranges supported"))
+                }
+            }
+        }
+    }
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, IsVariant, Unwrap, JsonSchema)]
@@ -61,6 +76,47 @@ pub enum ModelValue {
     String(String),
     Number(f64),
     Bool(bool),
+}
+
+#[derive(Serialize, Deserialize, Clone, Copy, Debug, PartialEq, Eq, Hash, IsVariant, JsonSchema)]
+#[serde(rename_all = "snake_case")]
+pub enum SimpleModelValueType {
+    String,
+    Number { integer: bool, signed: bool },
+    Bool,
+}
+
+impl SimpleModelValueType {
+    pub fn from_numeric_value(number: f64) -> SimpleModelValueType {
+        let mut integer = false;
+        let mut signed = false;
+
+        if number.fract() == 0.0 {
+            if number.is_sign_negative() {
+                signed = true;
+            }
+
+            integer = true;
+        }
+
+        return Self::Number { integer, signed };
+    }
+
+    pub fn try_widen(self, other: SimpleModelValueType) -> anyhow::Result<SimpleModelValueType> {
+        match (self, other) {
+            (Self::Number { signed: s1, integer: i1 }, Self::Number { signed: s2, integer: i2 }) => Ok(Self::Number { signed:  s1 || s2,
+                                                                                                                      integer: i1 && i2, }),
+            _ => Err(anyhow!("Only numeric types may be widened")),
+        }
+    }
+}
+
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, IsVariant, Unwrap, JsonSchema)]
+#[serde(rename_all = "snake_case")]
+pub enum ModelValueType {
+    Single(SimpleModelValueType),
+    Either(SimpleModelValueType, SimpleModelValueType),
+    Any,
 }
 
 impl ModelValue {
@@ -103,6 +159,14 @@ impl ModelValue {
                 }
             }),
             ModelValue::Bool(b) => Some(*b),
+        }
+    }
+
+    pub fn get_simple_type(&self) -> SimpleModelValueType {
+        match self {
+            ModelValue::String(_) => SimpleModelValueType::String,
+            ModelValue::Number(value) => SimpleModelValueType::from_numeric_value(*value),
+            ModelValue::Bool(_) => SimpleModelValueType::Bool,
         }
     }
 }
@@ -152,6 +216,7 @@ impl Model {
 }
 
 #[derive(Copy, Clone, Serialize, Deserialize, Debug, PartialEq, Eq, Hash, JsonSchema)]
+#[serde(rename_all = "snake_case")]
 pub enum ModelCapability {
     PowerDistributor,
     AudioRouter,
@@ -341,7 +406,7 @@ pub enum ModelElementScope {
     Global,
     AllInputs,
     AllOutputs,
-    Size(usize),
+    Count(usize),
 }
 
 impl ModelElementScope {
@@ -350,7 +415,7 @@ impl ModelElementScope {
             ModelElementScope::Global => 1,
             ModelElementScope::AllInputs => model.inputs.len(),
             ModelElementScope::AllOutputs => model.outputs.len(),
-            ModelElementScope::Size(num) => num,
+            ModelElementScope::Count(num) => num,
         }
     }
 }
@@ -414,4 +479,47 @@ pub enum DynamicsId {
     Gate,
     Limiter,
     DeEsser,
+}
+
+pub fn get_values_type(options: &Vec<ModelValueOption>) -> anyhow::Result<ModelValueType> {
+    let simple_options = options.iter()
+                                .map(ModelValueOption::get_simple_type)
+                                .filter_map(Result::ok)
+                                .collect::<HashSet<_>>();
+
+    let maybe_numeric_type = simple_options.iter()
+                                           .filter(|x| x.is_number())
+                                           .copied()
+                                           .reduce(|a, b| a.try_widen(b).unwrap());
+
+    let mut other_types = simple_options.into_iter()
+                                        .filter(|x| !x.is_number())
+                                        .collect::<HashSet<_>>()
+                                        .into_iter();
+
+    let first = other_types.next();
+    let second = other_types.next();
+    let third = other_types.next();
+
+    Ok(match (maybe_numeric_type, first, second, third) {
+        (None, None, None, None) => return Err(anyhow!("value without any times, illegal")),
+        (Some(numeric), None, None, None) => ModelValueType::Single(numeric),
+        (None, Some(first), None, None) => ModelValueType::Single(first),
+        (Some(numeric), Some(first), None, None) => ModelValueType::Either(numeric, first),
+        (None, Some(first), Some(second), None) => ModelValueType::Either(first, second),
+        _ => ModelValueType::Any, //
+    })
+}
+
+#[derive(Serialize, Deserialize, Clone, Copy, Debug, PartialEq, IsVariant, JsonSchema)]
+#[serde(untagged)]
+pub enum ToggleOr<T> {
+    Toggle(bool),
+    Value(T),
+}
+
+#[derive(Serialize, Deserialize, Clone, Copy, Debug, PartialEq, JsonSchema)]
+pub struct Stereo<T> {
+    pub left:  T,
+    pub right: T,
 }

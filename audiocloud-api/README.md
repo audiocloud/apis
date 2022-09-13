@@ -1,0 +1,6 @@
+- [ ] Generate SDKs:
+    - [ ] @audiocloud/cloud-client
+    - [ ] @audiocloud/domain-client
+    - [ ] @audiocloud/instance-driver-client
+    - [ ] @audiocloud/audio-engine-client
+    - [x] @audiocloud/models

@@ -1,4 +1,4 @@
-use std::collections::HashMap;
+use std::collections::{HashMap, HashSet};
 use std::fmt::{Display, Formatter};
 use std::ops::Range;
 use std::str::FromStr;
@@ -15,19 +15,25 @@ use crate::json_schema_new_type;
 use crate::time::TimeRange;
 use crate::{
     DomainId, DynamicInstanceNodeId, FixedInstanceId, FixedInstanceNodeId, MediaObjectId, MixerNodeId, Model, ModelId,
-    MultiChannelTimestampedValue, MultiChannelValue, NodeConnectionId, ParameterId, ReportId, SecureKey, TrackMediaId, TrackNodeId,
+    MultiChannelTimestampedValue, NodeConnectionId, ReportId, SecureKey, TrackMediaId, TrackNodeId,
 };
 
+/// Task specification
 #[derive(Debug, Serialize, Deserialize, Clone, PartialEq, Default, JsonSchema)]
 pub struct TaskSpec {
+    /// Track nodes of the task
     #[serde(default)]
     pub tracks:      HashMap<TrackNodeId, TrackNode>,
+    /// Mixer nodes of the task
     #[serde(default)]
     pub mixers:      HashMap<MixerNodeId, MixerNode>,
+    /// Dynamic instance nodes of the task
     #[serde(default)]
     pub dynamic:     HashMap<DynamicInstanceNodeId, DynamicInstanceNode>,
+    /// Fixed instance nodes of the task
     #[serde(default)]
     pub fixed:       HashMap<FixedInstanceNodeId, FixedInstanceNode>,
+    /// Connections between nodes
     #[serde(default)]
     pub connections: HashMap<NodeConnectionId, NodeConnection>,
 }
@@ -166,13 +172,21 @@ impl TaskSpec {
     }
 }
 
+/// Task information
 #[derive(Clone, Debug, Serialize, Deserialize, JsonSchema)]
 pub struct Task {
-    pub domain_id: DomainId,
-    pub time:      TimeRange,
-    pub spec:      TaskSpec,
-    pub security:  HashMap<SecureKey, TaskPermissions>,
-    pub version:   u64,
+    /// Domain executing the task
+    pub domain_id:           DomainId,
+    /// Reservation time range
+    pub time:                TimeRange,
+    /// Task specification
+    pub spec:                TaskSpec,
+    /// Security keys and associateds permissions
+    pub security:            HashMap<SecureKey, TaskPermissions>,
+    /// The pool of fixed isntances available to the task during its reserved time
+    pub fixed_instance_pool: HashSet<FixedInstanceId>,
+    /// Current version of the task, incremented by every change transaction
+    pub version:             u64,
 }
 
 impl From<CreateTask> for Task {
@@ -185,12 +199,13 @@ impl From<CreateTask> for Task {
                          fixed,
                          security,
                          connections,
+                         fixed_instance_pool,
                          .. } = source;
 
         Self { domain_id: domain,
-
                time,
                security,
+               fixed_instance_pool,
                version: 0,
                spec: TaskSpec { tracks,
                                 mixers,
@@ -200,36 +215,58 @@ impl From<CreateTask> for Task {
     }
 }
 
+/// Mixer node specification
 #[derive(Clone, Debug, Serialize, Deserialize, PartialEq, JsonSchema)]
 pub struct MixerNode {
+    /// Numvber of input channels on the mixer node
     pub input_channels:  usize,
+    /// Number of output channels on the mixer node
     pub output_channels: usize,
 }
 
+/// Dynamic node specification
 #[derive(Clone, Debug, Serialize, Deserialize, PartialEq, JsonSchema)]
 pub struct DynamicInstanceNode {
+    /// The manufacturer and name of the processing software
     pub model_id:   ModelId,
+    /// Parameter values
     pub parameters: InstanceParameters,
 }
 
+/// Fixed instance node specification
 #[derive(Clone, Debug, Serialize, Deserialize, PartialEq, JsonSchema)]
 pub struct FixedInstanceNode {
+    /// The manufacturer, name and instance identifier of the hardware device doing the processing
     pub instance_id: FixedInstanceId,
+    /// parameters
     pub parameters:  InstanceParameters,
-    pub wet:         f64, // only applicable for instances with <= 2 inputs and <= 2 outputs
+    /// Dry-wet percentage
+    ///
+    /// only applicable for instances with same number of inputs and outputs,
+    /// having 1 or 2 channels.
+    pub wet:         f64,
 }
 
+/// Connection between nodes in a task
 #[derive(Clone, Debug, Serialize, Deserialize, PartialEq, JsonSchema)]
 pub struct NodeConnection {
+    /// Source node pad
     pub from:          NodePadId,
+    /// Destination node pad
     pub to:            NodePadId,
+    /// Source channel mask
     pub from_channels: ChannelMask,
+    /// Destination channel mask
     pub to_channels:   ChannelMask,
+    /// Volume adjustment as a factor
     pub volume:        f64,
+    /// Panning adjustment
+    ///
+    /// Zero is centered, -1 is fully left, 1 is fully right
     pub pan:           f64,
 }
 
-pub type InstanceParameters = HashMap<ParameterId, MultiChannelValue>;
+pub type InstanceParameters = serde_json::Value;
 pub type InstanceReports = HashMap<ReportId, MultiChannelTimestampedValue>;
 
 #[derive(Clone, Copy, Debug, Serialize, Deserialize, PartialEq, JsonSchema)]
@@ -284,14 +321,22 @@ impl ChannelMask {
     }
 }
 
+/// An input or output pad of a node inside a task
 #[derive(Clone, Debug, PartialEq, IsVariant, Unwrap, Hash, Eq, PartialOrd, Ord)]
 pub enum NodePadId {
+    /// Mixer node input pad
     MixerInput(MixerNodeId),
+    /// Mixer node output pad
     MixerOutput(MixerNodeId),
+    /// Fixed instance input pad
     FixedInstanceInput(FixedInstanceNodeId),
+    /// Fixed instance output pad
     FixedInstanceOutput(FixedInstanceNodeId),
+    /// Dynamic instance input pad
     DynamicInstanceInput(DynamicInstanceNodeId),
+    /// Dynamic instance output pad
     DynamicInstanceOutput(DynamicInstanceNodeId),
+    /// Track node output pad
     TrackOutput(TrackNodeId),
 }
 
@@ -367,16 +412,22 @@ impl FromStr for NodePadId {
     }
 }
 
+/// Track node specification
 #[derive(Clone, Debug, Serialize, Deserialize, PartialEq, JsonSchema)]
 pub struct TrackNode {
+    /// Number of channels
     pub channels: MediaChannels,
+    /// Media items present on the track
     pub media:    HashMap<TrackMediaId, TrackMedia>,
 }
 
+/// Channel count for media items and track nodes
 #[derive(Clone, Copy, Debug, Serialize, Deserialize, Eq, PartialEq, JsonSchema)]
 #[serde(rename_all = "snake_case")]
 pub enum MediaChannels {
+    /// Single channel
     Mono,
+    /// Two channels - left and right
     Stereo,
 }
 
@@ -389,12 +440,18 @@ impl MediaChannels {
     }
 }
 
+/// Media item specification
 #[derive(Clone, Debug, Serialize, Deserialize, PartialEq, JsonSchema)]
 pub struct TrackMedia {
+    /// Number of channels
     pub channels:         MediaChannels,
+    /// Media format
     pub format:           TrackMediaFormat,
+    /// Subset of media that is used
     pub media_segment:    TimeSegment,
+    /// Where to place the media in the task timeline
     pub timeline_segment: TimeSegment,
+    /// Source media object id
     pub object_id:        MediaObjectId,
 }
 

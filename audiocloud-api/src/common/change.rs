@@ -491,7 +491,7 @@ impl TaskSpec {
                                                parameters: HashMap<ParameterId, MultiChannelValue>)
                                                -> Result<(), ModifyTaskError> {
         let fixed = self.fixed.get_mut(&node_id).ok_or(FixedInstanceDoesNotExist { node_id })?;
-        fixed.parameters.extend(parameters.into_iter());
+        // fixed.parameters.extend(parameters.into_iter());
         Ok(())
     }
 
@@ -500,7 +500,7 @@ impl TaskSpec {
                                                  parameters: HashMap<ParameterId, MultiChannelValue>)
                                                  -> Result<(), ModifyTaskError> {
         let dynamic = self.dynamic.get_mut(&node_id).ok_or(DynamicInstanceDoesNotExist { node_id })?;
-        dynamic.parameters.extend(parameters.into_iter());
+        // dynamic.parameters.extend(parameters.into_iter());
         Ok(())
     }
 

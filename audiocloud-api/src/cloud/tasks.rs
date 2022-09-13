@@ -1,4 +1,4 @@
-use std::collections::HashMap;
+use std::collections::{HashMap, HashSet};
 
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
@@ -7,7 +7,8 @@ use crate::common::change::ModifyTask;
 use crate::common::task::{DynamicInstanceNode, FixedInstanceNode, MixerNode, NodeConnection, TaskPermissions, TrackNode};
 use crate::time::{TimeRange, Timestamp};
 use crate::{
-    AppId, AppTaskId, DomainId, DynamicInstanceNodeId, FixedInstanceNodeId, MixerNodeId, NodeConnectionId, SecureKey, TaskId, TrackNodeId,
+    AppId, AppTaskId, DomainId, DynamicInstanceNodeId, FixedInstanceId, FixedInstanceNodeId, MixerNodeId, NodeConnectionId, SecureKey,
+    TaskId, TrackNodeId,
 };
 
 /// Create a task
@@ -19,29 +20,31 @@ use crate::{
 #[derive(Debug, Serialize, Deserialize, Clone, PartialEq, JsonSchema)]
 pub struct CreateTask {
     /// Domain that will be executing the task
-    pub domain:      DomainId,
+    pub domain:              DomainId,
     /// When is the task reserving resources
-    pub time:        TimeRange,
+    pub time:                TimeRange,
     /// Track nodes within the task
     #[serde(default)]
-    pub tracks:      HashMap<TrackNodeId, TrackNode>,
+    pub tracks:              HashMap<TrackNodeId, TrackNode>,
     /// Mixer nodes within the task
     #[serde(default)]
-    pub mixers:      HashMap<MixerNodeId, MixerNode>,
+    pub mixers:              HashMap<MixerNodeId, MixerNode>,
     /// Dynamic instance nodes within the task
     #[serde(default)]
-    pub dynamic:     HashMap<DynamicInstanceNodeId, DynamicInstanceNode>,
+    pub dynamic:             HashMap<DynamicInstanceNodeId, DynamicInstanceNode>,
     /// Fixed nodes within the task
     #[serde(default)]
-    pub fixed:       HashMap<FixedInstanceNodeId, FixedInstanceNode>,
+    pub fixed:               HashMap<FixedInstanceNodeId, FixedInstanceNode>,
     /// Connections between nodes
     #[serde(default)]
-    pub connections: HashMap<NodeConnectionId, NodeConnection>,
+    pub connections:         HashMap<NodeConnectionId, NodeConnection>,
     /// Security keys associated with the task
     #[serde(default)]
-    pub security:    HashMap<SecureKey, TaskPermissions>,
+    pub security:            HashMap<SecureKey, TaskPermissions>,
+    /// The pool of fixed isntances available to the task during its reserved time
+    pub fixed_instance_pool: HashSet<FixedInstanceId>,
     /// If true, task creation will be evaluated for correctness, but no actual task will be created
-    pub dry_run:     bool,
+    pub dry_run:             bool,
 }
 
 /// Task created successfully

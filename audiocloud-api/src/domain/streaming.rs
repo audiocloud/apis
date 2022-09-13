@@ -188,7 +188,7 @@ pub struct MixerPacket {
 ///
 /// For each PlayId, on a task, a stream is kept in memory with a history of packets, by ascending
 /// serial number. For a sane amount of time, the packets may be requested by the clients. If a
-/// packet is not yet generated (but it is expected they will be, in the future) the request will
+/// packet is not yet models (but it is expected they will be, in the future) the request will
 /// block (wait) for `Timeout` milliseconds before giving up and returning 408.
 #[utoipa::path(
   get,
