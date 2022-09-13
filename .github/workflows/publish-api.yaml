@@ -67,16 +67,9 @@ jobs:
           npx tsc
         name: Install deps, generate and build client
         working-directory: './packages/${{ matrix.package.dir }}'
-      - name: 'Automated Version Bump'
-        id: version-bump
-        uses: 'phips28/gh-action-bump-version@master'
-        with:
-          tag-prefix: 'v'
+      - run: |
+          npm publish --access public || true
+        name: Publish to NPM
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          PACKAGEJSON_DIR: './packages/${{ matrix.package.dir }}'
-#      - run: npm publish --access public
-#        name: Publish to NPM
-#        env:
-#          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
-#        working-directory: ./packages/${{ matrix.package.dir }}
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+        working-directory: './packages/${{ matrix.package.dir }}'
