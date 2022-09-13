@@ -62,7 +62,7 @@ jobs:
           registry-url: 'https://registry.npmjs.org'
       - run: |
           cp ../../${{ matrix.package.schema }} .
-          npm ci
+          npm install
           npm run generate
           npx tsc
         name: Install deps, generate and build client
