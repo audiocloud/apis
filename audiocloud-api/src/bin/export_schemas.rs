@@ -7,7 +7,7 @@ use audiocloud_api::api::*;
 fn export_cloud_openapi() {
     use audiocloud_api::cloud::*;
 
-    fs::write("openapi_cloud.json",
+    fs::write("packages/cloud-client/openapi_cloud.json",
               openapi_with_schemas_to_json(CloudApi::openapi(),
                                            schemas(),
                                            json!([
@@ -23,7 +23,7 @@ fn export_cloud_openapi() {
 fn export_audio_engine_openapi() {
     use audiocloud_api::audio_engine::*;
 
-    fs::write("openapi_audio_engine.json",
+    fs::write("packages/audio-engine-client/openapi_audio_engine.json",
               openapi_with_schemas_to_json(AudioEngineApi::openapi(), schemas(), json!([
                   openapi_set_version("3.1.0"),
                   openapi_add_apache_license(),
@@ -36,7 +36,7 @@ fn export_audio_engine_openapi() {
 fn export_instance_driver_openapi() {
     use audiocloud_api::instance_driver::*;
 
-    fs::write("openapi_instance_driver.json",
+    fs::write("packages/instance-driver-client/openapi_instance_driver.json",
               openapi_with_schemas_to_json(InstanceDriverApi::openapi(), schemas(), json!([
                   openapi_set_version("3.1.0"),
                   openapi_add_apache_license(),
@@ -49,11 +49,11 @@ fn export_instance_driver_openapi() {
 fn export_domain_openapi() {
     use audiocloud_api::domain::*;
 
-    fs::write("openapi_domain.json",
+    fs::write("packages/domain-client/openapi_domain.json",
               openapi_with_schemas_to_json(DomainApi::openapi(), schemas(), json!([
                   openapi_set_version("3.1.0"),
                   openapi_add_apache_license(),
-                  openapi_set_info_title("Audio Cloud Orchestrator"),
+                  openapi_set_info_title("Audio Cloud Domain"),
                   openapi_create_empty_servers(),
                   openapi_add_server("https://distopik-hq.eu.audiocloud.io", "Distopik HQ"),
                   openapi_add_server("http://localhost:7200", "Local development")
