@@ -132,7 +132,7 @@ pub enum ModifyTaskSpec {
         /// Fixed instance node id
         fixed_id: FixedInstanceNodeId,
         /// Values to set
-        values:   HashMap<ParameterId, MultiChannelValue>,
+        values:   serde_json::Value,
     },
     /// Set dynamic instance node values
     SetDynamicInstanceParameterValues {
@@ -488,7 +488,7 @@ impl TaskSpec {
 
     pub fn set_fixed_instance_parameter_values(&mut self,
                                                node_id: FixedInstanceNodeId,
-                                               parameters: HashMap<ParameterId, MultiChannelValue>)
+                                               parameters: serde_json::Value)
                                                -> Result<(), ModifyTaskError> {
         let fixed = self.fixed.get_mut(&node_id).ok_or(FixedInstanceDoesNotExist { node_id })?;
         // fixed.parameters.extend(parameters.into_iter());

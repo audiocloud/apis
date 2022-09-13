@@ -23,12 +23,12 @@ pub enum InstanceDriverCommand {
     Play { play_id: PlayId },
     Render { length: f64, render_id: RenderId },
     Rewind { to: f64 },
-    SetParameters(HashMap<ParameterId, MultiChannelValue>),
+    SetParameters(serde_json::Value),
 }
 
 #[derive(PartialEq, Serialize, Deserialize, Clone, Debug, JsonSchema)]
 pub struct SetInstanceParameters {
-    pub parameters: HashMap<ParameterId, MultiChannelValue>,
+    pub parameters: serde_json::Value,
 }
 
 #[derive(PartialEq, Serialize, Deserialize, Clone, Debug, Error, JsonSchema)]
@@ -38,7 +38,7 @@ pub enum InstanceDriverError {
     InstanceNotFound(FixedInstanceId),
 
     #[error("Parameter {parameter} does not exist")]
-    ParameterDoesNotExist { parameter: String },
+    ParameterDoesNotExist { parameter: ParameterId },
 
     #[error("Media is not present, can't play or rewind")]
     MediaNotPresent,
