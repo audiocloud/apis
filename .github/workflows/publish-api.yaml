@@ -61,6 +61,7 @@ jobs:
           node-version: '18.x'
           registry-url: 'https://registry.npmjs.org'
       - run: |
+          ls -lR ../..
           cp ../../apis/${{ matrix.package.schema }} .
           npm ci
           npm run generate
