@@ -171,8 +171,8 @@ fn main() {
               RustGeneratedTemplate { models: &by_manufacturers }.render()
                                                                  .expect("render rust types")).expect("write generated rust code");
 
-    fs::write("package/src/generated.ts", TSGeneratedTemplate { models: &by_manufacturers }.render()
-                  .expect("render typescript types")).expect("write generated typescript code");
+    // fs::write("../packages/models/src/generated.ts", TSGeneratedTemplate { models: &by_manufacturers }.render()
+    //               .expect("render typescript types")).expect("write generated typescript code");
 }
 
 fn simple_to_rust_type(simple_type: SimpleModelValueType) -> &'static str {
