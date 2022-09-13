@@ -13,7 +13,7 @@ fn main() {
 
     // we generate a schema.json to be included in various builds
 
-    fs::write("openapi_model.json",
+    fs::write("openapi_models.json",
               openapi_with_schemas_to_json(ModelApi::openapi(), audiocloud_models::schemas(), json!([
                   openapi_set_version("3.1.0"),
                   openapi_add_apache_license(),
