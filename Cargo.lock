@@ -107,13 +107,12 @@ dependencies = [
  "audiocloud-api",
  "convert_case 0.6.0",
  "globwalk",
- "lazy_static",
- "maplit",
  "rm_rf",
  "schemars",
  "serde",
  "serde_json",
  "serde_yaml",
+ "utoipa",
 ]
 
 [[package]]
