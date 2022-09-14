@@ -79,7 +79,8 @@ jobs:
           registry-url: 'https://registry.npmjs.org'
       - run: |
           cp ../${{ matrix.package.schema }} .
-          cat package.json | envsubst > package.json
+          envsubst < package.json > package2.json
+          mv package2.json package.json
           ls -lR
           cat package.json
           npm install
