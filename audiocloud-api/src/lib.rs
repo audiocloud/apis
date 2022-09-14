@@ -1,8 +1,5 @@
 //! A crate of audiocloud API definitions and API calls
 
-use schemars::schema::RootSchema;
-use schemars::schema_for;
-
 pub use api::*;
 pub use common::*;
 

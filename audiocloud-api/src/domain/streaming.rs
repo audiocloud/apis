@@ -1,7 +1,6 @@
 //! API definitions for communicating with the apps
 use std::collections::{HashMap, HashSet};
 
-use crate::AppTaskId;
 use chrono::Utc;
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
@@ -9,12 +8,13 @@ use serde::{Deserialize, Serialize};
 use crate::audio_engine::CompressedAudio;
 use crate::common::change::{DesiredTaskPlayState, TaskPlayState};
 use crate::common::media::{PlayId, RenderId};
-use crate::common::task::{InstanceReports, NodePadId};
+use crate::common::task::InstanceReports;
 use crate::common::time::{Timestamp, Timestamped};
 use crate::common::{
     AppMediaObjectId, DynamicInstanceNodeId, FixedInstanceId, FixedInstanceNodeId, InstancePlayState, InstancePowerState, MixerNodeId,
     MultiChannelValue, ReportId, TrackNodeId,
 };
+use crate::{AppTaskId, DestinationPadId, SourcePadId};
 
 #[derive(Serialize, Deserialize, Debug, Clone, JsonSchema)]
 pub struct TaskStreamingPacket {
@@ -63,56 +63,63 @@ impl TaskStreamingPacket {
         // }
     }
 
-    pub fn push_peak_meters(&mut self, peak_meters: HashMap<NodePadId, MultiChannelValue>) {
+    pub fn push_source_peak_meters(&mut self, peak_meters: HashMap<SourcePadId, MultiChannelValue>) {
         for (flow_id, value) in peak_meters {
             match flow_id {
-                NodePadId::MixerInput(mixer_id) => {
-                    self.mixers
-                        .entry(mixer_id)
-                        .or_default()
-                        .input_metering
-                        .push(DiffStamped::new(self.created_at, value));
-                }
-                NodePadId::MixerOutput(mixer_id) => {
+                SourcePadId::MixerOutput(mixer_id) => {
                     self.mixers
                         .entry(mixer_id)
                         .or_default()
                         .output_metering
                         .push(DiffStamped::new(self.created_at, value));
                 }
-                NodePadId::FixedInstanceInput(fixed_id) => {
-                    self.fixed
-                        .entry(fixed_id)
-                        .or_default()
-                        .input_metering
-                        .push(DiffStamped::new(self.created_at, value));
-                }
-                NodePadId::FixedInstanceOutput(fixed_id) => {
+                SourcePadId::FixedInstanceOutput(fixed_id) => {
                     self.fixed
                         .entry(fixed_id)
                         .or_default()
                         .output_metering
                         .push(DiffStamped::new(self.created_at, value));
                 }
-                NodePadId::DynamicInstanceInput(dynamic_id) => {
-                    self.dynamic
-                        .entry(dynamic_id)
-                        .or_default()
-                        .input_metering
-                        .push(DiffStamped::new(self.created_at, value));
-                }
-                NodePadId::DynamicInstanceOutput(dynamic_id) => {
+                SourcePadId::DynamicInstanceOutput(dynamic_id) => {
                     self.dynamic
                         .entry(dynamic_id)
                         .or_default()
                         .output_metering
                         .push(DiffStamped::new(self.created_at, value));
                 }
-                NodePadId::TrackOutput(track_id) => {
+                SourcePadId::TrackOutput(track_id) => {
                     self.tracks
                         .entry(track_id)
                         .or_default()
                         .output_metering
+                        .push(DiffStamped::new(self.created_at, value));
+                }
+            }
+        }
+    }
+
+    pub fn push_destination_peak_meters(&mut self, peak_meters: HashMap<DestinationPadId, MultiChannelValue>) {
+        for (flow_id, value) in peak_meters {
+            match flow_id {
+                DestinationPadId::MixerInput(mixer_id) => {
+                    self.mixers
+                        .entry(mixer_id)
+                        .or_default()
+                        .input_metering
+                        .push(DiffStamped::new(self.created_at, value));
+                }
+                DestinationPadId::FixedInstanceInput(fixed_id) => {
+                    self.fixed
+                        .entry(fixed_id)
+                        .or_default()
+                        .input_metering
+                        .push(DiffStamped::new(self.created_at, value));
+                }
+                DestinationPadId::DynamicInstanceInput(dynamic_id) => {
+                    self.dynamic
+                        .entry(dynamic_id)
+                        .or_default()
+                        .input_metering
                         .push(DiffStamped::new(self.created_at, value));
                 }
             }

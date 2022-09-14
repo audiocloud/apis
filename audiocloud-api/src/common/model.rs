@@ -213,6 +213,26 @@ impl Model {
             .map(|(k, v)| (k.clone(), iter::repeat(None).take(v.scope.len(self)).collect()))
             .collect()
     }
+
+    pub fn get_audio_input_channel_count(&self) -> usize {
+        self.inputs
+            .iter()
+            .map(|input| match input {
+                ModelInput::Audio(_) => 1,
+                _ => 0,
+            })
+            .sum()
+    }
+
+    pub fn get_audio_output_channel_count(&self) -> usize {
+        self.outputs
+            .iter()
+            .map(|output| match output {
+                ModelOutput::Audio(_) => 1,
+                _ => 0,
+            })
+            .sum()
+    }
 }
 
 #[derive(Copy, Clone, Serialize, Deserialize, Debug, PartialEq, Eq, Hash, JsonSchema)]

@@ -1,16 +1,13 @@
 //! Types used to communicate with the instance_driver
 
-use std::collections::HashMap;
-
+use schemars::{JsonSchema, schema_for};
 use schemars::schema::RootSchema;
-use schemars::{schema_for, JsonSchema};
 use serde::{Deserialize, Serialize};
 use thiserror::Error;
 use utoipa::OpenApi;
 
 use crate::common::instance::{DesiredInstancePlayState, InstancePlayState};
 use crate::common::media::{PlayId, RenderId};
-use crate::common::model::MultiChannelValue;
 use crate::common::task::InstanceReports;
 use crate::merge_schemas;
 use crate::newtypes::{FixedInstanceId, ParameterId};

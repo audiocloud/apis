@@ -1,23 +1,23 @@
 use std::collections::{HashMap, HashSet};
 use std::hash::Hash;
 
-use crate::common::media::{PlayId, RenderId, RequestPlay, RequestRender};
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 use thiserror::Error;
 
+use crate::common::media::{PlayId, RenderId, RequestPlay, RequestRender};
 use crate::common::model::MultiChannelValue;
 use crate::common::task::TaskPermissions;
 use crate::common::task::{
-    ConnectionValues, DynamicInstanceNode, FixedInstanceNode, MediaChannels, MixerChannels, MixerNode, NodeConnection, NodePadId, Task,
-    TaskSpec, TimeSegment, TrackMedia, TrackNode, UpdateTaskTrackMedia,
+    ConnectionValues, DynamicInstanceNode, FixedInstanceNode, MediaChannels, MixerNode, NodeConnection, Task, TaskSpec, TimeSegment,
+    TrackMedia, TrackNode, UpdateTaskTrackMedia,
 };
 use crate::common::time::Timestamped;
 use crate::newtypes::{
     AppId, AppMediaObjectId, DynamicInstanceNodeId, FixedInstanceId, FixedInstanceNodeId, MediaObjectId, MixerNodeId, NodeConnectionId,
     ParameterId, SecureKey, TrackMediaId, TrackNodeId,
 };
-use crate::{json_schema_new_type, ChannelMask};
+use crate::{json_schema_new_type, ChannelMask, DestinationPadId, SourcePadId, TaskNodeId};
 
 use self::ModifyTaskError::*;
 
@@ -108,9 +108,9 @@ pub enum ModifyTaskSpec {
         /// Connection id
         connection_id: NodeConnectionId,
         /// Source node pad
-        from:          NodePadId,
+        from:          SourcePadId,
         /// Destination node pad
-        to:            NodePadId,
+        to:            DestinationPadId,
         /// Source channel mask
         from_channels: ChannelMask,
         /// Destination channel mask
@@ -463,7 +463,7 @@ impl TaskSpec {
         Ok(())
     }
 
-    pub fn is_connected(&self, from: &NodePadId, to: &NodePadId) -> bool {
+    pub fn is_connected(&self, from: &SourcePadId, to: &DestinationPadId) -> bool {
         self.connections
             .iter()
             .any(|(_, connection)| &connection.from == from && &connection.to == to)
@@ -504,8 +504,9 @@ impl TaskSpec {
         Ok(())
     }
 
-    pub fn delete_connections_referencing(&mut self, flow_id: NodePadId) {
-        self.connections.retain(|_, value| &value.from != &flow_id && &value.to != &flow_id);
+    pub fn delete_connections_referencing(&mut self, node_id: &TaskNodeId) {
+        self.connections
+            .retain(|_, value| !(value.from.references(node_id) || value.to.references(node_id)));
     }
 
     pub fn add_track(&mut self, track_id: TrackNodeId, channels: MediaChannels) -> Result<(), ModifyTaskError> {
@@ -549,7 +550,8 @@ impl TaskSpec {
 
     pub fn delete_track(&mut self, node_id: TrackNodeId) -> Result<(), ModifyTaskError> {
         if self.tracks.remove(&node_id).is_some() {
-            self.delete_connections_referencing(NodePadId::TrackOutput(node_id));
+            let node_id = TaskNodeId::Track(node_id.clone());
+            self.delete_connections_referencing(&node_id);
 
             Ok(())
         } else {
@@ -559,8 +561,9 @@ impl TaskSpec {
 
     pub fn delete_fixed_instance(&mut self, node_id: FixedInstanceNodeId) -> Result<(), ModifyTaskError> {
         if self.fixed.remove(&node_id).is_some() {
-            self.delete_connections_referencing(NodePadId::FixedInstanceOutput(node_id.clone()));
-            self.delete_connections_referencing(NodePadId::FixedInstanceInput(node_id.clone()));
+            let node_Id = TaskNodeId::FixedInstance(node_id.clone());
+            self.delete_connections_referencing(&node_Id);
+            self.delete_connections_referencing(&node_Id);
 
             Ok(())
         } else {
@@ -570,8 +573,9 @@ impl TaskSpec {
 
     pub fn delete_dynamic_instance(&mut self, node_id: DynamicInstanceNodeId) -> Result<(), ModifyTaskError> {
         if self.dynamic.remove(&node_id).is_some() {
-            self.delete_connections_referencing(NodePadId::DynamicInstanceOutput(node_id.clone()));
-            self.delete_connections_referencing(NodePadId::DynamicInstanceInput(node_id.clone()));
+            let node_id = TaskNodeId::DynamicInstance(node_id.clone());
+            self.delete_connections_referencing(&node_id);
+            self.delete_connections_referencing(&node_id);
 
             Ok(())
         } else {
@@ -589,8 +593,8 @@ impl TaskSpec {
 
     pub fn add_connection(&mut self,
                           connection_id: NodeConnectionId,
-                          from: NodePadId,
-                          to: NodePadId,
+                          from: SourcePadId,
+                          to: DestinationPadId,
                           from_channels: ChannelMask,
                           to_channels: ChannelMask,
                           volume: f64,
@@ -598,16 +602,6 @@ impl TaskSpec {
                           -> Result<(), ModifyTaskError> {
         if self.connections.contains_key(&connection_id) {
             return Err(ConnectionExists { connection_id });
-        }
-
-        if !from.is_output() {
-            return Err(ConnectionMalformed { connection_id,
-                                             message: format!("{from} is not an output") });
-        }
-
-        if !to.is_input() {
-            return Err(ConnectionMalformed { connection_id,
-                                             message: format!("{to} is not an input") });
         }
 
         self.connections.insert(connection_id,

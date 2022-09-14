@@ -11,7 +11,8 @@ use utoipa::OpenApi;
 use crate::common::change::ModifyTaskError;
 use crate::common::model::ResourceId;
 use crate::{
-    merge_schemas, AppId, AppMediaObjectId, AppTaskId, DomainId, DynamicInstanceNodeId, FixedInstanceId, FixedInstanceNodeId, ModelId,
+    merge_schemas, AppId, AppMediaObjectId, AppTaskId, ChannelMask, DomainId, DynamicInstanceNodeId, FixedInstanceId, FixedInstanceNodeId,
+    MixerNodeId, ModelId, NodeConnectionId, TrackNodeId,
 };
 
 pub mod apps;
@@ -56,11 +57,35 @@ pub enum CloudError {
     #[error("Instances overlapping: {instance_ids:?}")]
     OverlappingFixedInstances { instance_ids: HashSet<FixedInstanceId> },
 
+    #[error("Connection error: {connection_id}: {error}")]
+    ConnectionError {
+        connection_id: NodeConnectionId,
+        error:         Box<CloudError>,
+    },
+
+    #[error("Channel mask {mask:?} is invalid for channel count {channels}")]
+    ChannelMaskIncompatible { mask: ChannelMask, channels: usize },
+
+    #[error("Mixer instance node not found: {mixer_node_id}")]
+    MixerNodeNotFound { mixer_node_id: MixerNodeId },
+
+    #[error("Mixer instance node not found: {track_node_id}")]
+    TrackNodeNotFound { track_node_id: TrackNodeId },
+
+    #[error("Fixd instance node not found: {fixed_node_id}")]
+    FixedInstanceNodeNotFound { fixed_node_id: FixedInstanceNodeId },
+
+    #[error("Dynamic instance node not found: {dynamic_node_id}")]
+    DynamicInstanceNodeNotFound { dynamic_node_id: DynamicInstanceNodeId },
+
     #[error("Domain {domain_id} unknown")]
     DomainNotFound { domain_id: DomainId },
 
     #[error("Instance {instance_id} unknown")]
     InstanceNotFound { instance_id: FixedInstanceId },
+
+    #[error("Model {model_id} unknown")]
+    ModelNotFound { model_id: ModelId },
 
     #[error("Model {model_id} of a dynamic instance required by node {node_id} is not supported on domain {domain_id}")]
     DynamicInstanceNotSupported {

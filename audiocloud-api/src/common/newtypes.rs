@@ -1,6 +1,5 @@
 //! Various IDs and wrappers
 
-use schemars::JsonSchema;
 use std::fmt::Formatter;
 use std::marker::PhantomData;
 use std::str::FromStr;
@@ -8,11 +7,11 @@ use std::str::FromStr;
 use derive_more::{Constructor, Deref, Display, From, FromStr, IsVariant};
 use once_cell::sync::OnceCell;
 use regex::Regex;
+use schemars::JsonSchema;
 use serde::{Deserialize, Deserializer, Serialize, Serializer};
-use serde_json::Value;
 
 use crate::cloud::CloudError;
-use crate::common::task::NodePadId;
+use crate::{DestinationPadId, SourcePadId};
 
 /// Id of a fixed instance
 #[derive(Clone, Debug, Eq, PartialEq, Hash, Display, Constructor)]
@@ -154,8 +153,8 @@ impl<'de, K, V, T> serde::de::Visitor<'de> for Tuple2Visitor<K, V, T>
 pub struct TrackNodeId(String);
 
 impl TrackNodeId {
-    pub fn flow(self) -> NodePadId {
-        NodePadId::TrackOutput(self)
+    pub fn source(self) -> SourcePadId {
+        SourcePadId::TrackOutput(self)
     }
 }
 
@@ -170,11 +169,11 @@ pub struct TrackMediaId(String);
 pub struct MixerNodeId(String);
 
 impl MixerNodeId {
-    pub fn input_flow(self) -> NodePadId {
-        NodePadId::MixerInput(self)
+    pub fn input_flow(self) -> DestinationPadId {
+        DestinationPadId::MixerInput(self)
     }
-    pub fn output_flow(self) -> NodePadId {
-        NodePadId::MixerOutput(self)
+    pub fn output_flow(self) -> SourcePadId {
+        SourcePadId::MixerOutput(self)
     }
 }
 
@@ -184,11 +183,11 @@ impl MixerNodeId {
 pub struct DynamicInstanceNodeId(String);
 
 impl DynamicInstanceNodeId {
-    pub fn input_flow(self) -> NodePadId {
-        NodePadId::DynamicInstanceInput(self)
+    pub fn input_flow(self) -> DestinationPadId {
+        DestinationPadId::DynamicInstanceInput(self)
     }
-    pub fn output_flow(self) -> NodePadId {
-        NodePadId::DynamicInstanceOutput(self)
+    pub fn output_flow(self) -> SourcePadId {
+        SourcePadId::DynamicInstanceOutput(self)
     }
 }
 
@@ -198,11 +197,11 @@ impl DynamicInstanceNodeId {
 pub struct FixedInstanceNodeId(String);
 
 impl FixedInstanceNodeId {
-    pub fn input_flow(self) -> NodePadId {
-        NodePadId::FixedInstanceInput(self)
+    pub fn input_flow(self) -> DestinationPadId {
+        DestinationPadId::FixedInstanceInput(self)
     }
-    pub fn output_flow(self) -> NodePadId {
-        NodePadId::FixedInstanceOutput(self)
+    pub fn output_flow(self) -> SourcePadId {
+        SourcePadId::FixedInstanceOutput(self)
     }
 }
 
@@ -327,7 +326,7 @@ impl FromStr for AppMediaObjectId {
     type Err = serde_json::Error;
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
-        serde_json::from_value(Value::String(s.to_string()))
+        serde_json::from_value(serde_json::Value::String(s.to_string()))
     }
 }
 

@@ -1,17 +1,15 @@
 use std::collections::{HashMap, HashSet};
 use std::fmt::{Display, Formatter};
 use std::ops::Range;
-use std::str::FromStr;
 
-use derive_more::{IsVariant, Unwrap};
+use derive_more::{From, IsVariant, Unwrap};
 use schemars::JsonSchema;
-use serde::{Deserialize, Deserializer, Serialize, Serializer};
+use serde::{Deserialize, Serialize};
 use serde_json::Value;
 
 use crate::cloud::tasks::CreateTask;
 use crate::cloud::CloudError;
-use crate::cloud::CloudError::InternalInconsistency;
-use crate::json_schema_new_type;
+use crate::cloud::CloudError::*;
 use crate::time::TimeRange;
 use crate::{
     DomainId, DynamicInstanceNodeId, FixedInstanceId, FixedInstanceNodeId, MediaObjectId, MixerNodeId, Model, ModelId,
@@ -69,34 +67,98 @@ impl TaskSpec {
         let to = &connection.to;
         let from = &connection.from;
 
-        if !from.is_output() {
-            return Err(InternalInconsistency { message: format!("Connection {id} flow from {from} is not an output"), });
-        }
-
-        if !to.is_input() {
-            return Err(InternalInconsistency { message: format!("Connection {id} flow to {to} is not an input"), });
-        }
-
-        self.check_channel_exists(id, &connection.from, &connection.from_channels, models)?;
-        self.check_channel_exists(id, &connection.to, &connection.to_channels, models)?;
+        self.check_source_channel_exists(id, &connection.from, connection.from_channels, models)?;
+        self.check_destination_channel_exists(id, &connection.to, connection.to_channels, models)?;
 
         Ok(())
     }
 
-    fn check_channel_exists(&self,
-                            id: &NodeConnectionId,
-                            flow_id: &NodePadId,
-                            channels: &ChannelMask,
-                            models: &HashMap<ModelId, Model>)
-                            -> Result<(), CloudError> {
-        match flow_id {
-            NodePadId::MixerInput(mixer_id) => self.check_channel_exists_mixer(id, mixer_id, channels),
-            NodePadId::MixerOutput(mixer_id) => self.check_channel_exists_mixer(id, mixer_id, channels),
-            NodePadId::FixedInstanceInput(fixed_id) => self.check_channel_exists_fixed(id, fixed_id, channels, false, models),
-            NodePadId::FixedInstanceOutput(fixed_id) => self.check_channel_exists_fixed(id, fixed_id, channels, true, models),
-            NodePadId::DynamicInstanceInput(dynamic_id) => self.check_channel_exists_dynamic(id, dynamic_id, channels, false, models),
-            NodePadId::DynamicInstanceOutput(dynamic_id) => self.check_channel_exists_dynamic(id, dynamic_id, channels, true, models),
-            NodePadId::TrackOutput(track_id) => self.check_channel_exists_track(id, track_id, channels),
+    fn check_source_channel_exists(&self,
+                                   connection_id: &NodeConnectionId,
+                                   pad_id: &SourcePadId,
+                                   channels: ChannelMask,
+                                   models: &HashMap<ModelId, Model>)
+                                   -> Result<(), CloudError> {
+        let complete_error = |error| ConnectionError { connection_id: connection_id.clone(),
+                                                       error:         Box::new(error), };
+
+        match pad_id {
+            SourcePadId::MixerOutput(id) => self.mixers
+                                                .get(id)
+                                                .ok_or_else(|| MixerNodeNotFound { mixer_node_id: id.clone() })
+                                                .and_then(|node| node.validate_source_channels(channels))
+                                                .map_err(complete_error),
+            SourcePadId::FixedInstanceOutput(id) => {
+                let fixed = self.fixed
+                                .get(id)
+                                .ok_or_else(|| FixedInstanceNodeNotFound { fixed_node_id: id.clone() })
+                                .map_err(complete_error)?;
+
+                let model = models.get(&fixed.instance_id.model_id())
+                                  .ok_or_else(|| ModelNotFound { model_id: fixed.instance_id.model_id(), })
+                                  .map_err(complete_error)?;
+
+                fixed.validate_source_channels(channels, model).map_err(complete_error)
+            }
+            SourcePadId::DynamicInstanceOutput(id) => {
+                let dynamic = self.dynamic
+                                  .get(id)
+                                  .ok_or_else(|| DynamicInstanceNodeNotFound { dynamic_node_id: id.clone(), })
+                                  .map_err(complete_error)?;
+
+                let model = models.get(&dynamic.model_id)
+                                  .ok_or_else(|| ModelNotFound { model_id: dynamic.model_id.clone(), })
+                                  .map_err(complete_error)?;
+
+                dynamic.validate_source_channels(channels, model).map_err(complete_error)
+            }
+            SourcePadId::TrackOutput(id) => self.tracks
+                                                .get(id)
+                                                .ok_or_else(|| TrackNodeNotFound { track_node_id: id.clone() })
+                                                .and_then(|node| node.validate_source_channels(channels))
+                                                .map_err(complete_error),
+        }
+    }
+
+    fn check_destination_channel_exists(&self,
+                                        connection_id: &NodeConnectionId,
+                                        pad_id: &DestinationPadId,
+                                        channels: ChannelMask,
+                                        models: &HashMap<ModelId, Model>)
+                                        -> Result<(), CloudError> {
+        let complete_error = |error| ConnectionError { connection_id: connection_id.clone(),
+                                                       error:         Box::new(error), };
+
+        match pad_id {
+            DestinationPadId::MixerInput(id) => self.mixers
+                                                    .get(id)
+                                                    .ok_or_else(|| MixerNodeNotFound { mixer_node_id: id.clone() })
+                                                    .and_then(|node| node.validate_destination_channels(channels))
+                                                    .map_err(complete_error),
+            DestinationPadId::FixedInstanceInput(id) => {
+                let fixed = self.fixed
+                                .get(id)
+                                .ok_or_else(|| FixedInstanceNodeNotFound { fixed_node_id: id.clone() })
+                                .map_err(complete_error)?;
+
+                let model = models.get(&fixed.instance_id.model_id())
+                                  .ok_or_else(|| ModelNotFound { model_id: fixed.instance_id.model_id(), })
+                                  .map_err(complete_error)?;
+
+                fixed.validate_destination_channels(channels, model).map_err(complete_error)
+            }
+            DestinationPadId::DynamicInstanceInput(id) => {
+                let dynamic = self.dynamic
+                                  .get(id)
+                                  .ok_or_else(|| DynamicInstanceNodeNotFound { dynamic_node_id: id.clone(), })
+                                  .map_err(complete_error)?;
+
+                let model = models.get(&dynamic.model_id)
+                                  .ok_or_else(|| ModelNotFound { model_id: dynamic.model_id.clone(), })
+                                  .map_err(complete_error)?;
+
+                dynamic.validate_destination_channels(channels, model).map_err(complete_error)
+            }
         }
     }
 
@@ -216,12 +278,40 @@ impl From<CreateTask> for Task {
 }
 
 /// Mixer node specification
-#[derive(Clone, Debug, Serialize, Deserialize, PartialEq, JsonSchema)]
+#[derive(Clone, Copy, Debug, Serialize, Deserialize, PartialEq, JsonSchema)]
 pub struct MixerNode {
     /// Numvber of input channels on the mixer node
     pub input_channels:  usize,
     /// Number of output channels on the mixer node
     pub output_channels: usize,
+}
+
+impl MixerNode {
+    pub fn validate_source_channels(&self, mask: ChannelMask) -> Result<(), CloudError> {
+        let Self { output_channels, .. } = *self;
+
+        let half_output_channels = output_channels / 2;
+
+        if matches!(mask, ChannelMask::Mono(i) if i < output_channels) || matches!(mask, ChannelMask::Stereo(i) if i < output_channels) {
+            Ok(())
+        } else {
+            Err(ChannelMaskIncompatible { mask:     mask.clone(),
+                                          channels: output_channels, })
+        }
+    }
+
+    pub fn validate_destination_channels(&self, mask: ChannelMask) -> Result<(), CloudError> {
+        let Self { input_channels, .. } = *self;
+
+        let half_input_channels = input_channels / 2;
+
+        if matches!(mask, ChannelMask::Mono(i) if i < input_channels) || matches!(mask, ChannelMask::Stereo(i) if i < input_channels) {
+            Ok(())
+        } else {
+            Err(ChannelMaskIncompatible { mask:     mask.clone(),
+                                          channels: input_channels, })
+        }
+    }
 }
 
 /// Dynamic node specification
@@ -231,6 +321,32 @@ pub struct DynamicInstanceNode {
     pub model_id:   ModelId,
     /// Parameter values
     pub parameters: InstanceParameters,
+}
+
+impl DynamicInstanceNode {
+    pub fn validate_source_channels(&self, mask: ChannelMask, model: &Model) -> Result<(), CloudError> {
+        let output_channels = model.get_audio_output_channel_count();
+        let half_output_channels = output_channels / 2;
+
+        if matches!(mask, ChannelMask::Mono(i) if i < output_channels) || matches!(mask, ChannelMask::Stereo(i) if i < output_channels) {
+            Ok(())
+        } else {
+            Err(ChannelMaskIncompatible { mask:     mask.clone(),
+                                          channels: output_channels, })
+        }
+    }
+
+    pub fn validate_destination_channels(&self, mask: ChannelMask, model: &Model) -> Result<(), CloudError> {
+        let input_channels = model.get_audio_input_channel_count();
+        let half_input_channels = input_channels / 2;
+
+        if matches!(mask, ChannelMask::Mono(i) if i < input_channels) || matches!(mask, ChannelMask::Stereo(i) if i < input_channels) {
+            Ok(())
+        } else {
+            Err(ChannelMaskIncompatible { mask:     mask.clone(),
+                                          channels: input_channels, })
+        }
+    }
 }
 
 /// Fixed instance node specification
@@ -247,13 +363,40 @@ pub struct FixedInstanceNode {
     pub wet:         f64,
 }
 
+impl FixedInstanceNode {
+    pub fn validate_source_channels(&self, mask: ChannelMask, model: &Model) -> Result<(), CloudError> {
+        let input_channels = model.get_audio_input_channel_count();
+        let half_input_channels = input_channels / 2;
+
+        if matches!(mask, ChannelMask::Mono(i) if i < input_channels) || matches!(mask, ChannelMask::Stereo(i) if i < half_input_channels) {
+            Ok(())
+        } else {
+            Err(ChannelMaskIncompatible { mask:     mask.clone(),
+                                          channels: input_channels, })
+        }
+    }
+
+    pub fn validate_destination_channels(&self, mask: ChannelMask, model: &Model) -> Result<(), CloudError> {
+        let output_channels = model.get_audio_output_channel_count();
+        let half_output_channels = output_channels / 2;
+
+        if matches!(mask, ChannelMask::Mono(i) if i < output_channels) || matches!(mask, ChannelMask::Stereo(i) if i < half_output_channels)
+        {
+            Ok(())
+        } else {
+            Err(ChannelMaskIncompatible { mask:     mask.clone(),
+                                          channels: output_channels, })
+        }
+    }
+}
+
 /// Connection between nodes in a task
 #[derive(Clone, Debug, Serialize, Deserialize, PartialEq, JsonSchema)]
 pub struct NodeConnection {
     /// Source node pad
-    pub from:          NodePadId,
+    pub from:          SourcePadId,
     /// Destination node pad
-    pub to:            NodePadId,
+    pub to:            DestinationPadId,
     /// Source channel mask
     pub from_channels: ChannelMask,
     /// Destination channel mask
@@ -321,95 +464,94 @@ impl ChannelMask {
     }
 }
 
-/// An input or output pad of a node inside a task
-#[derive(Clone, Debug, PartialEq, IsVariant, Unwrap, Hash, Eq, PartialOrd, Ord)]
-pub enum NodePadId {
-    /// Mixer node input pad
+/// A pad that can receive connections on a node inside a task
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, IsVariant, Unwrap, Hash, Eq, PartialOrd, Ord, JsonSchema)]
+pub enum DestinationPadId {
+    /// Mixer node input
+    #[serde(rename = "mixer")]
     MixerInput(MixerNodeId),
-    /// Mixer node output pad
-    MixerOutput(MixerNodeId),
-    /// Fixed instance input pad
+
+    /// Fixed instance node input
+    #[serde(rename = "fixed")]
     FixedInstanceInput(FixedInstanceNodeId),
-    /// Fixed instance output pad
-    FixedInstanceOutput(FixedInstanceNodeId),
-    /// Dynamic instance input pad
+
+    /// Dynamic instance node input
+    #[serde(rename = "dynamic")]
     DynamicInstanceInput(DynamicInstanceNodeId),
-    /// Dynamic instance output pad
+}
+
+impl DestinationPadId {
+    pub fn references(&self, node_id: &TaskNodeId) -> bool {
+        match (self, node_id) {
+            (Self::MixerInput(mixer_id), TaskNodeId::Mixer(ref_mixer_id)) => mixer_id == ref_mixer_id,
+            (Self::FixedInstanceInput(fixed_id), TaskNodeId::FixedInstance(ref_fixed_id)) => fixed_id == ref_fixed_id,
+            (Self::DynamicInstanceInput(dynamic_id), TaskNodeId::DynamicInstance(ref_dynamic_id)) => dynamic_id == ref_dynamic_id,
+            _ => false,
+        }
+    }
+}
+
+/// A pad that can receive connections on a node inside a task
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, IsVariant, Unwrap, Hash, Eq, PartialOrd, Ord, JsonSchema)]
+pub enum SourcePadId {
+    /// Mixer node output
+    #[serde(rename = "mixer")]
+    MixerOutput(MixerNodeId),
+
+    /// Fixed instance node output
+    #[serde(rename = "fixed")]
+    FixedInstanceOutput(FixedInstanceNodeId),
+
+    /// Dynamic instance node output
+    #[serde(rename = "dynamic")]
     DynamicInstanceOutput(DynamicInstanceNodeId),
-    /// Track node output pad
+
+    /// Track node output
+    #[serde(rename = "track")]
     TrackOutput(TrackNodeId),
 }
 
-impl NodePadId {
-    pub fn is_input(&self) -> bool {
-        matches!(self,
-                 NodePadId::MixerInput(_) | NodePadId::FixedInstanceInput(_) | NodePadId::DynamicInstanceInput(_))
-    }
-
-    pub fn is_output(&self) -> bool {
-        matches!(self,
-                 NodePadId::MixerOutput(_)
-                 | NodePadId::FixedInstanceOutput(_)
-                 | NodePadId::DynamicInstanceOutput(_)
-                 | NodePadId::TrackOutput(_))
+impl SourcePadId {
+    pub fn references(&self, node_id: &TaskNodeId) -> bool {
+        match (self, node_id) {
+            (Self::TrackOutput(track_id), TaskNodeId::Track(ref_track_id)) => track_id == ref_track_id,
+            (Self::DynamicInstanceOutput(instance_id), TaskNodeId::DynamicInstance(ref_instance_id)) => instance_id == ref_instance_id,
+            (Self::FixedInstanceOutput(instance_id), TaskNodeId::FixedInstance(ref_instance_id)) => instance_id == ref_instance_id,
+            (Self::MixerOutput(mixer_id), TaskNodeId::Mixer(ref_mixer_id)) => mixer_id == ref_mixer_id,
+            _ => false,
+        }
     }
 }
 
-impl std::fmt::Display for NodePadId {
+impl std::fmt::Display for SourcePadId {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        let inner_json = match serde_json::to_value(self).unwrap() {
-            serde_json::Value::String(s) => s,
-            _ => unreachable!(),
-        };
-        f.write_str(&inner_json)
+        match self {
+            Self::MixerOutput(id) => write!(f, "mixer:{}", id),
+            Self::FixedInstanceOutput(id) => write!(f, "fixed:{}", id),
+            Self::DynamicInstanceOutput(id) => write!(f, "dynamic:{}", id),
+            Self::TrackOutput(id) => write!(f, "track:{}", id),
+        }
     }
 }
 
-impl Serialize for NodePadId {
-    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
-        where S: Serializer
-    {
-        serializer.serialize_str(&match self {
-                                     NodePadId::MixerInput(mixer) => format!("mix:inp:{mixer}"),
-                                     NodePadId::FixedInstanceInput(fixed) => format!("fix:inp:{fixed}"),
-                                     NodePadId::DynamicInstanceInput(dynamic) => format!("dyn:inp:{dynamic}"),
-                                     NodePadId::MixerOutput(mixer) => format!("mix:out:{mixer}"),
-                                     NodePadId::FixedInstanceOutput(fixed) => format!("fix:out:{fixed}"),
-                                     NodePadId::DynamicInstanceOutput(dynamic) => format!("dyn:out:{dynamic}"),
-                                     NodePadId::TrackOutput(track) => format!("trk:out:{track}"),
-                                 })
+impl std::fmt::Display for DestinationPadId {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            Self::MixerInput(id) => write!(f, "mixer:{}", id),
+            Self::FixedInstanceInput(id) => write!(f, "fixed:{}", id),
+            Self::DynamicInstanceInput(id) => write!(f, "dynamic:{}", id),
+        }
     }
 }
 
-impl<'de> Deserialize<'de> for NodePadId {
-    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
-        where D: Deserializer<'de>
-    {
-        let err = |msg| serde::de::Error::custom(msg);
-        let string = String::deserialize(deserializer)?;
-        let sep_pos = string.find(':').ok_or_else(|| err("expected separator ':'"))?;
-        let sep_pos2 = string[(sep_pos + 1)..].find(':').ok_or_else(|| err("expected separator ':'"))?;
-        let rest = string[(sep_pos + sep_pos2 + 2)..].to_owned();
-
-        Ok(match (&string[..sep_pos], &string[(sep_pos + 1)..(sep_pos + sep_pos2 + 1)]) {
-            ("mix", "inp") => Self::MixerInput(MixerNodeId::new(rest)),
-            ("mix", "out") => Self::MixerOutput(MixerNodeId::new(rest)),
-            ("fix", "inp") => Self::FixedInstanceInput(FixedInstanceNodeId::new(rest)),
-            ("fix", "out") => Self::FixedInstanceOutput(FixedInstanceNodeId::new(rest)),
-            ("dyn", "inp") => Self::DynamicInstanceInput(DynamicInstanceNodeId::new(rest)),
-            ("dyn", "out") => Self::DynamicInstanceOutput(DynamicInstanceNodeId::new(rest)),
-            ("trk", "out") => Self::TrackOutput(TrackNodeId::new(rest)),
-            (a, b) => return Err(err(&format!("unrecognized NodePadId variant: '{a}', '{b}'"))),
-        })
-    }
-}
-
-impl FromStr for NodePadId {
-    type Err = serde_json::Error;
-
-    fn from_str(s: &str) -> Result<Self, Self::Err> {
-        serde_json::from_str(s)
-    }
+/// Task node identifier
+#[derive(Clone, Debug, Serialize, Deserialize, PartialEq, JsonSchema, From)]
+#[serde(rename_all = "snake_case")]
+pub enum TaskNodeId {
+    Mixer(MixerNodeId),
+    FixedInstance(FixedInstanceNodeId),
+    DynamicInstance(DynamicInstanceNodeId),
+    Track(TrackNodeId),
 }
 
 /// Track node specification
@@ -419,6 +561,23 @@ pub struct TrackNode {
     pub channels: MediaChannels,
     /// Media items present on the track
     pub media:    HashMap<TrackMediaId, TrackMedia>,
+}
+
+impl TrackNode {
+    pub fn validate_source_channels(&self, mask: ChannelMask) -> Result<(), CloudError> {
+        let Self { channels, .. } = self;
+
+        let channels = channels.num_channels();
+        let half_channels = channels / 2;
+
+        if matches!(mask, ChannelMask::Mono(i) if i < channels) {
+            Ok(())
+        } else if matches!(mask, ChannelMask::Stereo(i) if i < half_channels) {
+            Ok(())
+        } else {
+            Err(ChannelMaskIncompatible { mask, channels })
+        }
+    }
 }
 
 /// Channel count for media items and track nodes
@@ -540,5 +699,3 @@ impl TaskPermissions {
                           audio:      true, }
     }
 }
-
-json_schema_new_type!(NodePadId);
