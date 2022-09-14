@@ -51,7 +51,7 @@ jobs:
           skip-tag: 'true'
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          PACKAGEJSON_DIR: packages
+          PACKAGEJSON_DIR: packages/workdir
   publish:
     name: Publish
     runs-on: ubuntu-latest
@@ -76,16 +76,14 @@ jobs:
           node-version: '18.x'
           registry-url: 'https://registry.npmjs.org'
       - run: |
-          cp ../${{ matrix.package.schema }} .
+          cp ../../${{ matrix.package.schema }} .
           envsubst < package.json > package2.json
           mv package2.json package.json
-          ls -lR
-          cat package.json
           npm install
           npm run generate
           npm run build
         name: Install deps, generate and build client
-        working-directory: './packages'
+        working-directory: './packages/workdir'
         env:
           PACKAGE: ${{ matrix.package.name }}
           SCHEMA: ${{ matrix.package.schema }}
@@ -94,4 +92,4 @@ jobs:
         name: Publish to NPM
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
-        working-directory: './packages'
+        working-directory: './packages/workdir'
