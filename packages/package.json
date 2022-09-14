@@ -1,0 +1,28 @@
+{
+  "name": "@audiocloud/$PACKAGE",
+  "version": "2.0.2",
+  "description": "AudioCloud $PACKAGE",
+  "main": "dist/cjs/index.js",
+  "module": "dist/esm/index.js",
+  "types": "dist/types/index.d.ts",
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "scripts": {
+    "generate": "npx openapi-typescript-codegen --input $SCHEMA --output ./src --useUnionTypes",
+    "build": "tsc && tsc -p tsconfig-cjs.json && tsc -p tsconfig-types.json"
+  },
+  "devDependencies": {
+    "typescript": "^4",
+    "openapi-typescript-codegen": "^0.23.0"
+  },
+  "keywords": [
+    "audiocloud",
+    "audio",
+    "api",
+    "client",
+    "$PACKAGE"
+  ],
+  "author": "Bojan Šernek",
+  "license": "ISC"
+}

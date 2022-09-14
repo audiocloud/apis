@@ -15,8 +15,8 @@ pub struct CloudInsert2X2Preset {}
 pub struct CloudInsert2X2Parameters {}
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
 pub struct CloudInsert2X2Reports {
-    pub insert_output: Option<Stereo<f64>>,
-    pub insert_input: Option<Stereo<f64>>,}
+    pub insert_input: Option<Stereo<f64>>,
+    pub insert_output: Option<Stereo<f64>>,}
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
 pub struct CloudInsert24X2Preset {}
@@ -43,52 +43,52 @@ pub mod distopik {
 use super::*;
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
-pub struct SummatraPreset {
-    pub bus_assign: Vec<u64>,
-    pub input: Vec<f64>,
-    pub pan: Vec<f64>,}
-#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
-pub struct SummatraParameters {
-    pub bus_assign: Option<Vec<u64>>,
-    pub input: Option<Vec<f64>>,
-    pub pan: Option<Vec<f64>>,}
-#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
-pub struct SummatraReports {}
-
-#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
 pub struct Dual1084Preset {
-    pub high_mid_gain: Stereo<f64>,
-    pub high_pass_filter: Stereo<ToggleOr<u64>>,
-    pub input_gain: Stereo<ToggleOr<i64>>,
-    pub high_mid_freq: Stereo<ToggleOr<u64>>,
-    pub high_gain: Stereo<f64>,
-    pub low_freq: Stereo<ToggleOr<u64>>,
-    pub low_mid_freq: Stereo<ToggleOr<u64>>,
-    pub eql_toggle: Stereo<bool>,
-    pub low_mid_gain: Stereo<f64>,
     pub low_gain: Stereo<f64>,
-    pub output_pad: Stereo<ToggleOr<i64>>,
-    pub low_mid_width: Stereo<bool>,
+    pub low_freq: Stereo<ToggleOr<u64>>,
     pub high_freq: Stereo<ToggleOr<u64>>,
+    pub low_mid_gain: Stereo<f64>,
+    pub output_pad: Stereo<ToggleOr<i64>>,
+    pub eql_toggle: Stereo<bool>,
+    pub high_mid_freq: Stereo<ToggleOr<u64>>,
+    pub low_mid_width: Stereo<bool>,
+    pub input_gain: Stereo<ToggleOr<i64>>,
+    pub high_mid_gain: Stereo<f64>,
+    pub high_gain: Stereo<f64>,
+    pub high_pass_filter: Stereo<ToggleOr<u64>>,
+    pub low_mid_freq: Stereo<ToggleOr<u64>>,
     pub high_mid_width: Stereo<bool>,}
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
 pub struct Dual1084Parameters {
-    pub high_mid_gain: Option<Stereo<f64>>,
-    pub high_pass_filter: Option<Stereo<ToggleOr<u64>>>,
-    pub input_gain: Option<Stereo<ToggleOr<i64>>>,
-    pub high_mid_freq: Option<Stereo<ToggleOr<u64>>>,
-    pub high_gain: Option<Stereo<f64>>,
-    pub low_freq: Option<Stereo<ToggleOr<u64>>>,
-    pub low_mid_freq: Option<Stereo<ToggleOr<u64>>>,
-    pub eql_toggle: Option<Stereo<bool>>,
-    pub low_mid_gain: Option<Stereo<f64>>,
     pub low_gain: Option<Stereo<f64>>,
-    pub output_pad: Option<Stereo<ToggleOr<i64>>>,
-    pub low_mid_width: Option<Stereo<bool>>,
+    pub low_freq: Option<Stereo<ToggleOr<u64>>>,
     pub high_freq: Option<Stereo<ToggleOr<u64>>>,
+    pub low_mid_gain: Option<Stereo<f64>>,
+    pub output_pad: Option<Stereo<ToggleOr<i64>>>,
+    pub eql_toggle: Option<Stereo<bool>>,
+    pub high_mid_freq: Option<Stereo<ToggleOr<u64>>>,
+    pub low_mid_width: Option<Stereo<bool>>,
+    pub input_gain: Option<Stereo<ToggleOr<i64>>>,
+    pub high_mid_gain: Option<Stereo<f64>>,
+    pub high_gain: Option<Stereo<f64>>,
+    pub high_pass_filter: Option<Stereo<ToggleOr<u64>>>,
+    pub low_mid_freq: Option<Stereo<ToggleOr<u64>>>,
     pub high_mid_width: Option<Stereo<bool>>,}
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
 pub struct Dual1084Reports {}
+
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
+pub struct SummatraPreset {
+    pub input: Vec<f64>,
+    pub pan: Vec<f64>,
+    pub bus_assign: Vec<u64>,}
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
+pub struct SummatraParameters {
+    pub input: Option<Vec<f64>>,
+    pub pan: Option<Vec<f64>>,
+    pub bus_assign: Option<Vec<u64>>,}
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
+pub struct SummatraReports {}
 
 }
 
@@ -123,12 +123,12 @@ pub fn schemas() -> RootSchema {
       schema_for!(self::audio::CloudInsert1X1Preset),
       schema_for!(self::audio::CloudInsert1X1Parameters),
       schema_for!(self::audio::CloudInsert1X1Reports),
-      schema_for!(self::distopik::SummatraPreset),
-      schema_for!(self::distopik::SummatraParameters),
-      schema_for!(self::distopik::SummatraReports),
       schema_for!(self::distopik::Dual1084Preset),
       schema_for!(self::distopik::Dual1084Parameters),
       schema_for!(self::distopik::Dual1084Reports),
+      schema_for!(self::distopik::SummatraPreset),
+      schema_for!(self::distopik::SummatraParameters),
+      schema_for!(self::distopik::SummatraReports),
       schema_for!(self::netio::PowerPdu4CPreset),
       schema_for!(self::netio::PowerPdu4CParameters),
       schema_for!(self::netio::PowerPdu4CReports),

@@ -37,18 +37,35 @@ jobs:
         with:
           name: schemas
           path: openapi_*.json
+  bump:
+    name: Bump version
+    runs-on: ubuntu-latest
+    needs: schemas
+    steps:
+      - name: 'Checkout source code'
+        uses: 'actions/checkout@v2'
+        with:
+          ref: ${{ github.ref }}
+      - name: 'Automated Version Bump'
+        id: version-bump
+        uses: 'phips28/gh-action-bump-version@master'
+        with:
+          tag-prefix: 'v'
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          PACKAGEJSON_DIR: packages
   publish:
     name: Publish
     runs-on: ubuntu-latest
-    needs: schemas
+    needs: bump
     strategy:
       matrix:
         package:
-          - { dir: cloud-client, schema: openapi_cloud.json }
-          - { dir: domain-client, schema: openapi_domain.json }
-          - { dir: audio-engine-client, schema: openapi_audio_engine.json }
-          - { dir: instance-driver-client, schema: openapi_instance_driver.json }
-          - { dir: models, schema: openapi_models.json }
+          - { name: cloud-client, schema: openapi_cloud.json }
+          - { name: domain-client, schema: openapi_domain.json }
+          - { name: audio-engine-client, schema: openapi_audio_engine.json }
+          - { name: instance-driver-client, schema: openapi_instance_driver.json }
+          - { name: models, schema: openapi_models.json }
     steps:
       - uses: actions/checkout@v2
         name: Checkout API code
@@ -60,16 +77,24 @@ jobs:
         with:
           node-version: '18.x'
           registry-url: 'https://registry.npmjs.org'
+      - name: Render package.json
+        uses: nowactions/envsubst@v1
+        with:
+          input: ./packages/package.json
+          output: ./packages/package.json
+        env:
+          PACKAGE: ${{ matrix.package.name }}
+          SCHEMA: ${{ matrix.package.schema }}
       - run: |
-          cp ../../${{ matrix.package.schema }} .
+          cp ../${{ matrix.package.schema }} .
           npm install
           npm run generate
-          npx tsc
+          npm run build
         name: Install deps, generate and build client
-        working-directory: './packages/${{ matrix.package.dir }}'
+        working-directory: './packages'
       - run: |
-          npm publish --access public || true
+          npm publish --access public
         name: Publish to NPM
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
-        working-directory: './packages/${{ matrix.package.dir }}'
+        working-directory: './packages'
