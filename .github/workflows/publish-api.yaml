@@ -87,6 +87,7 @@ jobs:
           SCHEMA: ${{ matrix.package.schema }}
       - run: |
           cp ../${{ matrix.package.schema }} .
+          ls -lR
           cat package.json
           npm install
           npm run generate
