@@ -77,16 +77,9 @@ jobs:
         with:
           node-version: '18.x'
           registry-url: 'https://registry.npmjs.org'
-      - name: Render package.json
-        uses: nowactions/envsubst@v1
-        with:
-          input: ./packages/package.json
-          output: ./packages/package.json
-        env:
-          PACKAGE: ${{ matrix.package.name }}
-          SCHEMA: ${{ matrix.package.schema }}
       - run: |
           cp ../${{ matrix.package.schema }} .
+          cat package.json | envsubst > package.json
           ls -lR
           cat package.json
           npm install
@@ -94,6 +87,9 @@ jobs:
           npm run build
         name: Install deps, generate and build client
         working-directory: './packages'
+        env:
+          PACKAGE: ${{ matrix.package.name }}
+          SCHEMA: ${{ matrix.package.schema }}
       - run: |
           npm publish --access public
         name: Publish to NPM
