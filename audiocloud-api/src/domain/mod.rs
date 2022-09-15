@@ -18,7 +18,7 @@ use crate::common::task::TaskPermissions;
 use crate::common::task::TaskSpec;
 use crate::instance_driver::InstanceDriverError;
 use crate::newtypes::{AppTaskId, SecureKey};
-use crate::{merge_schemas, AppId, AppMediaObjectId, EngineId, FixedInstanceId, ModifyTaskError, SocketId, TaskId};
+use crate::{merge_schemas, AppId, AppMediaObjectId, EngineId, FixedInstanceId, ModifyTaskError, RequestId, SocketId, TaskId};
 
 pub mod streaming;
 pub mod tasks;
@@ -129,6 +129,11 @@ pub fn schemas() -> RootSchema {
     merge_schemas([schema_for!(DomainError),
                    schema_for!(AppId),
                    schema_for!(TaskId),
+                   schema_for!(SocketId),
+                   schema_for!(RequestId),
+                   schema_for!(streaming::StreamStats),
+                   schema_for!(streaming::SocketMessage),
+                   schema_for!(streaming::SocketRequestMessage),
                    schema_for!(tasks::TaskSummaryList),
                    schema_for!(tasks::TaskWithStatusAndSpec),
                    schema_for!(tasks::CreateTask),

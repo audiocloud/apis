@@ -7,7 +7,7 @@
  request_body = SetMedia,
  responses(
   (status = 200, description = "Success", body = MediaUpdated),
-  (status = 404, description = "Not found", body = AudioEngineError),
+  (status = 404, description = "Not found", body = EngineError),
  ))]
 pub(crate) fn set_media() {}
 
@@ -22,6 +22,6 @@ pub(crate) fn set_media() {}
  request_body = SetInstances,
  responses(
   (status = 200, description = "Success", body = InstancesUpdated),
-  (status = 404, description = "Not found", body = AudioEngineError),
+  (status = 404, description = "Not found", body = EngineError),
  ))]
 pub(crate) fn set_instances() {}

@@ -8,7 +8,7 @@
  request_body = TaskSpec,
  responses(
   (status = 200, description = "Success", body = TaskReplaced),
-  (status = 401, description = "Not authorized", body = AudioEngineError),
+  (status = 401, description = "Not authorized", body = EngineError),
  ),
  params(
   ("app_id" = AppId, Path, description = "App id"),
@@ -26,8 +26,8 @@ pub(crate) fn set_spec() {}
  request_body = ModifyTaskSpec,
  responses(
   (status = 200, description = "Success", body = TaskModified),
-  (status = 400, description = "Modification failed", body = AudioEngineError),
-  (status = 404, description = "Not found", body = AudioEngineError),
+  (status = 400, description = "Modification failed", body = EngineError),
+  (status = 404, description = "Not found", body = EngineError),
  ),
  params(
   ("app_id" = AppId, Path, description = "App id"),
@@ -44,7 +44,7 @@ pub(crate) fn modify_spec() {}
  path = "/v1/tasks/{app_id}/{task_id}",
  responses(
   (status = 200, description = "Success", body = TaskDeleted),
-  (status = 404, description = "Not found", body = AudioEngineError),
+  (status = 404, description = "Not found", body = EngineError),
  ),
  params(
   ("app_id" = AppId, Path, description = "App id"),
@@ -60,7 +60,7 @@ pub(crate) fn delete() {}
  path = "/v1/tasks",
  responses(
   (status = 200, description = "Success", body = TaskWithStatusList),
-  (status = 404, description = "Not found", body = AudioEngineError),
+  (status = 404, description = "Not found", body = EngineError),
  ))]
 pub(crate) fn list() {}
 
@@ -74,7 +74,7 @@ pub(crate) fn list() {}
   request_body = RequestPlay,
   responses(
     (status = 200, description = "Success", body = TaskPlaying),
-    (status = 404, description = "Not found", body = AudioEngineError),
+    (status = 404, description = "Not found", body = EngineError),
   ),
   params(
     ("app_id" = AppId, Path, description = "App id"),
@@ -91,7 +91,7 @@ pub(crate) fn play() {}
   request_body = RequestSeek,
   responses(
     (status = 200, description = "Success", body = TaskSought),
-    (status = 404, description = "Task Not found", body = AudioEngineError),
+    (status = 404, description = "Task Not found", body = EngineError),
   ),
   params(
     ("app_id" = AppId, Path, description = "App id"),
@@ -108,7 +108,7 @@ pub(crate) fn seek() {}
   request_body = RequestChangeMixer,
   responses(
     (status = 200, description = "Success", body = TaskMixerChanged),
-    (status = 404, description = "Task or mixer Not found", body = AudioEngineError),
+    (status = 404, description = "Task or mixer Not found", body = EngineError),
   ),
   params(
     ("app_id" = AppId, Path, description = "App id"),
@@ -125,7 +125,7 @@ pub(crate) fn change_mixer() {}
   request_body = RequestStopPlay,
   responses(
     (status = 200, description = "Success", body = TaskPlayStopped),
-    (status = 404, description = "Task or mixer Not found", body = AudioEngineError),
+    (status = 404, description = "Task or mixer Not found", body = EngineError),
   ),
   params(
     ("app_id" = AppId, Path, description = "App id"),
@@ -142,7 +142,7 @@ pub(crate) fn stop_playing() {}
   request_body = RequestCancelRender,
   responses(
     (status = 200, description = "Success", body = TaskRenderCancelled),
-    (status = 404, description = "Task or mixer Not found", body = AudioEngineError),
+    (status = 404, description = "Task or mixer Not found", body = EngineError),
   ),
   params(
     ("app_id" = AppId, Path, description = "App id"),
@@ -162,7 +162,7 @@ pub(crate) fn cancel_render() {}
   request_body = RequestRender,
   responses(
     (status = 200, description = "Success", body = TaskRendering),
-    (status = 404, description = "Task or mixer Not found", body = AudioEngineError),
+    (status = 404, description = "Task or mixer Not found", body = EngineError),
   ),
   params(
     ("app_id" = AppId, Path, description = "App id"),
