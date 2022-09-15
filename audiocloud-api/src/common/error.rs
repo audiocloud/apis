@@ -1,28 +1,32 @@
+use std::fmt::Debug;
+
 use anyhow::anyhow;
+use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 
-#[derive(Serialize, Deserialize, Debug, Clone)]
+#[derive(Serialize, Deserialize, Debug, Clone, JsonSchema)]
 #[serde(rename_all = "snake_case")]
-pub enum SerializableResult<T = ()> {
+pub enum SerializableResult<T, E> {
     Ok(T),
-    Err { code: usize, message: String },
+    Error(E),
 }
 
-impl<T> Into<anyhow::Result<T>> for SerializableResult<T> {
+impl<T, E> Into<anyhow::Result<T>> for SerializableResult<T, E> where E: Debug
+{
     fn into(self) -> anyhow::Result<T> {
         match self {
             SerializableResult::Ok(t) => Ok(t),
-            SerializableResult::Err { code, message } => Err(anyhow!("Error code {code}: {message}")),
+            SerializableResult::Error(err) => Err(anyhow!("Error {err:?}")),
         }
     }
 }
 
-impl<T> From<anyhow::Result<T>> for SerializableResult<T> {
+impl<T, E> From<anyhow::Result<T>> for SerializableResult<T, E> where E: From<anyhow::Error>
+{
     fn from(res: anyhow::Result<T>) -> Self {
         match res {
             Ok(ok) => Self::Ok(ok),
-            Err(err) => Self::Err { code:    500,
-                                    message: err.to_string(), },
+            Err(err) => Self::Error(err.into()),
         }
     }
 }

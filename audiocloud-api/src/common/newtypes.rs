@@ -229,6 +229,11 @@ impl AppId {
 #[repr(transparent)]
 pub struct TaskId(String);
 
+/// Id of a request
+#[derive(Clone, Debug, Serialize, Deserialize, Eq, PartialEq, Ord, PartialOrd, Display, Deref, Constructor, Hash, From, FromStr)]
+#[repr(transparent)]
+pub struct RequestId(String);
+
 /// Id of an audio engine (there may be more than one in a domain)
 #[derive(Clone, Debug, Serialize, Deserialize, Eq, PartialEq, Ord, PartialOrd, Display, Deref, Constructor, Hash, From, FromStr)]
 #[repr(transparent)]
@@ -412,4 +417,6 @@ json_schema_new_type!(AppId,
                       ReportId,
                       ModelId,
                       TaskId,
+                      SocketId,
+                      RequestId,
                       EngineId);

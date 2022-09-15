@@ -1,3 +1,5 @@
+#![allow(unused_variables)]
+
 use std::collections::{HashMap, HashSet};
 use std::hash::Hash;
 
@@ -23,7 +25,7 @@ use self::ModifyTaskError::*;
 
 /// Modify task structure
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
-#[serde(rename_all = "snake_case")]
+#[serde(rename_all = "snake_case", tag = "type")]
 pub enum ModifyTaskSpec {
     /// Add a track node to the task
     AddTrack {
@@ -561,9 +563,9 @@ impl TaskSpec {
 
     pub fn delete_fixed_instance(&mut self, node_id: FixedInstanceNodeId) -> Result<(), ModifyTaskError> {
         if self.fixed.remove(&node_id).is_some() {
-            let node_Id = TaskNodeId::FixedInstance(node_id.clone());
-            self.delete_connections_referencing(&node_Id);
-            self.delete_connections_referencing(&node_Id);
+            let node_id = TaskNodeId::FixedInstance(node_id.clone());
+            self.delete_connections_referencing(&node_id);
+            self.delete_connections_referencing(&node_id);
 
             Ok(())
         } else {

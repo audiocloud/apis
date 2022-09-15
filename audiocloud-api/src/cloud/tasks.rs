@@ -7,8 +7,8 @@ use crate::common::change::ModifyTask;
 use crate::common::task::{DynamicInstanceNode, FixedInstanceNode, MixerNode, NodeConnection, TaskPermissions, TrackNode};
 use crate::time::{TimeRange, Timestamp};
 use crate::{
-    AppId, AppTaskId, DomainId, DynamicInstanceNodeId, FixedInstanceId, FixedInstanceNodeId, MixerNodeId, NodeConnectionId, SecureKey,
-    TaskId, TrackNodeId,
+    AppId, DomainId, DynamicInstanceNodeId, FixedInstanceId, FixedInstanceNodeId, MixerNodeId, NodeConnectionId, SecureKey, TaskId,
+    TrackNodeId,
 };
 
 /// Create a task
@@ -49,7 +49,7 @@ pub struct CreateTask {
 
 /// Task created successfully
 #[derive(Serialize, Deserialize, JsonSchema, Debug, Clone, PartialEq)]
-#[serde(rename_all = "snake_case")]
+#[serde(rename_all = "snake_case", tag = "type")]
 pub enum TaskCreated {
     /// Created normally
     Created {
@@ -69,7 +69,7 @@ pub enum TaskCreated {
 
 /// Task was updated successfully
 #[derive(Serialize, Deserialize, JsonSchema, Debug, Clone, PartialEq)]
-#[serde(rename_all = "snake_case")]
+#[serde(rename_all = "snake_case", tag = "type")]
 pub enum TaskUpdated {
     /// Updated normally
     Updated {
@@ -84,7 +84,7 @@ pub enum TaskUpdated {
 
 /// Task was deleted successfully
 #[derive(Serialize, Deserialize, JsonSchema, Debug, Clone, PartialEq)]
-#[serde(rename_all = "snake_case")]
+#[serde(rename_all = "snake_case", tag = "type")]
 pub enum TaskDeleted {
     /// Deleted normally
     Deleted {

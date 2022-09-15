@@ -1,4 +1,5 @@
 //! A crate of audiocloud API definitions and API calls
+#![allow(dead_code)]
 
 pub use api::*;
 pub use common::*;

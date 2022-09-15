@@ -1,7 +1,7 @@
 //! Types used to communicate with the instance_driver
 
-use schemars::{JsonSchema, schema_for};
 use schemars::schema::RootSchema;
+use schemars::{schema_for, JsonSchema};
 use serde::{Deserialize, Serialize};
 use thiserror::Error;
 use utoipa::OpenApi;
@@ -48,7 +48,7 @@ pub enum InstanceDriverError {
 }
 
 #[derive(PartialEq, Serialize, Deserialize, Clone, Debug)]
-#[serde(rename_all = "snake_case")]
+#[serde(rename_all = "snake_case", tag = "type")]
 pub enum InstanceDriverEvent {
     /// Sent when the instance_driver has started
     Started,

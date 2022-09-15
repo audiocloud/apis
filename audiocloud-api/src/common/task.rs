@@ -10,10 +10,11 @@ use serde_json::Value;
 use crate::cloud::tasks::CreateTask;
 use crate::cloud::CloudError;
 use crate::cloud::CloudError::*;
+use crate::domain::streaming::DiffStamped;
 use crate::time::TimeRange;
 use crate::{
-    DomainId, DynamicInstanceNodeId, FixedInstanceId, FixedInstanceNodeId, MediaObjectId, MixerNodeId, Model, ModelId,
-    MultiChannelTimestampedValue, NodeConnectionId, ReportId, SecureKey, TrackMediaId, TrackNodeId,
+    AppMediaObjectId, DesiredTaskPlayState, DomainId, DynamicInstanceNodeId, FixedInstanceId, FixedInstanceNodeId, MediaObjectId,
+    MixerNodeId, Model, ModelId, NodeConnectionId, SecureKey, TaskPlayState, Timestamp, Timestamped, TrackMediaId, TrackNodeId,
 };
 
 /// Task specification
@@ -410,7 +411,7 @@ pub struct NodeConnection {
 }
 
 pub type InstanceParameters = serde_json::Value;
-pub type InstanceReports = HashMap<ReportId, MultiChannelTimestampedValue>;
+pub type InstanceReports = serde_json::Value;
 
 #[derive(Clone, Copy, Debug, Serialize, Deserialize, PartialEq, JsonSchema)]
 pub struct ConnectionValues {
@@ -698,4 +699,36 @@ impl TaskPermissions {
                           transport:  true,
                           audio:      true, }
     }
+}
+
+#[derive(Debug, Serialize, Deserialize, Clone, PartialEq, JsonSchema)]
+#[serde(rename_all = "snake_case", tag = "type")]
+pub enum TaskEvent {
+    PlayState {
+        current:           Timestamped<TaskPlayState>,
+        desired:           Timestamped<DesiredTaskPlayState>,
+        waiting_instances: HashSet<FixedInstanceId>,
+        waiting_media:     HashSet<AppMediaObjectId>,
+    },
+    StreamingPacket {
+        packet: StreamingPacket,
+    },
+    Deleted,
+}
+
+#[derive(Debug, Default, Serialize, Deserialize, Clone, PartialEq, JsonSchema)]
+#[serde(rename_all = "snake_case", tag = "type")]
+pub struct StreamingPacket {
+    created_at:        Timestamp,
+    audio:             bytes::Bytes,
+    timeline_pos:      f64,
+    streaming_pos:     u64,
+    instance_metering: HashMap<FixedInstanceId, Vec<DiffStamped<serde_json::Value>>>,
+    node_outputs:      HashMap<SourcePadId, Vec<DiffStamped<PadMetering>>>,
+    node_inputs:       HashMap<DestinationPadId, Vec<DiffStamped<PadMetering>>>,
+}
+
+#[derive(Debug, Default, Serialize, Deserialize, Clone, PartialEq, JsonSchema)]
+pub struct PadMetering {
+    pub volume: Vec<f64>,
 }

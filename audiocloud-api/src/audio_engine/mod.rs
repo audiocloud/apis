@@ -34,7 +34,7 @@ pub struct CompressedAudio {
 
 #[derive(Debug, Clone, Error, Serialize, Deserialize, JsonSchema)]
 #[serde(rename_all = "snake_case")]
-pub enum AudioEngineError {
+pub enum EngineError {
     #[error("Track {0} not found")]
     TrackNotFound(usize),
 
@@ -168,7 +168,7 @@ pub enum TaskRenderCancelled {
 pub struct AudioEngineApi;
 
 pub fn schemas() -> RootSchema {
-    merge_schemas([schema_for!(AudioEngineError),
+    merge_schemas([schema_for!(EngineError),
                    schema_for!(TaskReplaced),
                    schema_for!(TaskDeleted),
                    schema_for!(TaskModified),

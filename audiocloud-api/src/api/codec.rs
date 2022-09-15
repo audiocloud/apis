@@ -38,8 +38,8 @@ pub trait Codec {
 pub struct Json;
 
 impl Codec for Json {
-    type DeserializeError = serde_json::Error;
     type SerializeError = serde_json::Error;
+    type DeserializeError = serde_json::Error;
 
     fn serialize<T: Serialize>(&self, t: &T) -> Result<Vec<u8>, Self::SerializeError> {
         to_json_vec(t)
@@ -53,8 +53,8 @@ impl Codec for Json {
 pub struct MsgPack;
 
 impl Codec for MsgPack {
-    type DeserializeError = rmp_serde::decode::Error;
     type SerializeError = rmp_serde::encode::Error;
+    type DeserializeError = rmp_serde::decode::Error;
 
     fn serialize<T: Serialize>(&self, t: &T) -> Result<Vec<u8>, Self::SerializeError> {
         to_msgpack(t)
@@ -73,8 +73,7 @@ pub trait Transferable {
 mod test {
     use serde_json::json;
 
-    use crate::audio_engine::command::AudioEngineCommand;
-    use crate::api::codec::{Codec, Json, MsgPack};
+    use crate::api::codec::{Codec, Json};
 
     #[test]
     pub fn test_err_json() {

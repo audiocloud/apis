@@ -1,38 +1,14 @@
 //! API definitions for communicating with the apps
-use std::collections::{HashMap, HashSet};
-
 use chrono::Utc;
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 
-use crate::audio_engine::CompressedAudio;
 use crate::common::change::{DesiredTaskPlayState, TaskPlayState};
 use crate::common::media::{PlayId, RenderId};
-use crate::common::task::InstanceReports;
-use crate::common::time::{Timestamp, Timestamped};
-use crate::common::{
-    AppMediaObjectId, DynamicInstanceNodeId, FixedInstanceId, FixedInstanceNodeId, InstancePlayState, InstancePowerState, MixerNodeId,
-    MultiChannelValue, ReportId, TrackNodeId,
-};
-use crate::{AppTaskId, DestinationPadId, SourcePadId};
-
-#[derive(Serialize, Deserialize, Debug, Clone, JsonSchema)]
-pub struct TaskStreamingPacket {
-    pub task_id:               AppTaskId,
-    pub play_id:               PlayId,
-    pub serial:                u64,
-    pub created_at:            Timestamp,
-    pub fixed:                 HashMap<FixedInstanceNodeId, FixedInstancePacket>,
-    pub dynamic:               HashMap<DynamicInstanceNodeId, DynamicInstancePacket>,
-    pub mixers:                HashMap<MixerNodeId, MixerPacket>,
-    pub tracks:                HashMap<TrackNodeId, TrackPacket>,
-    pub waiting_for_instances: HashSet<FixedInstanceId>,
-    pub waiting_for_media:     HashSet<AppMediaObjectId>,
-    pub compressed_audio:      Vec<CompressedAudio>,
-    pub desired_play_state:    DesiredTaskPlayState,
-    pub play_state:            TaskPlayState,
-    pub errors:                Vec<Timestamped<SessionPacketError>>,
-}
+use crate::common::time::Timestamp;
+use crate::domain::tasks::TaskUpdated;
+use crate::domain::DomainError;
+use crate::{AppTaskId, ModifyTaskSpec, RequestId, SecureKey, SerializableResult, SocketId, TaskEvent};
 
 #[derive(Serialize, Deserialize, Debug, Clone, JsonSchema)]
 pub struct StreamStats {
@@ -51,101 +27,9 @@ pub enum SessionPacketError {
     General(String),
 }
 
-impl TaskStreamingPacket {
-    pub fn push_fixed_instance_reports(&mut self, instance: FixedInstanceNodeId, reports: InstanceReports) {
-        let fixed = self.fixed.entry(instance).or_default();
-
-        // for (report_id, value) in reports {
-        //     fixed.instance_metering
-        //          .entry(report_id)
-        //          .or_default()
-        //          .push();
-        // }
-    }
-
-    pub fn push_source_peak_meters(&mut self, peak_meters: HashMap<SourcePadId, MultiChannelValue>) {
-        for (flow_id, value) in peak_meters {
-            match flow_id {
-                SourcePadId::MixerOutput(mixer_id) => {
-                    self.mixers
-                        .entry(mixer_id)
-                        .or_default()
-                        .output_metering
-                        .push(DiffStamped::new(self.created_at, value));
-                }
-                SourcePadId::FixedInstanceOutput(fixed_id) => {
-                    self.fixed
-                        .entry(fixed_id)
-                        .or_default()
-                        .output_metering
-                        .push(DiffStamped::new(self.created_at, value));
-                }
-                SourcePadId::DynamicInstanceOutput(dynamic_id) => {
-                    self.dynamic
-                        .entry(dynamic_id)
-                        .or_default()
-                        .output_metering
-                        .push(DiffStamped::new(self.created_at, value));
-                }
-                SourcePadId::TrackOutput(track_id) => {
-                    self.tracks
-                        .entry(track_id)
-                        .or_default()
-                        .output_metering
-                        .push(DiffStamped::new(self.created_at, value));
-                }
-            }
-        }
-    }
-
-    pub fn push_destination_peak_meters(&mut self, peak_meters: HashMap<DestinationPadId, MultiChannelValue>) {
-        for (flow_id, value) in peak_meters {
-            match flow_id {
-                DestinationPadId::MixerInput(mixer_id) => {
-                    self.mixers
-                        .entry(mixer_id)
-                        .or_default()
-                        .input_metering
-                        .push(DiffStamped::new(self.created_at, value));
-                }
-                DestinationPadId::FixedInstanceInput(fixed_id) => {
-                    self.fixed
-                        .entry(fixed_id)
-                        .or_default()
-                        .input_metering
-                        .push(DiffStamped::new(self.created_at, value));
-                }
-                DestinationPadId::DynamicInstanceInput(dynamic_id) => {
-                    self.dynamic
-                        .entry(dynamic_id)
-                        .or_default()
-                        .input_metering
-                        .push(DiffStamped::new(self.created_at, value));
-                }
-            }
-        }
-    }
-
-    pub fn add_play_error(&mut self, play_id: PlayId, error: String) {
-        self.errors.push(Timestamped::new(SessionPacketError::Playing(play_id, error)));
-    }
-
-    pub fn add_render_error(&mut self, render_id: RenderId, error: String) {
-        self.errors.push(Timestamped::new(SessionPacketError::Rendering(render_id, error)));
-    }
-
-    pub fn push_fixed_error(&mut self, instance: FixedInstanceNodeId, error: String) {
-        self.fixed.entry(instance).or_default().errors.push(Timestamped::new(error));
-    }
-
-    pub fn push_audio_packets(&mut self, compressed_audio: CompressedAudio) {
-        self.compressed_audio.push(compressed_audio);
-    }
-}
-
 /// Difference stamped in milliseconds since a common epoch, in order to pack most efficiently
 /// The epoch in InstancePacket is the created_at field of SessionPacket
-#[derive(Serialize, Deserialize, Debug, Clone, JsonSchema)]
+#[derive(Serialize, Deserialize, Debug, Clone, PartialEq, JsonSchema)]
 pub struct DiffStamped<T>(usize, T);
 
 impl<T> DiffStamped<T> {
@@ -162,33 +46,125 @@ impl<T> From<(Timestamp, T)> for DiffStamped<T> {
     }
 }
 
-#[derive(Serialize, Deserialize, Debug, Clone, Default, JsonSchema)]
-pub struct FixedInstancePacket {
-    pub errors:            Vec<Timestamped<String>>,
-    pub instance_metering: HashMap<ReportId, Vec<DiffStamped<MultiChannelValue>>>,
-    pub input_metering:    Vec<DiffStamped<MultiChannelValue>>,
-    pub output_metering:   Vec<DiffStamped<MultiChannelValue>>,
-    pub media_pos:         Option<f64>,
-    pub power:             Option<Timestamped<InstancePowerState>>,
-    pub media:             Option<Timestamped<InstancePlayState>>,
+/// A mesasge received over a real-time communication channel from a streaming domain connection
+#[derive(Serialize, Deserialize, Debug, Clone, JsonSchema)]
+#[serde(rename_all = "snake_case", tag = "type")]
+pub enum SocketMessage {
+    /// Task generated event
+    TaskEvent {
+        /// Id of the task generating the event
+        task_id: AppTaskId,
+        /// Event details
+        event:   TaskEvent,
+    },
+    /// Response to a request to change a task play state
+    SetDesiredPlayStateResponse {
+        /// Request id this message is responding to
+        request_id: RequestId,
+        /// Result
+        result:     SerializableResult<TaskUpdated, DomainError>,
+    },
+    /// Response to a request to change task specification
+    ModifyTaskSpecResponse {
+        /// Request id this message is responding to
+        request_id: RequestId,
+        /// Result of the operation
+        result:     SerializableResult<TaskUpdated, DomainError>,
+    },
+    /// Response to initiating a new peer connection
+    PeerConnectionResponse {
+        /// Request id this message is responding to
+        request_id: RequestId,
+        /// Result of the operation - the assigned socket ID
+        result:     SerializableResult<SocketId, DomainError>,
+    },
+    /// Response to submitting a peer connection candidate
+    PeerConnectionCandidateResponse {
+        /// Request id this message is responding to
+        request_id: RequestId,
+        /// Result of the operation
+        result:     SerializableResult<(), DomainError>,
+    },
+    /// Response to a request to attach the socket to a task
+    AttachToTaskResponse {
+        /// Request id this message is responding to
+        request_id: RequestId,
+        /// Result of the operation
+        result:     SerializableResult<(), DomainError>,
+    },
+    /// Response to detach the socket from a task
+    DetachFromTaskResponse {
+        /// Request id this message is responding to
+        request_id: RequestId,
+        /// Result of the operation - will be success even if task does not exist
+        result:     SerializableResult<(), DomainError>,
+    },
+    /// Submit a new WebRTC peer connection ICE candidate
+    SubmitPeerConnectionCandidate {
+        /// Request id (to reference the response to)
+        request_id: RequestId,
+        /// Socket id of the peer connection
+        socket_id:  SocketId,
+        /// ICE Candidate
+        candidate:  serde_json::Value,
+    },
 }
 
-#[derive(Serialize, Deserialize, Debug, Clone, Default, JsonSchema)]
-pub struct DynamicInstancePacket {
-    pub instance_metering: HashMap<ReportId, Vec<DiffStamped<MultiChannelValue>>>,
-    pub input_metering:    Vec<DiffStamped<MultiChannelValue>>,
-    pub output_metering:   Vec<DiffStamped<MultiChannelValue>>,
-}
-
-#[derive(Serialize, Deserialize, Debug, Clone, Default, JsonSchema)]
-pub struct TrackPacket {
-    pub output_metering: Vec<DiffStamped<MultiChannelValue>>,
-}
-
-#[derive(Serialize, Deserialize, Debug, Clone, Default, JsonSchema)]
-pub struct MixerPacket {
-    pub input_metering:  Vec<DiffStamped<MultiChannelValue>>,
-    pub output_metering: Vec<DiffStamped<MultiChannelValue>>,
+/// A message sent over a real-time communication channel to a streaming domain connection
+#[derive(Serialize, Deserialize, Debug, Clone, JsonSchema)]
+#[serde(rename_all = "snake_case", tag = "type")]
+pub enum SocketRequestMessage {
+    /// Request desired task play state
+    RequestSetDesiredPlayState {
+        /// Request id (to reference the response to)
+        request_id: RequestId,
+        /// Id of the task to change play state
+        task_id:    AppTaskId,
+        /// Desired play state
+        desired:    DesiredTaskPlayState,
+    },
+    /// Request to modify task specification
+    RequestModifyTaskSpec {
+        /// Request id (to reference the response to)
+        request_id:   RequestId,
+        /// Id of the task to modify
+        task_id:      AppTaskId,
+        /// List of modifications to apply
+        modification: Vec<ModifyTaskSpec>,
+    },
+    /// Request a new WebRTC peer connection to the domain
+    RequestPeerConnection {
+        /// Request id (to reference the response to)
+        request_id:  RequestId,
+        /// Socket id of the peer connection
+        socket_id:   SocketId,
+        /// Local description offer
+        description: serde_json::Value,
+    },
+    /// Submit a new WebRTC peer connection ICE candidate
+    SubmitPeerConnectionCandidate {
+        /// Request id (to reference the response to)
+        request_id: RequestId,
+        /// Socket id of the peer connection
+        socket_id:  SocketId,
+        /// ICE Candidate
+        candidate:  serde_json::Value,
+    },
+    /// Request attaching to a task
+    RequestAttachToTask {
+        /// Request id (to reference the response to)
+        request_id: RequestId,
+        /// Id of the task to attach to
+        task_id:    AppTaskId,
+        /// Secure key to use for attachment
+        secure_key: SecureKey,
+    },
+    RequestDetachFromTask {
+        /// Request id (to reference the response to)
+        request_id: RequestId,
+        /// Id of the task to attach to
+        task_id:    AppTaskId,
+    },
 }
 
 /// Load packet data
@@ -201,7 +177,7 @@ pub struct MixerPacket {
   get,
   path = "/v1/stream/{app_id}/{task_id}/{play_id}/packet/{serial}",
   responses(
-    (status = 200, description = "Success", body = TaskStreamingPacket),
+    (status = 200, description = "Success", body = StreamingPacket),
     (status = 401, description = "Not authorized", body = DomainError),
     (status = 404, description = "App, task or stream not found", body = DomainError),
     (status = 408, description = "Timed out waiting for packet", body = DomainError),
@@ -231,4 +207,4 @@ pub(crate) fn stream_packets() {}
     ("task_id" = TaskId, Path, description = "Task id"),
     ("play_id" = PlayId, Path, description = "Play id")
   ))]
-pub(crate) fn stats() {}
+pub(crate) fn stream_stats() {}

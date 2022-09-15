@@ -3,54 +3,90 @@ use std::collections::{HashMap, HashSet};
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 
+pub use crate::audio_engine::{TaskPlayStopped, TaskPlaying, TaskRenderCancelled, TaskRendering, TaskSought};
 use crate::{
-  AppMediaObjectId, AppTaskId, FixedInstanceId, InstancePlayState, MediaObject, ModifyTaskSpec, SecureKey,
-  TaskPermissions, TaskPlayState, TaskSpec, TimeRange,
+    AppId, AppMediaObjectId, AppTaskId, FixedInstanceId, InstancePlayState, MediaObject, ModifyTaskSpec, SecureKey, TaskId,
+    TaskPermissions, TaskPlayState, TaskSpec, TimeRange,
 };
-pub use crate::audio_engine::{TaskPlaying, TaskPlayStopped, TaskRenderCancelled, TaskRendering, TaskSought};
 
+/// A summary of a task
 #[derive(Serialize, Deserialize, Clone, Debug, JsonSchema)]
 pub struct TaskSummary {
-    pub id:                    AppTaskId,
+    /// App that owns the task
+    app_id:                    AppId,
+    /// Task Id
+    task_id:                   TaskId,
+    /// Current play sate
     pub play_state:            TaskPlayState,
+    /// List of instances that are blocking play state change
     pub waiting_for_instances: HashSet<FixedInstanceId>,
+    /// List of media that are blocking or influencing completeness of play state change
     pub waiting_for_media:     HashSet<AppMediaObjectId>,
 }
 
+/// A more complete information about a task
 #[derive(Serialize, Deserialize, Clone, Debug, JsonSchema)]
 pub struct TaskWithStatusAndSpec {
-    pub id:         AppTaskId,
+    /// App that owns the task
+    app_id:         AppId,
+    /// Task Id
+    task_id:        TaskId,
+    /// Current play state
     pub play_state: TaskPlayState,
+    /// State of attatched fixed instances
     pub instances:  HashMap<FixedInstanceId, InstancePlayState>,
+    /// State of attached media objects
     pub media:      HashMap<AppMediaObjectId, MediaObject>,
+    /// The current specification of the task
     pub spec:       TaskSpec,
 }
 
 pub type TaskSummaryList = Vec<TaskSummary>;
 
+/// Create a task on the domain
 #[derive(Serialize, Deserialize, Clone, Debug, JsonSchema)]
 pub struct CreateTask {
-    pub id:       AppTaskId,
+    /// Task specification
     pub spec:     TaskSpec,
+    /// Time during which the task should be reserved
     pub time:     TimeRange,
+    /// Security attached to the task
     pub security: HashMap<SecureKey, TaskPermissions>,
 }
 
+/// Response to creating a task on the domain
 #[derive(Serialize, Deserialize, JsonSchema)]
-#[serde(rename_all = "snake_case")]
+#[serde(rename_all = "snake_case", tag = "type")]
 pub enum TaskCreated {
-    Created { id: AppTaskId },
+    /// Created normally
+    Created {
+        /// App that owns the task
+        app_id:  AppId,
+        /// Task Id
+        task_id: TaskId,
+    },
 }
 
+/// Request to modify a task on the domain
 #[derive(Serialize, Deserialize, Clone, Debug, JsonSchema)]
 pub struct ModifyTask {
-    pub modify_spec: Vec<ModifyTaskSpec>,
+    /// A list of modifications to apply
+    pub modifications: Vec<ModifyTaskSpec>,
 }
 
-#[derive(Serialize, Deserialize, JsonSchema)]
+/// Response to modifying a task on the domain
+#[derive(Serialize, Deserialize, Clone, Debug, JsonSchema)]
 #[serde(rename_all = "snake_case")]
-pub enum TaskModified {
-    Modified { id: AppTaskId },
+pub enum TaskUpdated {
+    /// Updated normally
+    Updated {
+        /// App that owns the task
+        app_id:  AppId,
+        /// Task Id
+        task_id: TaskId,
+        /// New version to be used with `If-Matches` when submitting further modifications
+        version: u64,
+    },
 }
 
 #[derive(Serialize, Deserialize, JsonSchema)]
@@ -69,7 +105,7 @@ pub enum TaskDeleted {
     (status = 200, description = "Success", body = TaskSummaryList),
     (status = 401, description = "Not authorized", body = DomainError),
   ))]
-pub(crate) fn list() {}
+pub(crate) fn list_tasks() {}
 
 /// Get task details
 ///
@@ -86,7 +122,7 @@ pub(crate) fn list() {}
     ("app_id" = AppId, Path, description = "App id"),
     ("task_id" = TaskId, Path, description = "Task id")
   ))]
-pub(crate) fn get() {}
+pub(crate) fn get_task() {}
 
 /// Create a task
 ///
@@ -103,7 +139,7 @@ pub(crate) fn get() {}
     (status = 404, description = "Not found", body = DomainError),
     (status = 409, description = "Overlapping task exists", body = DomainError),
   ))]
-pub(crate) fn create() {}
+pub(crate) fn create_task() {}
 
 /// Modify existing task
 ///
@@ -114,7 +150,7 @@ pub(crate) fn create() {}
   path = "/v1/tasks/{app_id}/{task_id}/modify",
   request_body = ModifyTask,
   responses(
-    (status = 200, description = "Success", body = TaskModified),
+    (status = 200, description = "Success", body = TaskUpdated),
     (status = 401, description = "Not authorized", body = DomainError),
     (status = 404, description = "Not found", body = DomainError),
     (status = 409, description = "Not allowed to change instances", body = DomainError),
@@ -124,7 +160,7 @@ pub(crate) fn create() {}
     ("task_id" = TaskId, Path, description = "Task id"),
     ("If-Match" = u64, Header, description = "The task version to be changed"),
   ))]
-pub(crate) fn modify() {}
+pub(crate) fn modify_task() {}
 
 /// Delete a task
 ///
@@ -141,7 +177,7 @@ pub(crate) fn modify() {}
     ("app_id" = AppId, Path, description = "App id"),
     ("task_id" = TaskId, Path, description = "Task id")
   ))]
-pub(crate) fn delete() {}
+pub(crate) fn delete_task() {}
 
 /// Render a task to a new file
 ///
@@ -159,7 +195,7 @@ pub(crate) fn delete() {}
     ("app_id" = AppId, Path, description = "App id"),
     ("task_id" = TaskId, Path, description = "Task id")
   ))]
-pub(crate) fn render() {}
+pub(crate) fn render_task() {}
 
 /// Start playing a task
 ///
@@ -179,7 +215,7 @@ pub(crate) fn render() {}
     ("task_id" = TaskId, Path, description = "Task id"),
     ("If-Match" = u64, Header, description = "The task version"),
   ))]
-pub(crate) fn play() {}
+pub(crate) fn play_task() {}
 
 /// Seek while task is playing
 ///
@@ -197,7 +233,7 @@ pub(crate) fn play() {}
     ("app_id" = AppId, Path, description = "App id"),
     ("task_id" = TaskId, Path, description = "Task id")
   ))]
-pub(crate) fn seek() {}
+pub(crate) fn seek_task() {}
 
 /// Cancel rendering a task
 ///
@@ -216,7 +252,7 @@ pub(crate) fn seek() {}
     ("task_id" = TaskId, Path, description = "Task id"),
     ("If-Match" = u64, Header, description = "The task version"),
   ))]
-pub(crate) fn cancel_render() {}
+pub(crate) fn cancel_render_task() {}
 
 /// Stop playing a task
 ///
@@ -235,4 +271,4 @@ pub(crate) fn cancel_render() {}
     ("task_id" = TaskId, Path, description = "Task id"),
     ("If-Match" = u64, Header, description = "The task version"),
   ))]
-pub(crate) fn stop_playing() {}
+pub(crate) fn stop_playing_task() {}
