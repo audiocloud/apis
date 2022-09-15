@@ -4,6 +4,7 @@ import {compile} from 'json-schema-to-typescript'
 import * as fs from "fs/promises";
 import {format as prettier} from "prettier"
 import minimist from "minimist"
+import {snakeCase} from "change-case"
 
 async function main(): Promise<void> {
     let args = minimist(process.argv.slice(2))
@@ -22,6 +23,7 @@ async function main(): Promise<void> {
     }
 
     let buf = `import {Requester, Result} from './base'\n`
+    buf += `export * from './base'\n`
 
     buf += await compile(json, 'CloudApi', {additionalProperties: false, unreachableDefinitions: true, format: false})
 
@@ -34,7 +36,7 @@ async function main(): Promise<void> {
             let operation = pathItem[method];
             if (operation.operationId) {
                 const {operationId} = operation;
-                const params = operation.parameters?.filter((p: any) => p.in === 'path').map((p: any) => `${p.name}: ${getTypeName(p)}`) || []
+                const params = operation.parameters?.filter((p: any) => p.in === 'path' || p.in == 'header').map((p: any) => `${snakeCase(p.name)}: ${getTypeName(p)}`) || []
                 const bodyArg = operation.requestBody?.content['application/json'] ? getTypeName(operation.requestBody?.content['application/json']) : null
 
                 let responseType = 'void'
@@ -59,13 +61,6 @@ async function main(): Promise<void> {
                     method: `"${method}"`
                 }
 
-                let requestObjStr = '{'
-                for (let key in requestObj) {
-                    requestObjStr += `${key}: ${requestObj[key]},`
-                }
-                requestObjStr += '}'
-
-
                 let comments = []
 
                 if (operation.description) {
@@ -74,7 +69,7 @@ async function main(): Promise<void> {
 
                 for (let param of operation.parameters || []) {
                     if (param.description) {
-                        comments.push(`@param ${param.name} ${param.description}`.trim())
+                        comments.push(`@param ${snakeCase(param.name)} ${param.description}`.trim())
                     }
                 }
 
@@ -92,6 +87,20 @@ async function main(): Promise<void> {
                     buf += `   */\n`
                 }
 
+                requestObj.headers = '{'
+                for (let param of operation.parameters || []) {
+                    if (param.in === 'header') {
+                        requestObj.headers += `'${param.name}': ${snakeCase(param.name)},`
+                    }
+                }
+                requestObj.headers += '}'
+
+                let requestObjStr = '{'
+                for (let key in requestObj) {
+                    requestObjStr += `${key}: ${requestObj[key]},`
+                }
+                requestObjStr += '}'
+
                 buf += `  async ${operationId}(${params.join(', ')}): Promise<Result<${responseType}, ${errorType}>> {\n`
                 buf += `    return this.requester.request(${requestObjStr});\n`
                 buf += `  }\n`
@@ -101,10 +110,15 @@ async function main(): Promise<void> {
 
     buf += '}\n'
 
-    await fs.mkdir(output, {recursive: true}).catch(() => {})
+    await fs.mkdir(output, {recursive: true}).catch(() => {
+    })
 
-    await fs.writeFile(`${output}/index.ts`, Buffer.from(prettier(buf, {semi: false, parser: 'babel-ts'}), 'utf-8'))
-    await fs.writeFile(`${output}/base.ts`, Buffer.from('ZXhwb3J0IHR5cGUgUmVxdWVzdDxCPiA9CiAgICB8IHsgbWV0aG9kOiAnZ2V0JywgaGVhZGVycz86IFJlY29yZDxzdHJpbmcsIHN0cmluZz4sIHBhdGg6IHN0cmluZyB9CiAgICB8IHsgbWV0aG9kOiAncG9zdCcgfCAnZGVsZXRlJyB8ICdwYXRjaCcgfCAncHV0JywgYm9keT86IEIsIGhlYWRlcnM/OiBSZWNvcmQ8c3RyaW5nLCBzdHJpbmc+LCBwYXRoOiBzdHJpbmcgfQoKZXhwb3J0IGludGVyZmFjZSBSZXF1ZXN0ZXIgewogICAgcmVxdWVzdDxCLCBULCBFPihyZXF1ZXN0OiBSZXF1ZXN0PEI+KTogUHJvbWlzZTxSZXN1bHQ8VCwgRT4+Owp9CgpleHBvcnQgdHlwZSBSZXN1bHQ8VCwgRT4gPQogICAgfCB7IG9rOiBULCBlcnJvcjogbnVsbCwgaXNfb2s6IHRydWUsIGlzX2Vycm9yOiB0cnVlIH0KICAgIHwgeyBvazogbnVsbCwgZXJyb3I6IEUsIGlzX29rOiBmYWxzZSwgaXNfZXJyb3I6IGZhbHNlIH0K', 'base64'))
+    await fs.writeFile(`${output}/index.ts`, Buffer.from(prettier(buf, {
+        semi: false,
+        parser: 'babel-ts',
+        printWidth: 120
+    }), 'utf-8'))
+    await fs.writeFile(`${output}/base.ts`, Buffer.from('ZXhwb3J0IHR5cGUgUmVxdWVzdDxCPiA9CiAgICB8IHsgbWV0aG9kOiAnZ2V0JywgaGVhZGVycz86IFJlY29yZDxzdHJpbmcsIGFueT4sIHBhdGg6IHN0cmluZyB9CiAgICB8IHsgbWV0aG9kOiAncG9zdCcgfCAnZGVsZXRlJyB8ICdwYXRjaCcgfCAncHV0JywgYm9keT86IEIsIGhlYWRlcnM/OiBSZWNvcmQ8c3RyaW5nLCBhbnk+LCBwYXRoOiBzdHJpbmcgfQoKZXhwb3J0IGludGVyZmFjZSBSZXF1ZXN0ZXIgewogICAgcmVxdWVzdDxCLCBULCBFPihyZXF1ZXN0OiBSZXF1ZXN0PEI+KTogUHJvbWlzZTxSZXN1bHQ8VCwgRT4+Owp9CgpleHBvcnQgdHlwZSBSZXN1bHQ8VCwgRT4gPQogICAgfCB7IG9rOiBULCBlcnJvcjogbnVsbCwgaXNfb2s6IHRydWUsIGlzX2Vycm9yOiB0cnVlIH0KICAgIHwgeyBvazogbnVsbCwgZXJyb3I6IEUsIGlzX29rOiBmYWxzZSwgaXNfZXJyb3I6IGZhbHNlIH0K', 'base64'))
 }
 
 function getTypeName(p: any) {
