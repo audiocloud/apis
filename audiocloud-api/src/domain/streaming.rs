@@ -122,6 +122,8 @@ pub enum SocketRequestMessage {
         task_id:    AppTaskId,
         /// Desired play state
         desired:    DesiredTaskPlayState,
+        /// Task version
+        version:    u64,
     },
     /// Request to modify task specification
     RequestModifyTaskSpec {
@@ -131,6 +133,8 @@ pub enum SocketRequestMessage {
         task_id:      AppTaskId,
         /// List of modifications to apply
         modification: Vec<ModifyTaskSpec>,
+        /// Task version
+        version:      u64,
     },
     /// Request a new WebRTC peer connection to the domain
     RequestPeerConnection {
