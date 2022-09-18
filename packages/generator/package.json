@@ -1,6 +1,6 @@
 {
   "name": "@audiocloud/client-generator",
-  "version": "1.0.20",
+  "version": "1.0.30",
   "main": "dist/cjs/index.js",
   "module": "dist/esm/index.js",
   "types": "dist/types/index.d.ts",
