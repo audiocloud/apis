@@ -24,7 +24,7 @@ pub mod streaming;
 pub mod tasks;
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
-#[serde(rename_all = "snake_case", tag = "type")]
+#[serde(rename_all = "snake_case")]
 pub enum DomainSessionCommand {
     Create {
         app_session_id: AppTaskId,
@@ -108,6 +108,15 @@ pub enum DomainError {
 
     #[error("Media {media_object_id} not found")]
     MediaNotFound { media_object_id: AppMediaObjectId },
+
+    #[error("Error during serialization: {error}")]
+    Serialization { error: String },
+
+    #[error("This feature or service call {call} is not implemented: {reason}")]
+    NotImplemented { call: String, reason: String },
+
+    #[error("The service call failed or timed out: {error}")]
+    BadGateway { error: String },
 }
 
 #[derive(OpenApi)]
@@ -132,8 +141,8 @@ pub fn schemas() -> RootSchema {
                    schema_for!(SocketId),
                    schema_for!(RequestId),
                    schema_for!(streaming::StreamStats),
-                   schema_for!(streaming::SocketMessage),
-                   schema_for!(streaming::SocketRequestMessage),
+                   schema_for!(streaming::DomainServerMessage),
+                   schema_for!(streaming::DomainClientMessage),
                    schema_for!(tasks::TaskSummaryList),
                    schema_for!(tasks::TaskWithStatusAndSpec),
                    schema_for!(tasks::CreateTask),

@@ -48,8 +48,8 @@ impl<T> From<(Timestamp, T)> for DiffStamped<T> {
 
 /// A mesasge received over a real-time communication channel from a streaming domain connection
 #[derive(Serialize, Deserialize, Debug, Clone, JsonSchema)]
-#[serde(rename_all = "snake_case", tag = "type")]
-pub enum SocketMessage {
+#[serde(rename_all = "snake_case")]
+pub enum DomainServerMessage {
     /// Task generated event
     TaskEvent {
         /// Id of the task generating the event
@@ -112,8 +112,8 @@ pub enum SocketMessage {
 
 /// A message sent over a real-time communication channel to a streaming domain connection
 #[derive(Serialize, Deserialize, Debug, Clone, JsonSchema)]
-#[serde(rename_all = "snake_case", tag = "type")]
-pub enum SocketRequestMessage {
+#[serde(rename_all = "snake_case")]
+pub enum DomainClientMessage {
     /// Request desired task play state
     RequestSetDesiredPlayState {
         /// Request id (to reference the response to)
@@ -179,7 +179,7 @@ pub enum SocketRequestMessage {
 /// block (wait) for `Timeout` milliseconds before giving up and returning 408.
 #[utoipa::path(
   get,
-  path = "/v1/stream/{app_id}/{task_id}/{play_id}/packet/{serial}",
+  path = "/v1/streams/{app_id}/{task_id}/{play_id}/packet/{serial}",
   responses(
     (status = 200, description = "Success", body = StreamingPacket),
     (status = 401, description = "Not authorized", body = DomainError),
@@ -200,7 +200,7 @@ pub(crate) fn stream_packets() {}
 /// Get statistics about cached packets available in the stream.
 #[utoipa::path(
   get,
-  path = "/v1/stream/{app_id}/{task_id}/{play_id}",
+  path = "/v1/streams/{app_id}/{task_id}/{play_id}",
   responses(
     (status = 200, description = "Success", body = StreamStats),
     (status = 401, description = "Not authorized", body = DomainError),

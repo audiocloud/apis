@@ -2,7 +2,6 @@
 
 use std::collections::{HashMap, HashSet};
 
-use crate::EngineId;
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 
@@ -10,22 +9,20 @@ use crate::common::model::{Model, ResourceId};
 use crate::common::task::Task;
 use crate::newtypes::{AppId, AppTaskId, DomainId, FixedInstanceId, ModelId};
 use crate::time::{TimeRange, Timestamp};
+use crate::EngineId;
 
 /// Used by domain for booting
 #[derive(Serialize, Deserialize, Debug, Clone, JsonSchema)]
-pub struct BootDomainResponse {
+#[serde(rename_all = "snake_case")]
+pub struct DomainConfig {
     /// Id of the domain
     pub domain_id:            DomainId,
-    /// Read after this event offset from event stream
-    pub event_base:           u64,
     /// Fixed instances configured on the domain
     pub fixed_instances:      HashMap<FixedInstanceId, DomainFixedInstance>,
     /// Dynamic instances configured on the domain, with associated limits
     pub dynamic_instances:    HashMap<ModelId, DynamicInstanceLimits>,
     /// Engines configured on the domain
     pub engines:              HashMap<EngineId, DomainEngine>,
-    /// All model information for parameter and report validation
-    pub models:               HashMap<ModelId, Model>,
     /// Currently configured tasks
     pub tasks:                HashMap<AppTaskId, Task>,
     /// Configured maintenance time windows during which the domain should not serve requests
@@ -35,23 +32,80 @@ pub struct BootDomainResponse {
     /// Maximum number of concurrent tasks (when lower than the sum of tasks available on engines)
     pub max_concurrent_tasks: usize,
     /// Minimum Task length
-    pub min_task_len:         f64,
-    /// The base URL where domain API is visible to the outside world
+    pub min_task_len_ms:      i64,
+    /// Source for commands from the cloud to the domain
+    pub command_source:       DomainCommandSource,
+    /// Sink for events from the domain to the cloud
+    pub event_sink:           DomainEventSink,
+    /// Source of model information for the domain (can include unused models)
+    pub models:               DomainModelSource,
+    /// The public base URL where domain API is visible to the outside world
     pub public_url:           String,
-    /// Topic where commands to the domain will be sent
-    pub cmd_topic:            String,
-    /// Topic where events from the domain may be sent
-    pub evt_topic:            String,
-    /// Kafka broker list to be used for commands and events
-    pub kafka_url:            String,
-    /// Username used to consume commands
-    pub consume_username:     String,
-    /// SASL SCRAM password used to consume commands
-    pub consume_password:     String,
-    /// Username used to produce events
-    pub produce_username:     String,
-    /// SASL SCRAM password used to produce events
-    pub produce_password:     String,
+}
+
+/// Source of commands for domains
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
+#[serde(rename_all = "snake_case")]
+pub enum DomainCommandSource {
+    /// Getting cloud events
+    Disabled,
+    /// Emit events as logs
+    Log,
+    /// Consume a kafka topic
+    Kafka {
+        /// Topic where commands to the domain will be sent
+        topic:    String,
+        /// Kafka broker list to be used for commands and events
+        brokers:  String,
+        /// Username used to consume commands
+        username: String,
+        /// SASL SCRAM password used to consume commands
+        password: String,
+        /// Read after this offset from event stream, or default to the latest one persisted
+        offset:   Option<u64>,
+    },
+}
+
+/// Source of commands for domains
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
+#[serde(rename_all = "snake_case")]
+pub enum DomainEventSink {
+    /// Disable sending of domain events
+    Disabled,
+    /// Produce to a kafka topic
+    Kafka {
+        /// Topic where events from the domain may be sent
+        topic:    String,
+        /// Kafka broker list to be used for commands and events
+        brokers:  String,
+        /// Username used to produce events
+        username: String,
+        /// SASL SCRAM password used to produce events
+        password: String,
+    },
+}
+
+/// Source for models
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
+#[serde(rename_all = "snake_case")]
+pub enum DomainModelSource {
+    /// MOdels are provided in-line with the configuration
+    Inline {
+        /// All model information for parameter and report validation
+        models: HashMap<ModelId, Model>,
+    },
+    /// Models are stored locally on the filesystem
+    Local {
+        /// The local path where models are stored
+        path: String,
+    },
+    /// Obtain models from a remote URL
+    Remote {
+        /// URL where models are going to reside
+        url:                 String,
+        /// Refresh interval, in milliseconds
+        refresh_interval_ms: u64,
+    },
 }
 
 /// Information about a media engine within a domain
@@ -219,35 +273,35 @@ pub enum DomainUpdated {
 /// Get details about a domain. Available to owners, administrators and apps where the app has
 /// permission to access domain details.
 #[utoipa::path(
-  get,
-  path = "/v1/domains/{domain_id}",
-  responses(
-    (status = 200, description = "Success", body = GetDomainResponse),
-    (status = 401, description = "Not authorized", body = CloudError),
-    (status = 404, description = "Not found", body = CloudError),
-  ),
-  params(
-    ("domain_id" = DomainId, Path, description = "Domain to get")
-  ))]
+get,
+path = "/v1/domains/{domain_id}",
+responses(
+(status = 200, description = "Success", body = GetDomainResponse),
+(status = 401, description = "Not authorized", body = CloudError),
+(status = 404, description = "Not found", body = CloudError),
+),
+params(
+("domain_id" = DomainId, Path, description = "Domain to get")
+))]
 pub(crate) fn get_domain() {}
 
-/// Domain requests to boot
+/// Domain requests to get its configuration
 ///
 /// When a domain starts in cloud mode, it will get the details of its configuration from the cloud.
 /// This endpoint delivers all of the cloud information about the domain, including instances,
 /// audio engines and cloud synchronization endpoints.
 #[utoipa::path(
-  get,
-  path = "/v1/domains/{domain_id}/boot",
-  responses(
-    (status = 200, description = "Success", body = BootDomainResponse),
-    (status = 401, description = "Not authorized", body = CloudError),
-    (status = 404, description = "Not found", body = CloudError),
-  ),
-  params(
-    ("domain_id" = DomainId, Path, description = "Domain to get")
-  ))]
-pub(crate) fn boot_domain() {}
+get,
+path = "/v1/domains/{domain_id}/config",
+responses(
+(status = 200, description = "Success", body = DomainConfig),
+(status = 401, description = "Not authorized", body = CloudError),
+(status = 404, description = "Not found", body = CloudError),
+),
+params(
+("domain_id" = DomainId, Path, description = "Domain to get config for")
+))]
+pub(crate) fn get_domain_config() {}
 
 /// Add maitenance time to domain
 ///
@@ -255,34 +309,34 @@ pub(crate) fn boot_domain() {}
 /// cannot serve API requests or process tasks. Apps will not be able to create bookings against the
 /// domain that intersect with maintenance windows.
 #[utoipa::path(
-  post,
-  path = "/v1/domains/{domain_id}/maintenance",
-  request_body = AddMaintenance,
-  responses(
-    (status = 200, description = "Success", body = DomainUpdated),
-    (status = 401, description = "Not authorized", body = CloudError),
-    (status = 404, description = "Not found", body = CloudError),
-  ),
-  params(
-    ("domain_id" = DomainId, Path, description = "Domain to add maintenance to"),
-  ))]
+post,
+path = "/v1/domains/{domain_id}/maintenance",
+request_body = AddMaintenance,
+responses(
+(status = 200, description = "Success", body = DomainUpdated),
+(status = 401, description = "Not authorized", body = CloudError),
+(status = 404, description = "Not found", body = CloudError),
+),
+params(
+("domain_id" = DomainId, Path, description = "Domain to add maintenance to"),
+))]
 pub(crate) fn add_domain_maintenance() {}
 
 /// Clear domain maintenance time
 ///
 /// Clear any maitnenance on the domain that matches the time predicates provided.
 #[utoipa::path(
-  delete,
-  path = "/v1/domains/{domain_id}/maintenance",
-  request_body = ClearMaintenance,
-  responses(
-    (status = 200, description = "Success", body = DomainUpdated),
-    (status = 401, description = "Not authorized", body = CloudError),
-    (status = 404, description = "Not found", body = CloudError),
-  ),
-  params(
-    ("domain_id" = DomainId, Path, description = "Domain to clear maitnenance on"),
-  ))]
+delete,
+path = "/v1/domains/{domain_id}/maintenance",
+request_body = ClearMaintenance,
+responses(
+(status = 200, description = "Success", body = DomainUpdated),
+(status = 401, description = "Not authorized", body = CloudError),
+(status = 404, description = "Not found", body = CloudError),
+),
+params(
+("domain_id" = DomainId, Path, description = "Domain to clear maitnenance on"),
+))]
 pub(crate) fn clear_domain_maintenance() {}
 
 /// Add maitenance time to instance
@@ -291,38 +345,38 @@ pub(crate) fn clear_domain_maintenance() {}
 /// maintenance, it cannot process tasks. Apps will not be able to create bookings against the
 /// instance that intersect with maintenance windows.
 #[utoipa::path(
-  post,
-  path = "/v1/domains/{domain_id}/instances/{manufacturer}/{name}/{instance}/maintenance",
-  request_body = AddMaintenance,
-  responses(
-    (status = 200, description = "Success", body = DomainUpdated),
-    (status = 401, description = "Not authorized", body = CloudError),
-    (status = 404, description = "Not found", body = CloudError),
-  ),
-  params(
-    ("domain_id" = DomainId, Path, description = "Domain hosting the instance"),
-    ("manufacturer" = String, Path, description = "Instance manufacturer"),
-    ("name" = String, Path, description = "Instance (product) name"),
-    ("instance" = String, Path, description = "Instance unique identifier"),
-  ))]
+post,
+path = "/v1/domains/{domain_id}/instances/{manufacturer}/{name}/{instance}/maintenance",
+request_body = AddMaintenance,
+responses(
+(status = 200, description = "Success", body = DomainUpdated),
+(status = 401, description = "Not authorized", body = CloudError),
+(status = 404, description = "Not found", body = CloudError),
+),
+params(
+("domain_id" = DomainId, Path, description = "Domain hosting the instance"),
+("manufacturer" = String, Path, description = "Instance manufacturer"),
+("name" = String, Path, description = "Instance (product) name"),
+("instance" = String, Path, description = "Instance unique identifier"),
+))]
 pub(crate) fn add_fixed_instance_maintenance() {}
 
 /// Clear instance maintenance time
 ///
 /// Clear any maitnenance on the instance that matches the time predicates provided.
 #[utoipa::path(
-  delete,
-  path = "/v1/domains/{domain_id}/instances/{manufacturer}/{name}/{instance}/maintenance",
-  request_body = ClearMaintenance,
-  responses(
-    (status = 200, description = "Success", body = DomainUpdated),
-    (status = 401, description = "Not authorized", body = CloudError),
-    (status = 404, description = "Not found", body = CloudError),
-  ),
-  params(
-    ("domain_id" = DomainId, Path, description = "Domain hosting the instance"),
-    ("manufacturer" = String, Path, description = "Instance manufacturer"),
-    ("name" = String, Path, description = "Instance (product) name"),
-    ("instance" = String, Path, description = "Instance unique identifier"),
-  ))]
+delete,
+path = "/v1/domains/{domain_id}/instances/{manufacturer}/{name}/{instance}/maintenance",
+request_body = ClearMaintenance,
+responses(
+(status = 200, description = "Success", body = DomainUpdated),
+(status = 401, description = "Not authorized", body = CloudError),
+(status = 404, description = "Not found", body = CloudError),
+),
+params(
+("domain_id" = DomainId, Path, description = "Domain hosting the instance"),
+("manufacturer" = String, Path, description = "Instance manufacturer"),
+("name" = String, Path, description = "Instance (product) name"),
+("instance" = String, Path, description = "Instance unique identifier"),
+))]
 pub(crate) fn clear_fixed_instance_maintenance() {}

@@ -49,7 +49,7 @@ pub struct CreateTask {
 
 /// Task created successfully
 #[derive(Serialize, Deserialize, JsonSchema, Debug, Clone, PartialEq)]
-#[serde(rename_all = "snake_case", tag = "type")]
+#[serde(rename_all = "snake_case")]
 pub enum TaskCreated {
     /// Created normally
     Created {
@@ -69,7 +69,7 @@ pub enum TaskCreated {
 
 /// Task was updated successfully
 #[derive(Serialize, Deserialize, JsonSchema, Debug, Clone, PartialEq)]
-#[serde(rename_all = "snake_case", tag = "type")]
+#[serde(rename_all = "snake_case")]
 pub enum TaskUpdated {
     /// Updated normally
     Updated {
@@ -84,7 +84,7 @@ pub enum TaskUpdated {
 
 /// Task was deleted successfully
 #[derive(Serialize, Deserialize, JsonSchema, Debug, Clone, PartialEq)]
-#[serde(rename_all = "snake_case", tag = "type")]
+#[serde(rename_all = "snake_case")]
 pub enum TaskDeleted {
     /// Deleted normally
     Deleted {

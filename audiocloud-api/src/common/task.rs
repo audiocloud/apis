@@ -702,7 +702,7 @@ impl TaskPermissions {
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone, PartialEq, JsonSchema)]
-#[serde(rename_all = "snake_case", tag = "type")]
+#[serde(rename_all = "snake_case")]
 pub enum TaskEvent {
     PlayState {
         current:           Timestamped<TaskPlayState>,
@@ -717,7 +717,7 @@ pub enum TaskEvent {
 }
 
 #[derive(Debug, Default, Serialize, Deserialize, Clone, PartialEq, JsonSchema)]
-#[serde(rename_all = "snake_case", tag = "type")]
+#[serde(rename_all = "snake_case")]
 pub struct StreamingPacket {
     created_at:        Timestamp,
     audio:             bytes::Bytes,

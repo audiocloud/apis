@@ -25,7 +25,7 @@ use self::ModifyTaskError::*;
 
 /// Modify task structure
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
-#[serde(rename_all = "snake_case", tag = "type")]
+#[serde(rename_all = "snake_case")]
 pub enum ModifyTaskSpec {
     /// Add a track node to the task
     AddTrack {

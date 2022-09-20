@@ -193,7 +193,7 @@ pub type ModelParameters = HashMap<ParameterId, ModelParameter>;
 pub type ModelReports = HashMap<ReportId, ModelReport>;
 
 /// A model describes the parameters and reprots of a processor
-#[derive(Clone, Debug, Serialize, Deserialize, Default, JsonSchema)]
+#[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq, JsonSchema)]
 pub struct Model {
     #[serde(default)]
     pub resources:    HashMap<ResourceId, f64>,

@@ -48,7 +48,7 @@ pub enum InstanceDriverError {
 }
 
 #[derive(PartialEq, Serialize, Deserialize, Clone, Debug)]
-#[serde(rename_all = "snake_case", tag = "type")]
+#[serde(rename_all = "snake_case")]
 pub enum InstanceDriverEvent {
     /// Sent when the instance_driver has started
     Started,
