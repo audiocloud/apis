@@ -11,9 +11,6 @@ use utoipa::OpenApi;
 pub use command::*;
 pub use event::*;
 
-pub mod environment;
-pub mod tasks;
-
 use crate::common::media::PlayId;
 use crate::{
     merge_schemas, AppId, AppMediaObjectId, AppTaskId, FixedInstanceId, MediaObject, ModifyTaskError, RenderId, TaskId, TaskPlayState,
@@ -21,7 +18,9 @@ use crate::{
 };
 
 pub mod command;
+pub mod environment;
 pub mod event;
+pub mod tasks;
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
 pub struct CompressedAudio {

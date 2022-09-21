@@ -8,7 +8,6 @@ use serde::{Deserialize, Serialize};
 use thiserror::Error;
 
 use crate::common::media::{PlayId, RenderId, RequestPlay, RequestRender};
-use crate::common::model::MultiChannelValue;
 use crate::common::task::TaskPermissions;
 use crate::common::task::{
     ConnectionValues, DynamicInstanceNode, FixedInstanceNode, MediaChannels, MixerNode, NodeConnection, Task, TaskSpec, TimeSegment,
@@ -17,7 +16,7 @@ use crate::common::task::{
 use crate::common::time::Timestamped;
 use crate::newtypes::{
     AppId, AppMediaObjectId, DynamicInstanceNodeId, FixedInstanceId, FixedInstanceNodeId, MediaObjectId, MixerNodeId, NodeConnectionId,
-    ParameterId, SecureKey, TrackMediaId, TrackNodeId,
+    SecureKey, TrackMediaId, TrackNodeId,
 };
 use crate::{json_schema_new_type, ChannelMask, DestinationPadId, SourcePadId, TaskNodeId, TaskSecurity};
 
@@ -141,7 +140,7 @@ pub enum ModifyTaskSpec {
         /// Dynamic instance node id
         dynamic_id: DynamicInstanceNodeId,
         /// Values to set
-        values:     HashMap<ParameterId, MultiChannelValue>,
+        values:     serde_json::Value,
     },
 }
 
@@ -501,7 +500,7 @@ impl TaskSpec {
 
     pub fn set_dynamic_instance_parameter_values(&mut self,
                                                  node_id: DynamicInstanceNodeId,
-                                                 parameters: HashMap<ParameterId, MultiChannelValue>)
+                                                 values: serde_json::Value)
                                                  -> Result<(), ModifyTaskError> {
         let dynamic = self.dynamic.get_mut(&node_id).ok_or(DynamicInstanceDoesNotExist { node_id })?;
         // dynamic.parameters.extend(parameters.into_iter());

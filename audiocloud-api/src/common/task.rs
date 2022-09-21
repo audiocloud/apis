@@ -102,9 +102,6 @@ impl TaskSpec {
                            connection: &NodeConnection,
                            models: &HashMap<ModelId, Model>)
                            -> Result<(), CloudError> {
-        let to = &connection.to;
-        let from = &connection.from;
-
         self.check_source_channel_exists(id, &connection.from, connection.from_channels, models)?;
         self.check_destination_channel_exists(id, &connection.to, connection.to_channels, models)?;
 
@@ -369,7 +366,7 @@ impl MixerNode {
 
         let half_output_channels = output_channels / 2;
 
-        if matches!(mask, ChannelMask::Mono(i) if i < output_channels) || matches!(mask, ChannelMask::Stereo(i) if i < output_channels) {
+        if matches!(mask, ChannelMask::Mono(i) if i < output_channels) || matches!(mask, ChannelMask::Stereo(i) if i < half_output_channels) {
             Ok(())
         } else {
             Err(ChannelMaskIncompatible { mask:     mask.clone(),
@@ -382,7 +379,7 @@ impl MixerNode {
 
         let half_input_channels = input_channels / 2;
 
-        if matches!(mask, ChannelMask::Mono(i) if i < input_channels) || matches!(mask, ChannelMask::Stereo(i) if i < input_channels) {
+        if matches!(mask, ChannelMask::Mono(i) if i < input_channels) || matches!(mask, ChannelMask::Stereo(i) if i < half_input_channels) {
             Ok(())
         } else {
             Err(ChannelMaskIncompatible { mask:     mask.clone(),
@@ -405,7 +402,7 @@ impl DynamicInstanceNode {
         let output_channels = model.get_audio_output_channel_count();
         let half_output_channels = output_channels / 2;
 
-        if matches!(mask, ChannelMask::Mono(i) if i < output_channels) || matches!(mask, ChannelMask::Stereo(i) if i < output_channels) {
+        if matches!(mask, ChannelMask::Mono(i) if i < output_channels) || matches!(mask, ChannelMask::Stereo(i) if i < half_output_channels) {
             Ok(())
         } else {
             Err(ChannelMaskIncompatible { mask:     mask.clone(),
@@ -417,7 +414,7 @@ impl DynamicInstanceNode {
         let input_channels = model.get_audio_input_channel_count();
         let half_input_channels = input_channels / 2;
 
-        if matches!(mask, ChannelMask::Mono(i) if i < input_channels) || matches!(mask, ChannelMask::Stereo(i) if i < input_channels) {
+        if matches!(mask, ChannelMask::Mono(i) if i < input_channels) || matches!(mask, ChannelMask::Stereo(i) if i < half_input_channels) {
             Ok(())
         } else {
             Err(ChannelMaskIncompatible { mask:     mask.clone(),

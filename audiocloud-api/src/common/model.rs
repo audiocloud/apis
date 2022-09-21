@@ -1,12 +1,10 @@
-use anyhow::anyhow;
 use std::collections::{HashMap, HashSet};
-use std::iter;
 
+use anyhow::anyhow;
 use derive_more::{Display, IsVariant, Unwrap};
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 
-use crate::common::time::Timestamped;
 use crate::common::{FilterId, ParameterId, ReportId};
 
 #[derive(Serialize, Deserialize, Clone, Copy, Eq, PartialEq, Debug, IsVariant, JsonSchema)]
@@ -207,13 +205,6 @@ pub struct Model {
 }
 
 impl Model {
-    pub fn default_reports(&self) -> HashMap<ReportId, MultiChannelTimestampedValue> {
-        self.reports
-            .iter()
-            .map(|(k, v)| (k.clone(), iter::repeat(None).take(v.scope.len(self)).collect()))
-            .collect()
-    }
-
     pub fn get_audio_input_channel_count(&self) -> usize {
         self.inputs
             .iter()
@@ -341,74 +332,6 @@ pub enum AmplifierReportRole {
 pub enum DynamicsReportRole {
     GainReduction,
     GainReductionLimitHit,
-}
-
-// #[serde_as]
-// #[derive(Serialize, Deserialize, Deref, DerefMut, Debug, Clone, PartialEq, From, Constructor)]
-// pub struct MultiChannelValue(#[serde_as(as = "Vec<(_, _)>")] HashMap<usize, ModelValue>);
-
-// alternative
-pub type MultiChannelValue = Vec<Option<ModelValue>>;
-
-// #[serde_as]
-// #[derive(Serialize, Deserialize, Deref, DerefMut, Debug, Clone, PartialEq, From, Constructor)]
-// pub struct MultiChannelTimestampedValue(#[serde_as(as = "Vec<(_, _)>")] HashMap<usize, Timestamped<ModelValue>>);
-pub type MultiChannelTimestampedValue = Vec<Option<Timestamped<ModelValue>>>;
-
-pub fn enumerate_multi_channel_value(val: MultiChannelValue) -> impl Iterator<Item = (usize, ModelValue)> {
-    val.into_iter().enumerate().filter_map(|(i, v)| v.map(|v| (i, v)))
-}
-
-pub fn enumerate_multi_channel_value_bool(val: MultiChannelValue) -> impl Iterator<Item = (usize, bool)> {
-    val.into_iter()
-       .enumerate()
-       .filter_map(|(i, v)| v.and_then(ModelValue::into_bool).map(|v| (i, v)))
-}
-
-pub fn enumerate_multi_channel_value_f64(val: MultiChannelValue) -> impl Iterator<Item = (usize, f64)> {
-    val.into_iter()
-       .enumerate()
-       .filter_map(|(i, v)| v.and_then(ModelValue::into_f64).map(|v| (i, v)))
-}
-
-pub fn enumerate_multi_channel_value_i64(val: MultiChannelValue) -> impl Iterator<Item = (usize, i64)> {
-    val.into_iter()
-       .enumerate()
-       .filter_map(|(i, v)| v.and_then(ModelValue::into_i64).map(|v| (i, v)))
-}
-
-pub mod multi_channel_value {
-    use std::iter;
-
-    use crate::common::model::{ModelValue, MultiChannelValue};
-
-    pub fn single(channel: usize, value: ModelValue) -> MultiChannelValue {
-        iter::repeat(None).take(channel - 1).chain(Some(Some(value)).into_iter()).collect()
-    }
-
-    pub fn bool(channel: usize, value: bool) -> MultiChannelValue {
-        single(channel, ModelValue::Bool(value))
-    }
-
-    pub fn number(channel: usize, value: f64) -> MultiChannelValue {
-        single(channel, ModelValue::Number(value))
-    }
-
-    pub fn string(channel: usize, value: String) -> MultiChannelValue {
-        single(channel, ModelValue::String(value))
-    }
-
-    pub fn join(mut first: MultiChannelValue, other: MultiChannelValue) -> MultiChannelValue {
-        for (index, value) in other.into_iter().enumerate() {
-            if index >= first.len() {
-                first.push(value);
-            } else if value.is_some() {
-                first[index] = value;
-            }
-        }
-
-        first
-    }
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
