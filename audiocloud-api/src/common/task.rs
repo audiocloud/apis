@@ -11,7 +11,6 @@ use crate::cloud::tasks::CreateTask;
 use crate::cloud::CloudError;
 use crate::cloud::CloudError::*;
 use crate::domain::streaming::DiffStamped;
-use crate::time::TimeRange;
 use crate::{
     AppMediaObjectId, DesiredTaskPlayState, DomainId, DynamicInstanceNodeId, FixedInstanceId, FixedInstanceNodeId, MediaObjectId,
     MixerNodeId, Model, ModelId, NodeConnectionId, SecureKey, TaskPlayState, Timestamp, Timestamped, TrackMediaId, TrackNodeId,
@@ -35,6 +34,44 @@ pub struct TaskSpec {
     /// Connections between nodes
     #[serde(default)]
     pub connections: HashMap<NodeConnectionId, NodeConnection>,
+    #[serde(default)]
+    pub revision:    u64,
+}
+
+/// Create task spec
+#[derive(Debug, Serialize, Deserialize, Clone, PartialEq, Default, JsonSchema)]
+pub struct CreateTaskSpec {
+    /// Track nodes of the task
+    #[serde(default)]
+    pub tracks:      HashMap<TrackNodeId, TrackNode>,
+    /// Mixer nodes of the task
+    #[serde(default)]
+    pub mixers:      HashMap<MixerNodeId, MixerNode>,
+    /// Dynamic instance nodes of the task
+    #[serde(default)]
+    pub dynamic:     HashMap<DynamicInstanceNodeId, DynamicInstanceNode>,
+    /// Fixed instance nodes of the task
+    #[serde(default)]
+    pub fixed:       HashMap<FixedInstanceNodeId, FixedInstanceNode>,
+    /// Connections between nodes
+    #[serde(default)]
+    pub connections: HashMap<NodeConnectionId, NodeConnection>,
+}
+
+impl Into<TaskSpec> for CreateTaskSpec {
+    fn into(self) -> TaskSpec {
+        let Self { tracks,
+                   mixers,
+                   dynamic,
+                   fixed,
+                   connections, } = self;
+        TaskSpec { tracks,
+                   mixers,
+                   dynamic,
+                   fixed,
+                   connections,
+                   revision: 0 }
+    }
 }
 
 impl TaskSpec {
@@ -184,16 +221,16 @@ impl TaskSpec {
                                   models: &HashMap<ModelId, Model>)
                                   -> Result<(), CloudError> {
         let fixed = self.fixed
-                        .get(fixed_id)
-                        .ok_or_else(|| InternalInconsistency { message: format!("Connection {id} references fixed {fixed_id} which does not exist")})?;
+            .get(fixed_id)
+            .ok_or_else(|| InternalInconsistency { message: format!("Connection {id} references fixed {fixed_id} which does not exist") })?;
 
         let model_id = fixed.instance_id.model_id();
         let model = models.get(&model_id).ok_or_else(|| {
-            InternalInconsistency { message: format!("Connection {id} references fixed instance labelled {fixed_id} which references model {model_id} which does not exist")}
+            InternalInconsistency { message: format!("Connection {id} references fixed instance labelled {fixed_id} which references model {model_id} which does not exist") }
         })?;
 
         if !channels.is_subset_of(0..(if output { model.outputs.len() } else { model.inputs.len() })) {
-            return Err(InternalInconsistency { message: format!("Connection {id} references fixed instance labelled {fixed_id} which has channels that do not exist")});
+            return Err(InternalInconsistency { message: format!("Connection {id} references fixed instance labelled {fixed_id} which has channels that do not exist") });
         }
 
         Ok(())
@@ -207,16 +244,16 @@ impl TaskSpec {
                                     models: &HashMap<ModelId, Model>)
                                     -> Result<(), CloudError> {
         let dynamic = self.dynamic.get(dynamic_id).ok_or_else(|| {
-            InternalInconsistency{message: format!("Connection {id} references dynamic instance labelled {dynamic_id} which does not exist")}
+            InternalInconsistency { message: format!("Connection {id} references dynamic instance labelled {dynamic_id} which does not exist") }
         })?;
 
         let model_id = &dynamic.model_id;
         let model = models.get(&model_id).ok_or_else(|| {
-            InternalInconsistency{ message: format!("Connection {id} references dynamic instance labelled {dynamic_id} which references model {model_id} which does not exist")}
+            InternalInconsistency { message: format!("Connection {id} references dynamic instance labelled {dynamic_id} which references model {model_id} which does not exist") }
         })?;
 
         if !channels.is_subset_of(0..(if output { model.outputs.len() } else { model.inputs.len() })) {
-            return Err(InternalInconsistency{ message: format!("Connection {id} references dynamic instance labelled {dynamic_id} which has channels that do not exist")});
+            return Err(InternalInconsistency { message: format!("Connection {id} references dynamic instance labelled {dynamic_id} which has channels that do not exist") });
         }
 
         Ok(())
@@ -224,11 +261,11 @@ impl TaskSpec {
 
     fn check_channel_exists_track(&self, id: &NodeConnectionId, track_id: &TrackNodeId, channels: &ChannelMask) -> Result<(), CloudError> {
         let track = self.tracks
-                        .get(track_id)
-                        .ok_or_else(|| InternalInconsistency { message: format!("Connection {id} references track {track_id} which does not exist")})?;
+            .get(track_id)
+            .ok_or_else(|| InternalInconsistency { message: format!("Connection {id} references track {track_id} which does not exist") })?;
 
         if !channels.is_subset_of(0..track.channels.num_channels()) {
-            return Err(InternalInconsistency{ message: format!("Connection {id} references track {track_id} which has channels that do not exist")});
+            return Err(InternalInconsistency { message: format!("Connection {id} references track {track_id} which has channels that do not exist") });
         }
 
         Ok(())
@@ -239,42 +276,81 @@ impl TaskSpec {
 #[derive(Clone, Debug, Serialize, Deserialize, JsonSchema)]
 pub struct Task {
     /// Domain executing the task
-    pub domain_id:           DomainId,
-    /// Reservation time range
-    pub time:                TimeRange,
+    pub domain_id:    DomainId,
+    /// Task reservations
+    pub reservations: TaskReservation,
     /// Task specification
-    pub spec:                TaskSpec,
+    pub spec:         TaskSpec,
     /// Security keys and associateds permissions
-    pub security:            HashMap<SecureKey, TaskPermissions>,
-    /// The pool of fixed isntances available to the task during its reserved time
-    pub fixed_instance_pool: HashSet<FixedInstanceId>,
-    /// Current version of the task, incremented by every change transaction
-    pub version:             u64,
+    pub security:     TaskSecurity,
+}
+
+/// Information about access keys and permissions of a task
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, JsonSchema)]
+pub struct TaskSecurity {
+    /// Security settings per secure key
+    pub security: HashMap<SecureKey, TaskPermissions>,
+    /// Revision number - each operation on task security increments this
+    #[serde(default)]
+    pub revision: u64,
+}
+
+impl From<CreateTaskSecurity> for TaskSecurity {
+    fn from(other: CreateTaskSecurity) -> Self {
+        TaskSecurity { security: other,
+                       revision: 0, }
+    }
+}
+
+/// Information about access keys and permissions of a task
+pub type CreateTaskSecurity = HashMap<SecureKey, TaskPermissions>;
+
+/// Timed resource reservations for the task (must contain all used resources)
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, JsonSchema)]
+pub struct TaskReservation {
+    /// Start of the reservation time
+    pub from:            Timestamp,
+    /// End of the reservation time
+    pub to:              Timestamp,
+    /// Fixed instances reserved for the task
+    pub fixed_instances: HashSet<FixedInstanceId>,
+    /// Revision number - each operation on task reservation increments this
+    pub revision:        u64,
+}
+
+/// Timed resource reservations for the task (must contain all used resources)
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, JsonSchema)]
+pub struct CreateTaskReservation {
+    /// Start of the reservation time
+    pub from:            Timestamp,
+    /// End of the reservation time
+    pub to:              Timestamp,
+    /// Fixed instances reserved for the task
+    pub fixed_instances: HashSet<FixedInstanceId>,
+}
+
+impl Into<TaskReservation> for CreateTaskReservation {
+    fn into(self) -> TaskReservation {
+        let Self { from, to, fixed_instances } = self;
+        TaskReservation { from,
+                          to,
+                          fixed_instances,
+                          revision: 0 }
+    }
 }
 
 impl From<CreateTask> for Task {
     fn from(source: CreateTask) -> Self {
-        let CreateTask { time,
-                         domain,
-                         tracks,
-                         mixers,
-                         dynamic,
-                         fixed,
+        let CreateTask { domain_id,
+                         reservations,
+                         spec,
                          security,
-                         connections,
-                         fixed_instance_pool,
                          .. } = source;
 
-        Self { domain_id: domain,
-               time,
-               security,
-               fixed_instance_pool,
-               version: 0,
-               spec: TaskSpec { tracks,
-                                mixers,
-                                dynamic,
-                                fixed,
-                                connections } }
+        Self { domain_id:    domain_id.into(),
+               reservations: reservations.into(),
+               spec:         spec.into(),
+               security:     security.into(), }
     }
 }
 

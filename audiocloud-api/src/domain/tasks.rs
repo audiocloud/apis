@@ -5,8 +5,8 @@ use serde::{Deserialize, Serialize};
 
 pub use crate::audio_engine::{TaskPlayStopped, TaskPlaying, TaskRenderCancelled, TaskRendering, TaskSought};
 use crate::{
-    AppId, AppMediaObjectId, AppTaskId, FixedInstanceId, InstancePlayState, MediaObject, ModifyTaskSpec, SecureKey, TaskId,
-    TaskPermissions, TaskPlayState, TaskSpec, TimeRange,
+    AppId, AppMediaObjectId, AppTaskId, CreateTaskReservation, CreateTaskSecurity, CreateTaskSpec, FixedInstanceId, InstancePlayState,
+    MediaObject, ModifyTaskSpec, TaskId, TaskPlayState, TaskSpec,
 };
 
 /// A summary of a task
@@ -46,12 +46,12 @@ pub type TaskSummaryList = Vec<TaskSummary>;
 /// Create a task on the domain
 #[derive(Serialize, Deserialize, Clone, Debug, JsonSchema)]
 pub struct CreateTask {
+    /// Task reservations
+    pub reservations: CreateTaskReservation,
     /// Task specification
-    pub spec:     TaskSpec,
-    /// Time during which the task should be reserved
-    pub time:     TimeRange,
-    /// Security attached to the task
-    pub security: HashMap<SecureKey, TaskPermissions>,
+    pub spec:         CreateTaskSpec,
+    /// Security keys and associateds permissions
+    pub security:     CreateTaskSecurity,
 }
 
 /// Response to creating a task on the domain

@@ -19,7 +19,7 @@ use crate::newtypes::{
     AppId, AppMediaObjectId, DynamicInstanceNodeId, FixedInstanceId, FixedInstanceNodeId, MediaObjectId, MixerNodeId, NodeConnectionId,
     ParameterId, SecureKey, TrackMediaId, TrackNodeId,
 };
-use crate::{json_schema_new_type, ChannelMask, DestinationPadId, SourcePadId, TaskNodeId};
+use crate::{json_schema_new_type, ChannelMask, DestinationPadId, SourcePadId, TaskNodeId, TaskSecurity};
 
 use self::ModifyTaskError::*;
 
@@ -365,12 +365,14 @@ impl Task {
     }
 
     pub fn set_security(&mut self, key: SecureKey, security: TaskPermissions) -> Result<(), ModifyTaskError> {
-        self.security.insert(key, security);
+        self.security.security.insert(key, security);
+        self.security.revision += 1;
         Ok(())
     }
 
     pub fn revoke_security(&mut self, key: SecureKey) -> Result<(), ModifyTaskError> {
-        self.security.remove(&key);
+        self.security.security.remove(&key);
+        self.security.revision += 1;
         Ok(())
     }
 }
@@ -633,8 +635,8 @@ impl TaskSpec {
     }
 }
 
-fn security_changes(rv: &mut Vec<ModifyTask>, existing: &HashMap<SecureKey, TaskPermissions>, new: &HashMap<SecureKey, TaskPermissions>) {
-    let changes = hashmap_changes(existing, new);
+fn security_changes(rv: &mut Vec<ModifyTask>, existing: &TaskSecurity, new: &TaskSecurity) {
+    let changes = hashmap_changes(&existing.security, &new.security);
     for (key, security) in changes.changed.into_iter().chain(changes.added.into_iter()) {
         rv.push(ModifyTask::SetSecurity { key, security })
     }

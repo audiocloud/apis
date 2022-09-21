@@ -47,10 +47,8 @@ pub struct DomainConfig {
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
 #[serde(rename_all = "snake_case")]
 pub enum DomainCommandSource {
-    /// Getting cloud events
+    /// Domain command source disabled
     Disabled,
-    /// Emit events as logs
-    Log,
     /// Consume a kafka topic
     Kafka {
         /// Topic where commands to the domain will be sent
@@ -72,6 +70,8 @@ pub enum DomainCommandSource {
 pub enum DomainEventSink {
     /// Disable sending of domain events
     Disabled,
+    /// Emit events as logs
+    Log,
     /// Produce to a kafka topic
     Kafka {
         /// Topic where events from the domain may be sent
