@@ -13,7 +13,7 @@ use crate::cloud::CloudError::*;
 use crate::domain::streaming::DiffStamped;
 use crate::{
     AppMediaObjectId, DesiredTaskPlayState, DomainId, DynamicInstanceNodeId, FixedInstanceId, FixedInstanceNodeId, MediaObjectId,
-    MixerNodeId, Model, ModelId, NodeConnectionId, SecureKey, TaskPlayState, Timestamp, Timestamped, TrackMediaId, TrackNodeId,
+    MixerNodeId, Model, ModelId, ModifyTask, NodeConnectionId, SecureKey, TaskPlayState, Timestamp, Timestamped, TrackMediaId, TrackNodeId,
 };
 
 /// Task specification
@@ -366,7 +366,8 @@ impl MixerNode {
 
         let half_output_channels = output_channels / 2;
 
-        if matches!(mask, ChannelMask::Mono(i) if i < output_channels) || matches!(mask, ChannelMask::Stereo(i) if i < half_output_channels) {
+        if matches!(mask, ChannelMask::Mono(i) if i < output_channels) || matches!(mask, ChannelMask::Stereo(i) if i < half_output_channels)
+        {
             Ok(())
         } else {
             Err(ChannelMaskIncompatible { mask:     mask.clone(),
@@ -402,7 +403,8 @@ impl DynamicInstanceNode {
         let output_channels = model.get_audio_output_channel_count();
         let half_output_channels = output_channels / 2;
 
-        if matches!(mask, ChannelMask::Mono(i) if i < output_channels) || matches!(mask, ChannelMask::Stereo(i) if i < half_output_channels) {
+        if matches!(mask, ChannelMask::Mono(i) if i < output_channels) || matches!(mask, ChannelMask::Stereo(i) if i < half_output_channels)
+        {
             Ok(())
         } else {
             Err(ChannelMaskIncompatible { mask:     mask.clone(),

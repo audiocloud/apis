@@ -125,6 +125,16 @@ pub struct MediaObject {
     pub upload:   Option<MediaUpload>,
 }
 
+impl MediaObject {
+    pub fn new(id: &AppMediaObjectId) -> Self {
+        Self { id:       id.clone(),
+               metadata: None,
+               path:     None,
+               download: None,
+               upload:   None, }
+    }
+}
+
 #[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct UpdateMediaSession {
     pub media_objects: HashSet<AppMediaObjectId>,

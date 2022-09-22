@@ -78,7 +78,7 @@ impl InstancePowerState {
     }
 }
 
-#[derive(Serialize, Deserialize, Clone, Copy, Debug, PartialEq)]
+#[derive(Serialize, Deserialize, Clone, Copy, Debug, PartialEq, JsonSchema)]
 #[serde(rename_all = "snake_case")]
 pub enum DesiredInstancePowerState {
     PoweredUp,
@@ -94,17 +94,30 @@ impl DesiredInstancePowerState {
     }
 }
 
-#[derive(Serialize, Deserialize, Clone, Debug, PartialEq)]
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
 pub struct ReportInstancePowerState {
     pub desired: Timestamped<DesiredInstancePowerState>,
     pub actual:  Timestamped<InstancePowerState>,
 }
 
-#[derive(Serialize, Deserialize, Clone, Debug, PartialEq)]
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
 pub struct ReportInstancePlayState {
     pub desired: Timestamped<DesiredInstancePlayState>,
     pub actual:  Timestamped<InstancePlayState>,
     pub media:   Option<Timestamped<f64>>,
+}
+
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
+#[serde(rename_all = "snake_case")]
+pub enum InstanceEvent {
+    State {
+        power:     Option<ReportInstancePowerState>,
+        play:      Option<ReportInstancePlayState>,
+        connected: Timestamped<bool>,
+    },
+    Error {
+        error: String,
+    },
 }
 
 pub mod power {

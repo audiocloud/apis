@@ -18,14 +18,17 @@ use crate::common::task::TaskPermissions;
 use crate::common::task::TaskSpec;
 use crate::instance_driver::InstanceDriverError;
 use crate::newtypes::{AppTaskId, SecureKey};
-use crate::{merge_schemas, AppId, AppMediaObjectId, EngineId, FixedInstanceId, ModifyTaskError, RequestId, SocketId, TaskId};
+use crate::{
+    merge_schemas, AppId, AppMediaObjectId, EngineId, FixedInstanceId, InstanceEvent, ModifyTaskError, RequestId, SocketId, TaskEvent,
+    TaskId,
+};
 
 pub mod streaming;
 pub mod tasks;
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
 #[serde(rename_all = "snake_case")]
-pub enum DomainSessionCommand {
+pub enum DomainCommand {
     Create {
         app_session_id: AppTaskId,
         create:         CreateTask,
@@ -55,28 +58,41 @@ pub enum DomainSessionCommand {
     },
 }
 
-impl DomainSessionCommand {
+impl DomainCommand {
     pub fn get_session_id(&self) -> &AppTaskId {
         match self {
-            DomainSessionCommand::Create { app_session_id, .. } => app_session_id,
-            DomainSessionCommand::SetSpec { app_session_id, .. } => app_session_id,
-            DomainSessionCommand::SetSecurity { app_session_id, .. } => app_session_id,
-            DomainSessionCommand::Modify { app_session_id, .. } => app_session_id,
-            DomainSessionCommand::SetDesiredPlayState { app_session_id, .. } => app_session_id,
-            DomainSessionCommand::Delete { app_session_id, .. } => app_session_id,
+            DomainCommand::Create { app_session_id, .. } => app_session_id,
+            DomainCommand::SetSpec { app_session_id, .. } => app_session_id,
+            DomainCommand::SetSecurity { app_session_id, .. } => app_session_id,
+            DomainCommand::Modify { app_session_id, .. } => app_session_id,
+            DomainCommand::SetDesiredPlayState { app_session_id, .. } => app_session_id,
+            DomainCommand::Delete { app_session_id, .. } => app_session_id,
         }
     }
 
     pub fn get_kind(&self) -> &'static str {
         match self {
-            DomainSessionCommand::Create { .. } => "create",
-            DomainSessionCommand::SetSpec { .. } => "set_spec",
-            DomainSessionCommand::SetSecurity { .. } => "set_security",
-            DomainSessionCommand::Modify { .. } => "modify",
-            DomainSessionCommand::SetDesiredPlayState { .. } => "set_desired_play_state",
-            DomainSessionCommand::Delete { .. } => "delete",
+            DomainCommand::Create { .. } => "create",
+            DomainCommand::SetSpec { .. } => "set_spec",
+            DomainCommand::SetSecurity { .. } => "set_security",
+            DomainCommand::Modify { .. } => "modify",
+            DomainCommand::SetDesiredPlayState { .. } => "set_desired_play_state",
+            DomainCommand::Delete { .. } => "delete",
         }
     }
+}
+
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
+#[serde(rename_all = "snake_case")]
+pub enum DomainEvent {
+    FixedInstance {
+        instance_id: FixedInstanceId,
+        event:       InstanceEvent,
+    },
+    Task {
+        task_id: AppTaskId,
+        event:   TaskEvent,
+    },
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, JsonSchema, Error)]
@@ -136,6 +152,8 @@ pub struct DomainApi;
 
 pub fn schemas() -> RootSchema {
     merge_schemas([schema_for!(DomainError),
+                   schema_for!(DomainCommand),
+                   schema_for!(DomainEvent),
                    schema_for!(AppId),
                    schema_for!(TaskId),
                    schema_for!(SocketId),

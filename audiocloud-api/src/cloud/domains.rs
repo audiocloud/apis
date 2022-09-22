@@ -60,7 +60,7 @@ pub enum DomainCommandSource {
         /// SASL SCRAM password used to consume commands
         password: String,
         /// Read after this offset from event stream, or default to the latest one persisted
-        offset:   Option<u64>,
+        offset:   Option<i64>,
     },
 }
 
