@@ -9,9 +9,10 @@ use utoipa::OpenApi;
 use crate::common::instance::{DesiredInstancePlayState, InstancePlayState};
 use crate::common::media::{PlayId, RenderId};
 use crate::common::task::InstanceReports;
-use crate::merge_schemas;
 use crate::newtypes::{FixedInstanceId, ParameterId};
+use crate::{merge_schemas, Request, SerializableResult};
 
+/// A command that can be sent to the instance driver
 #[derive(PartialEq, Serialize, Deserialize, Clone, Debug, JsonSchema)]
 #[serde(rename_all = "snake_case")]
 pub enum InstanceDriverCommand {
@@ -21,6 +22,10 @@ pub enum InstanceDriverCommand {
     Render { length: f64, render_id: RenderId },
     Rewind { to: f64 },
     SetParameters(serde_json::Value),
+}
+
+impl Request for InstanceDriverCommand {
+    type Response = SerializableResult<(), InstanceDriverError>;
 }
 
 #[derive(PartialEq, Serialize, Deserialize, Clone, Debug, JsonSchema)]

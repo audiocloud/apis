@@ -2,13 +2,14 @@
 use chrono::Utc;
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
+use std::collections::HashMap;
 
 use crate::common::change::{DesiredTaskPlayState, TaskPlayState};
 use crate::common::media::{PlayId, RenderId};
 use crate::common::time::Timestamp;
 use crate::domain::tasks::TaskUpdated;
 use crate::domain::DomainError;
-use crate::{AppTaskId, ModifyTaskSpec, RequestId, SecureKey, SerializableResult, SocketId, TaskEvent};
+use crate::{AppTaskId, ModifyTaskSpec, RequestId, SecureKey, SerializableResult, SocketId, TaskEvent, TaskPermissions};
 
 #[derive(Serialize, Deserialize, Debug, Clone, JsonSchema)]
 pub struct StreamStats {
@@ -76,7 +77,7 @@ pub enum DomainServerMessage {
         /// Request id this message is responding to
         request_id: RequestId,
         /// Result of the operation - the assigned socket ID
-        result:     SerializableResult<SocketId, DomainError>,
+        result:     SerializableResult<PeerConnectionCreated, DomainError>,
     },
     /// Response to submitting a peer connection candidate
     PeerConnectionCandidateResponse {
@@ -106,7 +107,33 @@ pub enum DomainServerMessage {
         /// Socket id of the peer connection
         socket_id:  SocketId,
         /// ICE Candidate
-        candidate:  serde_json::Value,
+        candidate:  String,
+    },
+    /// Ping message
+    Ping {
+        /// Challenge string
+        ///
+        /// In a future release, this field will contain a challenge that must be processed and returned
+        /// to validate that the client is running a valid version of the client code
+        challenge: String,
+    },
+    /// Notify the task permissions on this socket
+    NotifyTaskPermissions {
+        /// Mapping from each available task to permission information to that task
+        permissions: HashMap<AppTaskId, TaskPermissions>,
+    },
+}
+
+/// Confirmation that the socket has been created normally from the domain client offer
+#[derive(Serialize, Deserialize, Debug, Clone, JsonSchema)]
+pub enum PeerConnectionCreated {
+    /// Connection created normally
+    Created {
+        /// Created socket id
+        socket_id: SocketId,
+
+        /// The domain server's WebRTC offer
+        remote_description: String,
     },
 }
 
@@ -140,10 +167,8 @@ pub enum DomainClientMessage {
     RequestPeerConnection {
         /// Request id (to reference the response to)
         request_id:  RequestId,
-        /// Socket id of the peer connection
-        socket_id:   SocketId,
         /// Local description offer
-        description: serde_json::Value,
+        description: String,
     },
     /// Submit a new WebRTC peer connection ICE candidate
     SubmitPeerConnectionCandidate {
@@ -152,7 +177,7 @@ pub enum DomainClientMessage {
         /// Socket id of the peer connection
         socket_id:  SocketId,
         /// ICE Candidate
-        candidate:  serde_json::Value,
+        candidate:  String,
     },
     /// Request attaching to a task
     RequestAttachToTask {
@@ -168,6 +193,10 @@ pub enum DomainClientMessage {
         request_id: RequestId,
         /// Id of the task to attach to
         task_id:    AppTaskId,
+    },
+    Pong {
+        challenge: String,
+        response:  String,
     },
 }
 

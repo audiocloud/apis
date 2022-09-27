@@ -15,8 +15,8 @@ use crate::common::task::{
 };
 use crate::common::time::Timestamped;
 use crate::newtypes::{
-    AppId, AppMediaObjectId, DynamicInstanceNodeId, FixedInstanceId, FixedInstanceNodeId, MediaObjectId, MixerNodeId, NodeConnectionId,
-    SecureKey, TrackMediaId, TrackNodeId,
+    DynamicInstanceNodeId, FixedInstanceId, FixedInstanceNodeId, MediaObjectId, MixerNodeId, NodeConnectionId, SecureKey, TrackMediaId,
+    TrackNodeId,
 };
 use crate::{json_schema_new_type, ChannelMask, DestinationPadId, SourcePadId, TaskNodeId, TaskSecurity};
 
@@ -281,12 +281,12 @@ impl TaskPlayState {
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq)]
-pub struct SessionState {
+pub struct TaskState {
     pub play_state:         Timestamped<TaskPlayState>,
     pub desired_play_state: Timestamped<DesiredTaskPlayState>,
 }
 
-impl Default for SessionState {
+impl Default for TaskState {
     fn default() -> Self {
         Self { play_state:         Timestamped::new(TaskPlayState::Stopped),
                desired_play_state: Timestamped::new(DesiredTaskPlayState::Stopped), }
@@ -377,14 +377,14 @@ impl Task {
 }
 
 impl TaskSpec {
-    pub fn get_fixed_instance_ids<'a>(&'a self) -> impl Iterator<Item = &'a FixedInstanceId> + 'a {
-        self.fixed.values().map(|fixed| &fixed.instance_id)
+    pub fn get_fixed_instance_ids(&self) -> HashSet<&FixedInstanceId> {
+        self.fixed.values().map(|fixed| &fixed.instance_id).collect()
     }
 
-    pub fn get_media_object_ids(&self, app_id: &AppId) -> HashSet<AppMediaObjectId> {
+    pub fn get_media_object_ids(&self) -> HashSet<&MediaObjectId> {
         self.tracks
             .values()
-            .flat_map(|track| track.media.values().map(|media| media.object_id.clone().for_app(app_id.clone())))
+            .flat_map(|track| track.media.values().map(|media| &media.object_id))
             .collect()
     }
 

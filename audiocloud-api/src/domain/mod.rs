@@ -133,6 +133,9 @@ pub enum DomainError {
 
     #[error("The service call failed or timed out: {error}")]
     BadGateway { error: String },
+
+    #[error("WebRTC error: {error}")]
+    WebRTCError { error: String },
 }
 
 #[derive(OpenApi)]

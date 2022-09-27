@@ -13,7 +13,7 @@ use crate::cloud::CloudError::*;
 use crate::domain::streaming::DiffStamped;
 use crate::{
     AppMediaObjectId, DesiredTaskPlayState, DomainId, DynamicInstanceNodeId, FixedInstanceId, FixedInstanceNodeId, MediaObjectId,
-    MixerNodeId, Model, ModelId, ModifyTask, NodeConnectionId, SecureKey, TaskPlayState, Timestamp, Timestamped, TrackMediaId, TrackNodeId,
+    MixerNodeId, Model, ModelId, NodeConnectionId, SecureKey, TaskPlayState, TimeRange, Timestamp, Timestamped, TrackMediaId, TrackNodeId,
 };
 
 /// Task specification
@@ -313,6 +313,18 @@ pub struct TaskReservation {
     pub fixed_instances: HashSet<FixedInstanceId>,
     /// Revision number - each operation on task reservation increments this
     pub revision:        u64,
+}
+
+impl TaskReservation {
+    /// Returns true if the current UTC time is within the reservation time
+    pub fn contains_now(&self) -> bool {
+        self.time_range().contains_now()
+    }
+
+    /// Get a time range for this reservation
+    pub fn time_range(&self) -> TimeRange {
+        TimeRange::new(self.from, self.to)
+    }
 }
 
 /// Timed resource reservations for the task (must contain all used resources)

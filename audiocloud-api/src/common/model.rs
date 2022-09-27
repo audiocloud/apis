@@ -235,6 +235,12 @@ pub enum ModelCapability {
     DigitalInputOutput,
 }
 
+#[derive(Clone, Serialize, Deserialize, Debug, PartialEq, Eq, Hash, JsonSchema)]
+#[serde(rename_all = "snake_case")]
+pub struct PowerDistributorReports {
+    pub power: Option<Vec<bool>>,
+}
+
 #[derive(Serialize, Deserialize, Clone, Copy, Debug, Eq, PartialEq, IsVariant, Unwrap, JsonSchema)]
 #[serde(rename_all = "snake_case")]
 pub enum ModelParameterRole {

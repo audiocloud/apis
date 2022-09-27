@@ -18,29 +18,43 @@ pub struct DomainConfig {
     /// Id of the domain
     pub domain_id:            DomainId,
     /// Fixed instances configured on the domain
-    pub fixed_instances:      HashMap<FixedInstanceId, DomainFixedInstance>,
+    #[serde(default)]
+    pub fixed_instances:      HashMap<FixedInstanceId, DomainFixedInstanceConfig>,
     /// Dynamic instances configured on the domain, with associated limits
+    #[serde(default)]
     pub dynamic_instances:    HashMap<ModelId, DynamicInstanceLimits>,
     /// Engines configured on the domain
+    #[serde(default)]
     pub engines:              HashMap<EngineId, DomainEngine>,
     /// Currently configured tasks
+    #[serde(default)]
     pub tasks:                HashMap<AppTaskId, Task>,
     /// Configured maintenance time windows during which the domain should not serve requests
+    #[serde(default)]
     pub maintenance:          Vec<Maintenance>,
     /// Apps allowed to access the domain
+    #[serde(default)]
     pub apps:                 HashSet<AppId>,
     /// Maximum number of concurrent tasks (when lower than the sum of tasks available on engines)
-    pub max_concurrent_tasks: usize,
+    #[serde(default)]
+    pub max_concurrent_tasks: Option<usize>,
     /// Minimum Task length
+    #[serde(default = "default_min_task_length")]
     pub min_task_len_ms:      i64,
     /// Source for commands from the cloud to the domain
+    #[serde(default)]
     pub command_source:       DomainCommandSource,
     /// Sink for events from the domain to the cloud
+    #[serde(default)]
     pub event_sink:           DomainEventSink,
     /// Source of model information for the domain (can include unused models)
     pub models:               DomainModelSource,
-    /// The public base URL where domain API is visible to the outside world
-    pub public_url:           String,
+    /// The public host or IP where domain API is visible to the outside world
+    pub public_host:          String,
+}
+
+fn default_min_task_length() -> i64 {
+    5_000
 }
 
 /// Source of commands for domains
@@ -64,6 +78,12 @@ pub enum DomainCommandSource {
     },
 }
 
+impl Default for DomainCommandSource {
+    fn default() -> Self {
+        Self::Disabled
+    }
+}
+
 /// Source of commands for domains
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
 #[serde(rename_all = "snake_case")]
@@ -83,6 +103,12 @@ pub enum DomainEventSink {
         /// SASL SCRAM password used to produce events
         password: String,
     },
+}
+
+impl Default for DomainEventSink {
+    fn default() -> Self {
+        Self::Log
+    }
 }
 
 /// Source for models
@@ -112,13 +138,15 @@ pub enum DomainModelSource {
 #[derive(Serialize, Deserialize, Debug, Clone, JsonSchema)]
 pub struct DomainEngine {
     /// Dynamic instances configured on the audio engine, with associated limits
+    #[serde(default)]
     pub dynamic_instances:    HashMap<ModelId, DynamicInstanceLimits>,
     /// Maximum number of concurrent tasks
     pub max_concurrent_tasks: usize,
     /// Resources available on the domain
+    #[serde(default)]
     pub resources:            HashMap<ResourceId, f64>,
     /// Native audio sample rate
-    pub native_sample_rate:   usize,
+    pub sample_rate:          usize,
 }
 
 /// Limits on dynamic instances
@@ -133,22 +161,29 @@ pub struct DynamicInstanceLimits {
 
 /// Configuration of a fixed instance
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
-pub struct DomainFixedInstance {
+pub struct DomainFixedInstanceConfig {
     /// Engine hosting the instance
     pub engine_id:     EngineId,
     /// Instance inputs start at index on engine
+    #[serde(default)]
     pub input_start:   Option<u32>,
     /// Instance outputs start at index on engine
+    #[serde(default)]
     pub output_start:  Option<u32>,
     /// Additional models with parameters or reports that are merged with the instance model
+    #[serde(default)]
     pub sidecars:      HashSet<ModelId>,
     /// Optional configuration to powers on/off instance to conserve energy
-    pub power:         Option<DomainPowerInstanceSettings>,
+    #[serde(default)]
+    pub power:         Option<DomainPowerInstanceConfig>,
     /// Optional configuration if instance handles media (such as tape machines)
-    pub media:         Option<DomainMediaInstanceSettings>,
+    #[serde(default)]
+    pub media:         Option<DomainMediaInstanceConfig>,
     /// Apps allowed to access the instance or null if the domain defaults are used
+    #[serde(default)]
     pub apps_override: Option<HashSet<AppId>>,
     /// Maintenance windows on this instance
+    #[serde(default)]
     pub maintenance:   Vec<Maintenance>,
 }
 
@@ -162,7 +197,7 @@ pub struct InstanceRouting {
 
 /// Instance power settings
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
-pub struct DomainPowerInstanceSettings {
+pub struct DomainPowerInstanceConfig {
     /// Number of milliseconds to wait to warm up after powering on
     pub warm_up_ms:        usize,
     /// Number of milliseconds to wait to cool down after powering down
@@ -177,7 +212,7 @@ pub struct DomainPowerInstanceSettings {
 
 /// Instance media settings
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
-pub struct DomainMediaInstanceSettings {
+pub struct DomainMediaInstanceConfig {
     /// Lenght of the inserted media in milliseconds
     pub length_ms:               usize,
     /// WHen rewinding to make space for contiguous renders, should the driver rewind to start or just enough to start rendering
@@ -228,13 +263,13 @@ pub struct AppFixedInstance {
     pub maintenance: Vec<Maintenance>,
 }
 
-impl From<DomainFixedInstance> for AppFixedInstance {
-    fn from(instance: DomainFixedInstance) -> Self {
-        let DomainFixedInstance { sidecars,
-                                  power,
-                                  media,
-                                  maintenance,
-                                  .. } = instance;
+impl From<DomainFixedInstanceConfig> for AppFixedInstance {
+    fn from(instance: DomainFixedInstanceConfig) -> Self {
+        let DomainFixedInstanceConfig { sidecars,
+                                        power,
+                                        media,
+                                        maintenance,
+                                        .. } = instance;
         Self { power: power.is_some(),
                media: media.is_some(),
                maintenance,
