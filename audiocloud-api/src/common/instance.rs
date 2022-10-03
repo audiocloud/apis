@@ -104,7 +104,7 @@ pub struct ReportInstancePowerState {
 pub struct ReportInstancePlayState {
     pub desired: Timestamped<DesiredInstancePlayState>,
     pub actual:  Timestamped<InstancePlayState>,
-    pub media:   Option<Timestamped<f64>>,
+    pub media:   Timestamped<Option<f64>>,
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]

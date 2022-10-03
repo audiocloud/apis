@@ -82,7 +82,7 @@ pub enum MediaUpdated {
 }
 
 #[derive(Debug, Serialize, Deserialize, JsonSchema)]
-pub struct AudioEngineFixedInstance {
+pub struct EngineFixedInstance {
     pub input_start:  u32,
     pub output_start: u32,
     pub num_inputs:   u32,
@@ -91,7 +91,7 @@ pub struct AudioEngineFixedInstance {
 
 #[derive(Debug, Serialize, Deserialize, JsonSchema)]
 pub struct SetInstances {
-    instances: HashMap<FixedInstanceId, AudioEngineFixedInstance>,
+    instances: HashMap<FixedInstanceId, EngineFixedInstance>,
 }
 
 #[derive(Debug, Serialize, Deserialize, JsonSchema)]
@@ -164,7 +164,7 @@ pub enum TaskRenderCancelled {
                 tasks::render,
                 environment::set_media,
                 environment::set_instances))]
-pub struct AudioEngineApi;
+pub struct EngineApi;
 
 pub fn schemas() -> RootSchema {
     merge_schemas([schema_for!(EngineError),
@@ -178,7 +178,7 @@ pub fn schemas() -> RootSchema {
                    schema_for!(TaskRenderCancelled),
                    schema_for!(MediaUpdated),
                    schema_for!(InstancesUpdated),
-                   schema_for!(AudioEngineFixedInstance),
+                   schema_for!(EngineFixedInstance),
                    schema_for!(SetInstances),
                    schema_for!(SetMedia),
                    schema_for!(TaskWithStatusList),

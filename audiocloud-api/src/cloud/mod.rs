@@ -198,7 +198,7 @@ pub fn schemas() -> RootSchema {
                    schema_for!(domains::AppFixedInstance),
                    schema_for!(domains::DomainFixedInstanceConfig),
                    schema_for!(domains::DynamicInstanceLimits),
-                   schema_for!(domains::DomainEngine),
+                   schema_for!(domains::DomainEngineConfig),
                    schema_for!(media::DownloadCreated),
                    schema_for!(media::UploadCreated),
                    schema_for!(media::MediaObjectDeleted),

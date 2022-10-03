@@ -249,6 +249,16 @@ pub struct RequestId(String);
 #[repr(transparent)]
 pub struct EngineId(String);
 
+impl EngineId {
+    pub fn engine_command_subject(&self) -> String {
+        format!("ac.engn.{}.cmds", self)
+    }
+
+    pub fn engine_event_subject(&self) -> String {
+        format!("ac.engn.{}.evts", self)
+    }
+}
+
 /// Id of a socket (there may be more than one streaming connection per task in a domain)
 #[derive(Clone, Debug, Serialize, Deserialize, Eq, PartialEq, Ord, PartialOrd, Display, Deref, Constructor, Hash, From, FromStr)]
 #[repr(transparent)]

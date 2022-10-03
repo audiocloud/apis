@@ -25,7 +25,7 @@ pub struct DomainConfig {
     pub dynamic_instances:    HashMap<ModelId, DynamicInstanceLimits>,
     /// Engines configured on the domain
     #[serde(default)]
-    pub engines:              HashMap<EngineId, DomainEngine>,
+    pub engines:              HashMap<EngineId, DomainEngineConfig>,
     /// Currently configured tasks
     #[serde(default)]
     pub tasks:                HashMap<AppTaskId, Task>,
@@ -136,7 +136,7 @@ pub enum DomainModelSource {
 
 /// Information about a media engine within a domain
 #[derive(Serialize, Deserialize, Debug, Clone, JsonSchema)]
-pub struct DomainEngine {
+pub struct DomainEngineConfig {
     /// Dynamic instances configured on the audio engine, with associated limits
     #[serde(default)]
     pub dynamic_instances:    HashMap<ModelId, DynamicInstanceLimits>,
@@ -188,12 +188,14 @@ pub struct DomainFixedInstanceConfig {
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone, Copy, PartialEq)]
-pub struct InstanceRouting {
+pub struct FixedInstanceRouting {
     pub send_count:     usize,
     pub send_channel:   usize,
     pub return_count:   usize,
     pub return_channel: usize,
 }
+
+pub type FixedInstanceRoutingMap = HashMap<FixedInstanceId, FixedInstanceRouting>;
 
 /// Instance power settings
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
@@ -230,7 +232,7 @@ pub struct GetDomainResponse {
     /// FIxed instances available on the domain
     pub fixed_instances: HashMap<FixedInstanceId, AppFixedInstance>,
     /// Engines available on the domain
-    pub engines:         HashMap<EngineId, DomainEngine>,
+    pub engines:         HashMap<EngineId, DomainEngineConfig>,
     /// Minimum task duration
     pub min_task_len:    f64,
     /// Base public URL for domain API

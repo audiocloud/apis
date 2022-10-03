@@ -644,7 +644,7 @@ fn security_changes(rv: &mut Vec<ModifyTask>, existing: &TaskSecurity, new: &Tas
     }
 }
 
-fn hashmap_changes<K: Hash + Eq + Clone, T: Clone + PartialEq>(existing: &HashMap<K, T>, new: &HashMap<K, T>) -> HashMapChanges<K, T> {
+pub fn hashmap_changes<K: Hash + Eq + Clone, T: Clone + PartialEq>(existing: &HashMap<K, T>, new: &HashMap<K, T>) -> HashMapChanges<K, T> {
     let mut changes = HashMapChanges::default();
     let key_set = existing.keys().chain(new.keys()).collect::<HashSet<_>>();
     for key in key_set {
@@ -666,10 +666,10 @@ fn hashmap_changes<K: Hash + Eq + Clone, T: Clone + PartialEq>(existing: &HashMa
 }
 
 #[derive(Serialize, Deserialize)]
-struct HashMapChanges<K: Hash + Eq, T> {
-    added:   HashMap<K, T>,
-    changed: HashMap<K, T>,
-    removed: HashSet<K>,
+pub struct HashMapChanges<K: Hash + Eq, T> {
+    pub added:   HashMap<K, T>,
+    pub changed: HashMap<K, T>,
+    pub removed: HashSet<K>,
 }
 
 impl<K: Hash + Eq, T> Default for HashMapChanges<K, T> {

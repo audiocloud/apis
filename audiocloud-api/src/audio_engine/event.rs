@@ -9,7 +9,7 @@ use crate::{AppTaskId, DestinationPadId, DynamicInstanceNodeId, SourcePadId};
 /// Event emitted by the audio engine
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq)]
 #[serde(rename_all = "snake_case")]
-pub enum AudioEngineEvent {
+pub enum EngineEvent {
     /// The task has stopped
     Stopped {
         /// Task id
@@ -75,16 +75,16 @@ pub enum AudioEngineEvent {
     },
 }
 
-impl AudioEngineEvent {
+impl EngineEvent {
     pub fn task_id(&self) -> &AppTaskId {
         match self {
-            AudioEngineEvent::Stopped { task_id } => task_id,
-            AudioEngineEvent::Playing { task_id, .. } => task_id,
-            AudioEngineEvent::PlayingFailed { task_id, .. } => task_id,
-            AudioEngineEvent::Rendering { task_id, .. } => task_id,
-            AudioEngineEvent::RenderingFinished { task_id, .. } => task_id,
-            AudioEngineEvent::RenderingFailed { task_id, .. } => task_id,
-            AudioEngineEvent::Error { task_id, .. } => task_id,
+            EngineEvent::Stopped { task_id } => task_id,
+            EngineEvent::Playing { task_id, .. } => task_id,
+            EngineEvent::PlayingFailed { task_id, .. } => task_id,
+            EngineEvent::Rendering { task_id, .. } => task_id,
+            EngineEvent::RenderingFinished { task_id, .. } => task_id,
+            EngineEvent::RenderingFailed { task_id, .. } => task_id,
+            EngineEvent::Error { task_id, .. } => task_id,
         }
     }
 }

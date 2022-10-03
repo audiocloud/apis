@@ -37,13 +37,6 @@ impl MediaJobState {
     }
 }
 
-#[derive(Serialize, Deserialize, Clone, Debug, PartialEq)]
-pub struct DownloadMedia {
-    pub get_url:    String,
-    pub notify_url: String,
-    pub context:    String,
-}
-
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
 pub struct MediaMetadata {
     pub channels:    MediaChannels,
@@ -106,14 +99,22 @@ impl ImportToDomain {
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
 pub struct MediaDownload {
+    pub media_id: AppMediaObjectId,
     pub download: DownloadFromDomain,
     pub state:    MediaJobState,
 }
 
+impl MediaDownload {
+    pub fn completed_successfully(&self) -> bool {
+        self.state.error.is_none() && !self.state.in_progress
+    }
+}
+
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
 pub struct MediaUpload {
-    pub upload: UploadToDomain,
-    pub state:  MediaJobState,
+    pub media_id: AppMediaObjectId,
+    pub upload:   UploadToDomain,
+    pub state:    MediaJobState,
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, JsonSchema)]

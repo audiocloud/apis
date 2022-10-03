@@ -52,7 +52,7 @@ impl TimeRange {
     }
 }
 
-#[derive(Serialize, Deserialize, Clone, Debug, Hash, PartialEq, JsonSchema)]
+#[derive(Serialize, Deserialize, Clone, Copy, Debug, Hash, PartialEq, JsonSchema)]
 pub struct Timestamped<T>(Timestamp, T);
 
 impl<T> From<T> for Timestamped<T> {

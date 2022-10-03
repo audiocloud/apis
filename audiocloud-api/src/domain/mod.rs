@@ -95,6 +95,15 @@ pub enum DomainEvent {
     },
 }
 
+impl DomainEvent {
+    pub fn key(&self) -> String {
+        match self {
+            DomainEvent::FixedInstance { instance_id, .. } => instance_id.to_string(),
+            DomainEvent::Task { task_id, .. } => task_id.to_string(),
+        }
+    }
+}
+
 #[derive(Serialize, Deserialize, Clone, Debug, JsonSchema, Error)]
 #[serde(rename_all = "snake_case", tag = "type")]
 pub enum DomainError {
@@ -122,6 +131,9 @@ pub enum DomainError {
     #[error("Instance {instance_id} not found")]
     InstanceNotFound { instance_id: FixedInstanceId },
 
+    #[error("Instance {instance_id} does not support operation {operation}")]
+    InstanceNotCapable { instance_id: FixedInstanceId, operation: String },
+
     #[error("Media {media_object_id} not found")]
     MediaNotFound { media_object_id: AppMediaObjectId },
 
@@ -136,6 +148,19 @@ pub enum DomainError {
 
     #[error("WebRTC error: {error}")]
     WebRTCError { error: String },
+}
+
+impl DomainError {
+    pub fn get_status(&self) -> u16 {
+        use DomainError::*;
+
+        match self {
+            EngineNotFound { .. } | SocketNotFound { .. } | TaskNotFound { .. } | InstanceNotFound { .. } | MediaNotFound { .. } => 404,
+            NotImplemented { .. } => 500,
+            BadGateway { .. } => 502,
+            _ => 400,
+        }
+    }
 }
 
 #[derive(OpenApi)]

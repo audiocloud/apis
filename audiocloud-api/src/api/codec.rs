@@ -27,7 +27,7 @@ pub fn from_msgpack_slice<T: DeserializeOwned>(v: &[u8]) -> Result<T, rmp_serde:
     rmp_serde::decode::from_slice(v)
 }
 
-pub trait Codec {
+pub trait Codec: Clone {
     type SerializeError: Error + Send + Sync + 'static;
     type DeserializeError: Error + Send + Sync + 'static;
 
@@ -35,6 +35,7 @@ pub trait Codec {
     fn deserialize<T: DeserializeOwned>(&self, v: &[u8]) -> Result<T, Self::DeserializeError>;
 }
 
+#[derive(Clone, Copy)]
 pub struct Json;
 
 impl Codec for Json {
@@ -50,6 +51,7 @@ impl Codec for Json {
     }
 }
 
+#[derive(Clone, Copy)]
 pub struct MsgPack;
 
 impl Codec for MsgPack {

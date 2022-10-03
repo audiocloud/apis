@@ -24,7 +24,7 @@ fn export_audio_engine_openapi() {
     use audiocloud_api::audio_engine::*;
 
     fs::write("openapi_audio_engine.json",
-              openapi_with_schemas_to_json(AudioEngineApi::openapi(), schemas(), json!([
+              openapi_with_schemas_to_json(EngineApi::openapi(), schemas(), json!([
                   openapi_set_version("3.1.0"),
                   openapi_add_apache_license(),
                   openapi_set_info_title("Audio Cloud Audio Engine"),

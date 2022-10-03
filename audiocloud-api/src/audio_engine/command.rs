@@ -2,16 +2,17 @@ use std::collections::HashMap;
 
 use serde::{Deserialize, Serialize};
 
-use crate::{AppMediaObjectId, AppTaskId, DynamicInstanceNodeId, FixedInstanceId};
-use crate::cloud::domains::InstanceRouting;
+use crate::audio_engine::EngineError;
+use crate::cloud::domains::FixedInstanceRouting;
 use crate::common::change::{ModifyTaskSpec, UpdateTaskPlay};
 use crate::common::media::{PlayId, RenderId, RequestPlay, RequestRender};
 use crate::common::task::TaskSpec;
+use crate::{AppMediaObjectId, AppTaskId, DynamicInstanceNodeId, FixedInstanceId, Request, SerializableResult};
 
 /// Command sent to the Audio Engine
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq)]
 #[serde(rename_all = "snake_case")]
-pub enum AudioEngineCommand {
+pub enum EngineCommand {
     /// Set task specification.
     ///
     /// Create task if not already created.
@@ -21,7 +22,7 @@ pub enum AudioEngineCommand {
         /// Task specification
         spec:        TaskSpec,
         /// Current routing state for fixed instances
-        instances:   HashMap<FixedInstanceId, InstanceRouting>,
+        instances:   HashMap<FixedInstanceId, FixedInstanceRouting>,
         /// Current media state
         media_ready: HashMap<AppMediaObjectId, String>,
     },
@@ -37,7 +38,7 @@ pub enum AudioEngineCommand {
         /// Task id
         task_id:   AppTaskId,
         /// Instance state
-        instances: HashMap<FixedInstanceId, InstanceRouting>,
+        instances: HashMap<FixedInstanceId, FixedInstanceRouting>,
     },
     /// Modify a task specification
     ModifySpec {
@@ -46,7 +47,7 @@ pub enum AudioEngineCommand {
         /// List of changes
         transaction: Vec<ModifyTaskSpec>,
         /// Current routing state for fixed instances
-        instances:   HashMap<FixedInstanceId, InstanceRouting>,
+        instances:   HashMap<FixedInstanceId, FixedInstanceRouting>,
         /// Current media state
         media_ready: HashMap<AppMediaObjectId, String>,
     },
@@ -81,7 +82,7 @@ pub enum AudioEngineCommand {
         update:  UpdateTaskPlay,
     },
     /// Stop rendering the task
-    StopRender {
+    CancelRender {
         /// Task id
         task_id:   AppTaskId,
         /// Render id
@@ -99,4 +100,8 @@ pub enum AudioEngineCommand {
         /// Task id
         task_id: AppTaskId,
     },
+}
+
+impl Request for EngineCommand {
+    type Response = SerializableResult<(), EngineError>;
 }
