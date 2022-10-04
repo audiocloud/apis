@@ -1,16 +1,13 @@
 //! A crate of audiocloud API definitions and API calls
+#![allow(dead_code)]
 
-pub mod app;
+pub use api::*;
+pub use common::*;
+
+pub mod api;
 pub mod audio_engine;
-pub mod change;
 pub mod cloud;
-pub mod codec;
+pub mod common;
 pub mod domain;
-pub mod driver;
-pub mod instance;
-pub mod media;
-pub mod model;
-pub mod newtypes;
-pub mod session;
-pub mod time;
-pub mod error;
+pub mod instance_driver;
+
