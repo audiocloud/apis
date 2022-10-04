@@ -22,6 +22,7 @@ pub enum InstanceDriverCommand {
     Render { length: f64, render_id: RenderId },
     Rewind { to: f64 },
     SetParameters(serde_json::Value),
+    SetPowerChannel { channel: usize, power: bool },
 }
 
 impl Request for InstanceDriverCommand {

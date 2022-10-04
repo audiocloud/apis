@@ -128,6 +128,9 @@ pub enum DomainError {
     #[error("Task {task_id} not found")]
     TaskNotFound { task_id: AppTaskId },
 
+    #[error("Task {task_id} already exists")]
+    TaskExists { task_id: AppTaskId },
+
     #[error("Instance {instance_id} not found")]
     InstanceNotFound { instance_id: FixedInstanceId },
 
