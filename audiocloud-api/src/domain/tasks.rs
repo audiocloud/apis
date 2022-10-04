@@ -13,9 +13,9 @@ use crate::{
 #[derive(Serialize, Deserialize, Clone, Debug, JsonSchema)]
 pub struct TaskSummary {
     /// App that owns the task
-    app_id:                    AppId,
+    pub app_id:                AppId,
     /// Task Id
-    task_id:                   TaskId,
+    pub task_id:               TaskId,
     /// Current play sate
     pub play_state:            TaskPlayState,
     /// List of instances that are blocking play state change
@@ -28,9 +28,9 @@ pub struct TaskSummary {
 #[derive(Serialize, Deserialize, Clone, Debug, JsonSchema)]
 pub struct TaskWithStatusAndSpec {
     /// App that owns the task
-    app_id:         AppId,
+    pub app_id:     AppId,
     /// Task Id
-    task_id:        TaskId,
+    pub task_id:    TaskId,
     /// Current play state
     pub play_state: TaskPlayState,
     /// State of attatched fixed instances
@@ -46,6 +46,8 @@ pub type TaskSummaryList = Vec<TaskSummary>;
 /// Create a task on the domain
 #[derive(Serialize, Deserialize, Clone, Debug, JsonSchema)]
 pub struct CreateTask {
+    /// The new app id
+    pub task_id:      AppTaskId,
     /// Task reservations
     pub reservations: CreateTaskReservation,
     /// Task specification

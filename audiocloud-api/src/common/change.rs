@@ -18,7 +18,7 @@ use crate::newtypes::{
     DynamicInstanceNodeId, FixedInstanceId, FixedInstanceNodeId, MediaObjectId, MixerNodeId, NodeConnectionId, SecureKey, TrackMediaId,
     TrackNodeId,
 };
-use crate::{json_schema_new_type, ChannelMask, DestinationPadId, SourcePadId, TaskNodeId, TaskSecurity};
+use crate::{json_schema_new_type, AppMediaObjectId, ChannelMask, DestinationPadId, SourcePadId, TaskNodeId, TaskSecurity};
 
 use self::ModifyTaskError::*;
 
@@ -282,14 +282,18 @@ impl TaskPlayState {
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq)]
 pub struct TaskState {
-    pub play_state:         Timestamped<TaskPlayState>,
-    pub desired_play_state: Timestamped<DesiredTaskPlayState>,
+    pub play_state:            Timestamped<TaskPlayState>,
+    pub desired_play_state:    Timestamped<DesiredTaskPlayState>,
+    pub waiting_for_instances: Timestamped<HashSet<FixedInstanceId>>,
+    pub waiting_for_media:     Timestamped<HashSet<AppMediaObjectId>>,
 }
 
 impl Default for TaskState {
     fn default() -> Self {
-        Self { play_state:         Timestamped::new(TaskPlayState::Stopped),
-               desired_play_state: Timestamped::new(DesiredTaskPlayState::Stopped), }
+        Self { play_state:            Timestamped::new(TaskPlayState::Stopped),
+               desired_play_state:    Timestamped::new(DesiredTaskPlayState::Stopped),
+               waiting_for_instances: Default::default(),
+               waiting_for_media:     Default::default(), }
     }
 }
 
