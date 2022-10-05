@@ -112,7 +112,7 @@ impl Serialize for ModelId {
 }
 
 /// What kind of filter
-#[derive(Serialize, Deserialize, Clone, Copy, Debug, Eq, PartialEq, IsVariant, JsonSchema)]
+#[derive(Serialize, Deserialize, Clone, Copy, Debug, Eq, PartialEq, PartialOrd, IsVariant, JsonSchema)]
 #[serde(rename_all = "snake_case")]
 pub enum FilterId {
     HighPass,

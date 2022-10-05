@@ -1,8 +1,10 @@
+use std::cmp::Ordering;
 use std::collections::HashMap;
 use std::fs::File;
 use std::{env, fs};
 
 use askama::Template;
+use itertools::Itertools;
 
 use audiocloud_api::*;
 
@@ -322,4 +324,10 @@ fn pascal_case_converter() -> convert_case::Converter {
 
 fn screaming_snake_case_converter() -> convert_case::Converter {
     convert_case::Converter::new().to_case(convert_case::Case::ScreamingSnake)
+}
+
+fn get_key<A, B>(a: &(A, B)) -> A
+    where A: Copy
+{
+    a.0
 }
