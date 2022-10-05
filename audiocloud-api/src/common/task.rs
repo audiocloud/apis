@@ -271,7 +271,7 @@ impl TaskSpec {
 }
 
 /// Task information
-#[derive(Clone, Debug, Serialize, Deserialize, JsonSchema)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, JsonSchema)]
 pub struct Task {
     /// Domain executing the task
     pub domain_id:    DomainId,

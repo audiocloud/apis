@@ -73,7 +73,7 @@ pub enum TaskCreated {
 #[derive(Serialize, Deserialize, Clone, Debug, JsonSchema)]
 pub struct ModifyTask {
     /// A list of modifications to apply
-    pub modifications: Vec<ModifyTaskSpec>,
+    pub modify_spec: Vec<ModifyTaskSpec>,
 }
 
 /// Response to modifying a task on the domain
