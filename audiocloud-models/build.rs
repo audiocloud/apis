@@ -15,7 +15,7 @@ struct RustPresetModelTemplate<'a> {
 
 impl<'a> RustPresetModelTemplate<'a> {
     pub fn new(name: &str, model: &'a Model) -> Self {
-        Self { rust_name: case_converter().convert(name),
+        Self { rust_name: pascal_case_converter().convert(name),
                model }
     }
 }
@@ -29,7 +29,7 @@ struct RustParamsModelTemplate<'a> {
 
 impl<'a> RustParamsModelTemplate<'a> {
     pub fn new(name: &str, model: &'a Model) -> Self {
-        Self { rust_name: case_converter().convert(name),
+        Self { rust_name: pascal_case_converter().convert(name),
                model }
     }
 }
@@ -43,8 +43,44 @@ struct RustReportsModelTemplate<'a> {
 
 impl<'a> RustReportsModelTemplate<'a> {
     pub fn new(name: &str, model: &'a Model) -> Self {
-        Self { rust_name: case_converter().convert(name),
+        Self { rust_name: pascal_case_converter().convert(name),
                model }
+    }
+}
+
+#[derive(Template)]
+#[template(path = "rust_consts.rs", escape = "none")]
+struct RustConstantsTemplate<'a> {
+    model: &'a Model,
+}
+
+#[derive(Template)]
+#[template(path = "rust_model_values.rs", escape = "none")]
+struct ModelValueOptionsTemplate<'a> {
+    values: &'a Vec<ModelValueOption>,
+}
+
+impl<'a> ModelValueOptionsTemplate<'a> {
+    pub fn new(values: &'a Vec<ModelValueOption>) -> Self {
+        Self { values }
+    }
+}
+
+#[derive(Template)]
+#[template(path = "rust_model_value.rs", escape = "none")]
+struct ModelValueTemplate<'a> {
+    value: &'a ModelValue,
+}
+
+impl<'a> ModelValueTemplate<'a> {
+    pub fn new(value: &'a ModelValue) -> Self {
+        Self { value }
+    }
+}
+
+impl<'a> RustConstantsTemplate<'a> {
+    pub fn new(model: &'a Model) -> Self {
+        Self { model }
     }
 }
 
@@ -57,7 +93,7 @@ struct TSPresetModelTemplate<'a> {
 
 impl<'a> TSPresetModelTemplate<'a> {
     pub fn new(name: &str, model: &'a Model) -> Self {
-        Self { ts_name: case_converter().convert(name),
+        Self { ts_name: pascal_case_converter().convert(name),
                model }
     }
 }
@@ -71,7 +107,7 @@ struct TSParamsModelTemplate<'a> {
 
 impl<'a> TSParamsModelTemplate<'a> {
     pub fn new(name: &str, model: &'a Model) -> Self {
-        Self { ts_name: case_converter().convert(name),
+        Self { ts_name: pascal_case_converter().convert(name),
                model }
     }
 }
@@ -85,7 +121,7 @@ struct TSReportsModelTemplate<'a> {
 
 impl<'a> TSReportsModelTemplate<'a> {
     pub fn new(name: &str, model: &'a Model) -> Self {
-        Self { ts_name: case_converter().convert(name),
+        Self { ts_name: pascal_case_converter().convert(name),
                model }
     }
 }
@@ -103,8 +139,9 @@ struct TSGeneratedTemplate<'a> {
 }
 
 mod filters {
-    use crate::{case_converter, rust_type, ts_type};
     use audiocloud_api::{Model, ModelParameter, ModelReport};
+
+    use crate::{pascal_case_converter, rust_type, screaming_snake_case_converter, ts_type};
 
     pub fn rust_preset_type(spec: &(&ModelParameter, &Model)) -> ::askama::Result<String> {
         Ok(rust_type(&spec.0.values, spec.0.scope, spec.1, true))
@@ -131,7 +168,11 @@ mod filters {
     }
 
     pub fn pascal_case(value: &String) -> ::askama::Result<String> {
-        Ok(case_converter().convert(value))
+        Ok(pascal_case_converter().convert(value))
+    }
+
+    pub fn screaming_snake(value: &String) -> ::askama::Result<String> {
+        Ok(screaming_snake_case_converter().convert(value))
     }
 }
 
@@ -170,6 +211,12 @@ fn main() {
     fs::write("src/generated.rs",
               RustGeneratedTemplate { models: &by_manufacturers }.render()
                                                                  .expect("render rust types")).expect("write generated rust code");
+
+    let _ = std::process::Command::new("cargo").arg("+nightly")
+                                               .arg("fmt")
+                                               .arg("--")
+                                               .arg("src/generated.rs")
+                                               .output();
 
     // fs::write("../packages/models/src/generated.ts", TSGeneratedTemplate { models: &by_manufacturers }.render()
     //               .expect("render typescript types")).expect("write generated typescript code");
@@ -269,6 +316,10 @@ fn rust_type(options: &Vec<ModelValueOption>, scope: ModelElementScope, model: &
     format!("{container_type}<{inner_type}>")
 }
 
-fn case_converter() -> convert_case::Converter {
+fn pascal_case_converter() -> convert_case::Converter {
     convert_case::Converter::new().to_case(convert_case::Case::Pascal)
+}
+
+fn screaming_snake_case_converter() -> convert_case::Converter {
+    convert_case::Converter::new().to_case(convert_case::Case::ScreamingSnake)
 }

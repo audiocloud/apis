@@ -12,6 +12,7 @@ use super::*;
 {{ RustPresetModelTemplate::new(name, model) }}
 {{ RustParamsModelTemplate::new(name, model) }}
 {{ RustReportsModelTemplate::new(name, model) }}
+{{ RustConstantsTemplate::new(model) }}
 {% endfor %}
 }
 {% endfor %}

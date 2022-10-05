@@ -40,8 +40,8 @@ pub enum InstanceDriverError {
     #[error("Instance {0} does not exist")]
     InstanceNotFound(FixedInstanceId),
 
-    #[error("Parameter {parameter} does not exist")]
-    ParameterDoesNotExist { parameter: ParameterId },
+    #[error("Parameter {error} does not exist")]
+    ParameterDoesNotExist { error: String },
 
     #[error("Media is not present, can't play or rewind")]
     MediaNotPresent,

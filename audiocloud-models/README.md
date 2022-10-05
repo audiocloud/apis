@@ -1,2 +1,2 @@
-- [ ] TODO: Author YAML files and generate rust files
-- [ ] TODO: Generate typescript package @audiocloud/models
+- [x] TODO: Author YAML files and generate rust files
+- [x] TODO: Generate typescript package @audiocloud/models

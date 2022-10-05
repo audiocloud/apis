@@ -467,8 +467,43 @@ pub enum ToggleOr<T> {
     Value(T),
 }
 
+impl ToggleOr<i64> {
+    pub fn to_f64(self) -> ToggleOr<f64> {
+        match self {
+            Self::Toggle(value) => ToggleOr::Toggle(value),
+            Self::Value(value) => ToggleOr::Value(value as f64),
+        }
+    }
+}
+
+impl ToggleOr<u64> {
+    pub fn to_f64(self) -> ToggleOr<f64> {
+        match self {
+            Self::Toggle(value) => ToggleOr::Toggle(value),
+            Self::Value(value) => ToggleOr::Value(value as f64),
+        }
+    }
+}
+
 #[derive(Serialize, Deserialize, Clone, Copy, Debug, PartialEq, JsonSchema)]
 pub struct Stereo<T> {
     pub left:  T,
     pub right: T,
+}
+
+impl<T> Stereo<T> {
+    pub fn both(value: T) -> Self
+        where T: Clone
+    {
+        Self { left:  { value.clone() },
+               right: { value }, }
+    }
+}
+
+pub fn toggle_off<T>() -> ToggleOr<T> {
+    ToggleOr::Toggle(false)
+}
+
+pub fn toggle_value<T>(value: T) -> ToggleOr<T> {
+    ToggleOr::Value(value)
 }
