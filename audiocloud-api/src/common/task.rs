@@ -34,6 +34,7 @@ pub struct TaskSpec {
     /// Connections between nodes
     #[serde(default)]
     pub connections: HashMap<NodeConnectionId, NodeConnection>,
+    /// The revision number of the specification (starts at zero, increments for every change)
     #[serde(default)]
     pub revision:    u64,
 }
@@ -287,7 +288,7 @@ pub struct Task {
 pub struct TaskSecurity {
     /// Security settings per secure key
     pub security: HashMap<SecureKey, TaskPermissions>,
-    /// Revision number - each operation on task security increments this
+    /// Revision number - starts at zero and is incremented at every change of task security
     #[serde(default)]
     pub revision: u64,
 }
@@ -311,7 +312,7 @@ pub struct TaskReservation {
     pub to:              Timestamp,
     /// Fixed instances reserved for the task
     pub fixed_instances: HashSet<FixedInstanceId>,
-    /// Revision number - each operation on task reservation increments this
+    /// Revision number - starts at zero and change of task reservation increments it
     pub revision:        u64,
 }
 

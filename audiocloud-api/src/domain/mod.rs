@@ -19,8 +19,8 @@ use crate::common::task::TaskSpec;
 use crate::instance_driver::InstanceDriverError;
 use crate::newtypes::{AppTaskId, SecureKey};
 use crate::{
-    merge_schemas, AppId, AppMediaObjectId, EngineId, FixedInstanceId, InstanceEvent, ModifyTaskError, RequestId, SocketId, TaskEvent,
-    TaskId,
+    merge_schemas, AppId, AppMediaObjectId, EngineId, FixedInstanceId, InstanceEvent, ModifyTaskError, RequestId, SocketId, Task,
+    TaskEvent, TaskId,
 };
 
 pub mod streaming;
@@ -31,7 +31,7 @@ pub mod tasks;
 pub enum DomainCommand {
     Create {
         app_session_id: AppTaskId,
-        create:         CreateTask,
+        task:           Task,
     },
     SetSpec {
         app_session_id: AppTaskId,
