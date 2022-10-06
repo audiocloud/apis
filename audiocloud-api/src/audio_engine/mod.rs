@@ -54,26 +54,26 @@ pub enum EngineError {
 #[derive(Debug, Serialize, Deserialize, JsonSchema)]
 #[serde(rename_all = "snake_case")]
 pub enum TaskReplaced {
-    Updated { app_id: AppId, task_id: TaskId },
-    Created { app_id: AppId, task_id: TaskId },
+    Updated { task_id: AppTaskId },
+    Created { task_id: AppTaskId },
 }
 
 #[derive(Debug, Serialize, Deserialize, JsonSchema)]
 #[serde(rename_all = "snake_case")]
 pub enum TaskModified {
-    Modified { app_id: AppId, task_id: TaskId },
+    Modified { task_id: AppTaskId },
 }
 
 #[derive(Debug, Serialize, Deserialize, JsonSchema)]
 #[serde(rename_all = "snake_case")]
 pub enum TaskDeleted {
-    Deleted { app_id: AppId, task_id: TaskId },
+    Deleted { task_id: AppTaskId },
 }
 
 #[derive(Debug, Serialize, Deserialize, JsonSchema)]
 #[serde(rename_all = "snake_case")]
 pub enum TaskSought {
-    Sought { app_id: AppId, task_id: TaskId },
+    Sought { task_id: AppTaskId },
 }
 
 #[derive(Debug, Serialize, Deserialize, JsonSchema)]
@@ -118,39 +118,31 @@ pub type TaskWithStatusList = Vec<TaskWithStatus>;
 #[derive(Debug, Serialize, Deserialize, JsonSchema)]
 #[serde(rename_all = "snake_case")]
 pub enum TaskRendering {
-    Rendering {
-        app_id:    AppId,
-        task_id:   TaskId,
-        render_id: RenderId,
-    },
+    Rendering { task_id: AppTaskId, render_id: RenderId },
 }
 
 #[derive(Debug, Serialize, Deserialize, JsonSchema)]
 #[serde(rename_all = "snake_case")]
 pub enum TaskPlaying {
-    Playing { app_id: AppId, task_id: TaskId, play_id: PlayId },
+    Playing { task_id: AppTaskId, play_id: PlayId },
 }
 
 #[derive(Debug, Serialize, Deserialize, JsonSchema)]
 #[serde(rename_all = "snake_case")]
 pub enum TaskMixerChanged {
-    Changed { app_id: AppId, task_id: TaskId, play_id: PlayId },
+    Changed { task_id: AppTaskId, play_id: PlayId },
 }
 
 #[derive(Debug, Serialize, Deserialize, JsonSchema)]
 #[serde(rename_all = "snake_case")]
 pub enum TaskPlayStopped {
-    Stopped { app_id: AppId, task_id: TaskId, play_id: PlayId },
+    Stopped { task_id: AppTaskId, play_id: PlayId },
 }
 
 #[derive(Debug, Serialize, Deserialize, JsonSchema)]
 #[serde(rename_all = "snake_case")]
 pub enum TaskRenderCancelled {
-    Cancelled {
-        app_id:    AppId,
-        task_id:   TaskId,
-        render_id: RenderId,
-    },
+    Cancelled { task_id: AppTaskId, render_id: RenderId },
 }
 
 #[derive(OpenApi)]

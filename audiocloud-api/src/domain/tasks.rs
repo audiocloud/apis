@@ -12,10 +12,8 @@ use crate::{
 /// A summary of a task
 #[derive(Serialize, Deserialize, Clone, Debug, JsonSchema)]
 pub struct TaskSummary {
-    /// App that owns the task
-    pub app_id:                AppId,
     /// Task Id
-    pub task_id:               TaskId,
+    pub task_id:               AppTaskId,
     /// Current play sate
     pub play_state:            TaskPlayState,
     /// List of instances that are blocking play state change
@@ -27,10 +25,8 @@ pub struct TaskSummary {
 /// A more complete information about a task
 #[derive(Serialize, Deserialize, Clone, Debug, JsonSchema)]
 pub struct TaskWithStatusAndSpec {
-    /// App that owns the task
-    pub app_id:     AppId,
     /// Task Id
-    pub task_id:    TaskId,
+    pub task_id:    AppTaskId,
     /// Current play state
     pub play_state: TaskPlayState,
     /// State of attatched fixed instances
@@ -62,10 +58,8 @@ pub struct CreateTask {
 pub enum TaskCreated {
     /// Created normally
     Created {
-        /// App that owns the task
-        app_id:  AppId,
         /// Task Id
-        task_id: TaskId,
+        task_id: AppTaskId,
     },
 }
 
@@ -82,10 +76,8 @@ pub struct ModifyTask {
 pub enum TaskUpdated {
     /// Updated normally
     Updated {
-        /// App that owns the task
-        app_id:  AppId,
         /// Task Id
-        task_id: TaskId,
+        task_id:  AppTaskId,
         /// New version to be used with `If-Matches` when submitting further modifications
         revision: u64,
     },
