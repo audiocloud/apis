@@ -7,13 +7,15 @@ use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
 
+use crate::audio_engine::CompressedAudio;
 use crate::cloud::tasks::CreateTask;
 use crate::cloud::CloudError;
 use crate::cloud::CloudError::*;
 use crate::domain::streaming::DiffStamped;
 use crate::{
     now, AppMediaObjectId, DesiredTaskPlayState, DomainId, DynamicInstanceNodeId, FixedInstanceId, FixedInstanceNodeId, MediaObjectId,
-    MixerNodeId, Model, ModelId, NodeConnectionId, SecureKey, TaskPlayState, TimeRange, Timestamp, Timestamped, TrackMediaId, TrackNodeId,
+    MixerNodeId, Model, ModelId, NodeConnectionId, PlayId, SecureKey, TaskPlayState, TimeRange, Timestamp, Timestamped, TrackMediaId,
+    TrackNodeId,
 };
 
 /// Task specification
@@ -835,8 +837,10 @@ pub enum TaskEvent {
 #[derive(Debug, Serialize, Deserialize, Clone, PartialEq, JsonSchema)]
 #[serde(rename_all = "snake_case")]
 pub struct StreamingPacket {
+    pub play_id:           PlayId,
+    pub serial:            u64,
     pub created_at:        Timestamp,
-    pub audio:             Vec<DiffStamped<bytes::Bytes>>,
+    pub audio:             Vec<DiffStamped<CompressedAudio>>,
     pub timeline_pos:      f64,
     pub streaming_pos:     u64,
     pub instance_metering: HashMap<FixedInstanceId, Vec<DiffStamped<serde_json::Value>>>,
@@ -846,13 +850,26 @@ pub struct StreamingPacket {
 
 impl Default for StreamingPacket {
     fn default() -> Self {
-        Self { created_at:        now(),
+        Self { play_id:           PlayId::new(Default::default()),
+               serial:            0,
+               created_at:        now(),
                audio:             Default::default(),
                timeline_pos:      0.0,
                streaming_pos:     0,
                instance_metering: Default::default(),
                node_outputs:      Default::default(),
                node_inputs:       Default::default(), }
+    }
+}
+
+impl StreamingPacket {
+    pub fn next_of(packet: &StreamingPacket) -> Self {
+        let mut rv = Self::default();
+        rv.serial = packet.serial + 1;
+        rv.play_id = packet.play_id.clone();
+        rv.streaming_pos = packet.streaming_pos + packet.audio.iter().map(|audio| audio.value().num_samples).sum::<usize>() as u64;
+
+        rv
     }
 }
 

@@ -28,6 +28,7 @@ pub struct CompressedAudio {
     pub timeline_pos: f64,
     pub stream_pos:   u64,
     pub buffer:       bytes::Bytes,
+    pub num_samples:  usize,
     pub last:         bool,
 }
 

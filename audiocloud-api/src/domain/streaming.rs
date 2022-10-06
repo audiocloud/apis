@@ -1,8 +1,9 @@
 //! API definitions for communicating with the apps
+use std::collections::HashMap;
+
 use chrono::Utc;
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
-use std::collections::HashMap;
 
 use crate::common::change::{DesiredTaskPlayState, TaskPlayState};
 use crate::common::media::{PlayId, RenderId};
@@ -36,6 +37,14 @@ pub struct DiffStamped<T>(usize, T);
 impl<T> DiffStamped<T> {
     pub fn new(timestamp: Timestamp, value: T) -> Self {
         (timestamp, value).into()
+    }
+
+    pub fn value(&self) -> &T {
+        &self.1
+    }
+
+    pub fn value_mut(&mut self) -> &mut T {
+        &mut self.1
     }
 }
 
