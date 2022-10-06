@@ -150,27 +150,16 @@ pub enum PeerConnectionCreated {
 #[derive(Serialize, Deserialize, Debug, Clone, JsonSchema)]
 #[serde(rename_all = "snake_case")]
 pub enum DomainClientMessage {
-    /// Request desired task play state
-    RequestSetDesiredPlayState {
-        /// Request id (to reference the response to)
-        request_id: RequestId,
-        /// Id of the task to change play state
-        task_id:    AppTaskId,
-        /// Desired play state
-        desired:    DesiredTaskPlayState,
-        /// Task version
-        version:    u64,
-    },
     /// Request to modify task specification
     RequestModifyTaskSpec {
         /// Request id (to reference the response to)
-        request_id:   RequestId,
+        request_id:  RequestId,
         /// Id of the task to modify
-        task_id:      AppTaskId,
+        task_id:     AppTaskId,
         /// List of modifications to apply
-        modification: Vec<ModifyTaskSpec>,
+        modify_spec: Vec<ModifyTaskSpec>,
         /// Task version
-        version:      u64,
+        revision:    u64,
     },
     /// Request a new WebRTC peer connection to the domain
     RequestPeerConnection {
