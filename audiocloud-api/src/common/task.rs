@@ -770,7 +770,7 @@ impl TimeSegment {
     }
 }
 
-#[derive(Debug, Default, Serialize, Deserialize, Clone, PartialEq, JsonSchema)]
+#[derive(Debug, Default, Serialize, Deserialize, Clone, Copy, PartialEq, JsonSchema)]
 pub struct TaskPermissions {
     pub structure:  bool,
     pub media:      bool,
@@ -780,6 +780,34 @@ pub struct TaskPermissions {
 }
 
 impl TaskPermissions {
+    pub const fn empty() -> Self {
+        Self { structure:  false,
+               media:      false,
+               parameters: false,
+               transport:  false,
+               audio:      false, }
+    }
+
+    pub fn can(&self, other: TaskPermissions) -> bool {
+        if !self.structure && other.structure {
+            return false;
+        }
+        if !self.media && other.media {
+            return false;
+        }
+        if !self.parameters && other.parameters {
+            return false;
+        }
+        if !self.transport && other.transport {
+            return false;
+        }
+        if !self.audio && other.audio {
+            return false;
+        }
+
+        true
+    }
+
     pub fn full() -> Self {
         TaskPermissions { structure:  true,
                           media:      true,

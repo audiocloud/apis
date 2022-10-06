@@ -436,6 +436,7 @@ impl TaskSpec {
         }
 
         self.fixed.insert(fixed_id, instance);
+        self.revision += 1;
 
         Ok(())
     }
@@ -446,6 +447,7 @@ impl TaskSpec {
         }
 
         self.dynamic.insert(dynamic_id, dynamic);
+        self.revision += 1;
 
         Ok(())
     }
@@ -456,6 +458,7 @@ impl TaskSpec {
         }
 
         self.mixers.insert(mixer_id, mixer);
+        self.revision += 1;
 
         Ok(())
     }
@@ -466,6 +469,7 @@ impl TaskSpec {
         }
 
         self.mixers.remove(&mixer_id);
+        self.revision += 1;
 
         Ok(())
     }
@@ -490,6 +494,8 @@ impl TaskSpec {
             connection.pan = pan;
         }
 
+        self.revision += 1;
+
         Ok(())
     }
 
@@ -508,12 +514,17 @@ impl TaskSpec {
                                                  -> Result<(), ModifyTaskError> {
         let dynamic = self.dynamic.get_mut(&node_id).ok_or(DynamicInstanceDoesNotExist { node_id })?;
         // dynamic.parameters.extend(parameters.into_iter());
+
+        self.revision += 1;
+
         Ok(())
     }
 
     pub fn delete_connections_referencing(&mut self, node_id: &TaskNodeId) {
         self.connections
             .retain(|_, value| !(value.from.references(node_id) || value.to.references(node_id)));
+
+        self.revision += 1;
     }
 
     pub fn add_track(&mut self, track_id: TrackNodeId, channels: MediaChannels) -> Result<(), ModifyTaskError> {
@@ -524,6 +535,8 @@ impl TaskSpec {
         self.tracks.insert(track_id,
                            TrackNode { channels,
                                        media: Default::default() });
+
+        self.revision += 1;
 
         Ok(())
     }
@@ -539,6 +552,8 @@ impl TaskSpec {
         }
 
         track.media.insert(media_id, spec);
+
+        self.revision += 1;
 
         Ok(())
     }
@@ -560,6 +575,8 @@ impl TaskSpec {
             let node_id = TaskNodeId::Track(node_id.clone());
             self.delete_connections_referencing(&node_id);
 
+            self.revision += 1;
+
             Ok(())
         } else {
             Err(TrackDoesNotExist { node_id })
@@ -571,6 +588,8 @@ impl TaskSpec {
             let node_id = TaskNodeId::FixedInstance(node_id.clone());
             self.delete_connections_referencing(&node_id);
             self.delete_connections_referencing(&node_id);
+
+            self.revision += 1;
 
             Ok(())
         } else {
@@ -584,6 +603,8 @@ impl TaskSpec {
             self.delete_connections_referencing(&node_id);
             self.delete_connections_referencing(&node_id);
 
+            self.revision += 1;
+
             Ok(())
         } else {
             Err(DynamicInstanceDoesNotExist { node_id })
@@ -592,6 +613,9 @@ impl TaskSpec {
 
     pub fn delete_connection(&mut self, connection_id: NodeConnectionId) -> Result<(), ModifyTaskError> {
         if self.connections.remove(&connection_id).is_some() {
+
+            self.revision += 1;
+
             Ok(())
         } else {
             Err(ConnectionDoesNotExist { connection_id })
@@ -618,6 +642,9 @@ impl TaskSpec {
                                                  to_channels,
                                                  volume,
                                                  pan });
+
+        self.revision += 1;
+
         Ok(())
     }
 
@@ -633,6 +660,8 @@ impl TaskSpec {
                                                                               media_id })?;
 
         media.update(update);
+
+        self.revision += 1;
 
         Ok(())
     }

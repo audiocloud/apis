@@ -87,7 +87,7 @@ pub enum TaskUpdated {
         /// Task Id
         task_id: TaskId,
         /// New version to be used with `If-Matches` when submitting further modifications
-        version: u64,
+        revision: u64,
     },
 }
 

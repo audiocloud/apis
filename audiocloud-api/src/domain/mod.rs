@@ -128,6 +128,9 @@ pub enum DomainError {
     #[error("Task {task_id} not found")]
     TaskNotFound { task_id: AppTaskId },
 
+    #[error("Task {task_id} failed to modify: {error}")]
+    TaskModification { task_id: AppTaskId, error: ModifyTaskError },
+
     #[error("Task {task_id} already exists")]
     TaskExists { task_id: AppTaskId },
 
@@ -149,15 +152,26 @@ pub enum DomainError {
     #[error("The service call failed or timed out: {error}")]
     BadGateway { error: String },
 
+    #[error("Authentication failed")]
+    AuthenticationFailed,
+
+    #[error("Task revision is malformed: {error}")]
+    TaskRevisionMalformed { error: String },
+
+    #[error("You are not authorized to access task {task_id}, required permissions {required:?}")]
+    TaskAuthtorizationFailed { task_id: AppTaskId, required: TaskPermissions },
+
     #[error("WebRTC error: {error}")]
     WebRTCError { error: String },
 }
 
 impl DomainError {
-    pub fn get_status(&self) -> u16 {
+    pub fn status_code(&self) -> u16 {
         use DomainError::*;
 
         match self {
+            AuthenticationFailed => 401,
+            TaskAuthtorizationFailed { .. } => 403,
             EngineNotFound { .. } | SocketNotFound { .. } | TaskNotFound { .. } | InstanceNotFound { .. } | MediaNotFound { .. } => 404,
             NotImplemented { .. } => 500,
             BadGateway { .. } => 502,
