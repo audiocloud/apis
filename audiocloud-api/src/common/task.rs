@@ -836,7 +836,7 @@ pub enum TaskEvent {
 #[serde(rename_all = "snake_case")]
 pub struct StreamingPacket {
     pub created_at:        Timestamp,
-    pub audio:             bytes::Bytes,
+    pub audio:             Vec<DiffStamped<bytes::Bytes>>,
     pub timeline_pos:      f64,
     pub streaming_pos:     u64,
     pub instance_metering: HashMap<FixedInstanceId, Vec<DiffStamped<serde_json::Value>>>,
