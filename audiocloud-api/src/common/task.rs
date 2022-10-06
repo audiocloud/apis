@@ -12,7 +12,7 @@ use crate::cloud::CloudError;
 use crate::cloud::CloudError::*;
 use crate::domain::streaming::DiffStamped;
 use crate::{
-    AppMediaObjectId, DesiredTaskPlayState, DomainId, DynamicInstanceNodeId, FixedInstanceId, FixedInstanceNodeId, MediaObjectId,
+    now, AppMediaObjectId, DesiredTaskPlayState, DomainId, DynamicInstanceNodeId, FixedInstanceId, FixedInstanceNodeId, MediaObjectId,
     MixerNodeId, Model, ModelId, NodeConnectionId, SecureKey, TaskPlayState, TimeRange, Timestamp, Timestamped, TrackMediaId, TrackNodeId,
 };
 
@@ -832,16 +832,28 @@ pub enum TaskEvent {
     Deleted,
 }
 
-#[derive(Debug, Default, Serialize, Deserialize, Clone, PartialEq, JsonSchema)]
+#[derive(Debug, Serialize, Deserialize, Clone, PartialEq, JsonSchema)]
 #[serde(rename_all = "snake_case")]
 pub struct StreamingPacket {
-    created_at:        Timestamp,
-    audio:             bytes::Bytes,
-    timeline_pos:      f64,
-    streaming_pos:     u64,
-    instance_metering: HashMap<FixedInstanceId, Vec<DiffStamped<serde_json::Value>>>,
-    node_outputs:      HashMap<SourcePadId, Vec<DiffStamped<PadMetering>>>,
-    node_inputs:       HashMap<DestinationPadId, Vec<DiffStamped<PadMetering>>>,
+    pub created_at:        Timestamp,
+    pub audio:             bytes::Bytes,
+    pub timeline_pos:      f64,
+    pub streaming_pos:     u64,
+    pub instance_metering: HashMap<FixedInstanceId, Vec<DiffStamped<serde_json::Value>>>,
+    pub node_outputs:      HashMap<SourcePadId, Vec<DiffStamped<PadMetering>>>,
+    pub node_inputs:       HashMap<DestinationPadId, Vec<DiffStamped<PadMetering>>>,
+}
+
+impl Default for StreamingPacket {
+    fn default() -> Self {
+        Self { created_at:        now(),
+               audio:             Default::default(),
+               timeline_pos:      0.0,
+               streaming_pos:     0,
+               instance_metering: Default::default(),
+               node_outputs:      Default::default(),
+               node_inputs:       Default::default(), }
+    }
 }
 
 #[derive(Debug, Default, Serialize, Deserialize, Clone, PartialEq, JsonSchema)]
