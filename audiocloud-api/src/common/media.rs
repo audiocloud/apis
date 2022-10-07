@@ -220,6 +220,7 @@ pub struct RequestSeek {
     pub play_id:  PlayId,
     pub segment:  TimeSegment,
     pub start_at: f64,
+    pub looping:  bool,
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]

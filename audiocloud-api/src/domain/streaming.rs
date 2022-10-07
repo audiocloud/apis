@@ -5,7 +5,7 @@ use chrono::Utc;
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 
-use crate::common::change::{DesiredTaskPlayState, TaskPlayState};
+use crate::common::change::TaskPlayState;
 use crate::common::media::{PlayId, RenderId};
 use crate::common::time::Timestamp;
 use crate::domain::tasks::TaskUpdated;

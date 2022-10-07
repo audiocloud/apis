@@ -12,10 +12,7 @@ pub use command::*;
 pub use event::*;
 
 use crate::common::media::PlayId;
-use crate::{
-    merge_schemas, AppId, AppMediaObjectId, AppTaskId, FixedInstanceId, MediaObject, ModifyTaskError, RenderId, TaskId, TaskPlayState,
-    TaskSpec,
-};
+use crate::{merge_schemas, AppMediaObjectId, AppTaskId, FixedInstanceId, MediaObject, ModifyTaskError, RenderId, TaskPlayState, TaskSpec};
 
 pub mod command;
 pub mod environment;
@@ -73,7 +70,7 @@ pub enum TaskDeleted {
 #[derive(Debug, Serialize, Deserialize, JsonSchema)]
 #[serde(rename_all = "snake_case")]
 pub enum TaskSought {
-    Sought { task_id: AppTaskId },
+    Sought { task_id: AppTaskId, play_id: PlayId },
 }
 
 #[derive(Debug, Serialize, Deserialize, JsonSchema)]

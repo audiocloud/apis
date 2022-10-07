@@ -9,7 +9,7 @@ use utoipa::OpenApi;
 use crate::common::instance::{DesiredInstancePlayState, InstancePlayState};
 use crate::common::media::{PlayId, RenderId};
 use crate::common::task::InstanceReports;
-use crate::newtypes::{FixedInstanceId, ParameterId};
+use crate::newtypes::FixedInstanceId;
 use crate::{merge_schemas, Request, SerializableResult};
 
 /// A command that can be sent to the instance driver

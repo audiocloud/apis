@@ -12,7 +12,6 @@ use thiserror::Error;
 use utoipa::OpenApi;
 
 use crate::audio_engine::EngineError;
-use crate::cloud::tasks::CreateTask;
 use crate::common::change::{DesiredTaskPlayState, ModifyTaskSpec};
 use crate::common::task::TaskPermissions;
 use crate::common::task::TaskSpec;
@@ -160,6 +159,9 @@ pub enum DomainError {
 
     #[error("You are not authorized to access task {task_id}, required permissions {required:?}")]
     TaskAuthtorizationFailed { task_id: AppTaskId, required: TaskPermissions },
+
+    #[error("Task {task_id} is in an incorrect state to")]
+    TaskIllegalPlayState { task_id: AppTaskId },
 
     #[error("WebRTC error: {error}")]
     WebRTCError { error: String },
