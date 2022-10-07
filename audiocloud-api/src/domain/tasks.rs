@@ -81,6 +81,13 @@ pub enum TaskUpdated {
         /// New version to be used with `If-Matches` when submitting further modifications
         revision: u64,
     },
+    /// Did not update because a newer revision was specified and update is optional
+    Ignored {
+        /// Task Id
+        task_id:  AppTaskId,
+        /// Current version to be used with `If-Matches` when submitting further modifications
+        revision: u64,
+    },
 }
 
 #[derive(Serialize, Deserialize, JsonSchema)]

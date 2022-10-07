@@ -3,6 +3,7 @@
 use std::collections::{HashMap, HashSet};
 use std::hash::Hash;
 
+use derive_more::{Display, IsVariant};
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 use thiserror::Error;
@@ -257,13 +258,43 @@ pub enum TaskPlayState {
     Stopped,
 }
 
+#[derive(Serialize, Deserialize, Clone, Copy, Debug, PartialEq, Display, IsVariant, JsonSchema)]
+#[serde(rename_all = "snake_case")]
+pub enum TaskPlayStateSummary {
+    PreparingToPlay,
+    PreparingToRender,
+    Playing,
+    Rendering,
+    StoppingPlay,
+    StoppingRender,
+    Stopped,
+}
+
+impl<'a> Into<TaskPlayStateSummary> for &'a TaskPlayState {
+    fn into(self) -> TaskPlayStateSummary {
+        match self {
+            TaskPlayState::PreparingToPlay(_) => TaskPlayStateSummary::PreparingToPlay,
+            TaskPlayState::PreparingToRender(_) => TaskPlayStateSummary::PreparingToRender,
+            TaskPlayState::Playing(_) => TaskPlayStateSummary::Playing,
+            TaskPlayState::Rendering(_) => TaskPlayStateSummary::Rendering,
+            TaskPlayState::StoppingPlay(_) => TaskPlayStateSummary::StoppingPlay,
+            TaskPlayState::StoppingRender(_) => TaskPlayStateSummary::StoppingRender,
+            TaskPlayState::Stopped => TaskPlayStateSummary::Stopped,
+        }
+    }
+}
+
 impl TaskPlayState {
-    pub fn is_playing(&self, play_id: PlayId) -> bool {
-        matches!(self, Self::Playing(playing) if playing.play_id == play_id)
+    pub fn is_playing(&self, play_id: &PlayId) -> bool {
+        matches!(self, Self::Playing(playing) if &playing.play_id == play_id)
     }
 
-    pub fn is_rendering(&self, render_id: RenderId) -> bool {
-        matches!(self, Self::Rendering(rendering) if rendering.render_id == render_id)
+    pub fn is_rendering(&self, render_id: &RenderId) -> bool {
+        matches!(self, Self::Rendering(rendering) if &rendering.render_id == render_id)
+    }
+
+    pub fn is_rendering_any(&self) -> bool {
+        matches!(self, Self::Rendering(_))
     }
 
     pub fn is_stopped(&self) -> bool {
@@ -613,7 +644,6 @@ impl TaskSpec {
 
     pub fn delete_connection(&mut self, connection_id: NodeConnectionId) -> Result<(), ModifyTaskError> {
         if self.connections.remove(&connection_id).is_some() {
-
             self.revision += 1;
 
             Ok(())

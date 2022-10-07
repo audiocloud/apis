@@ -18,8 +18,8 @@ use crate::common::task::TaskSpec;
 use crate::instance_driver::InstanceDriverError;
 use crate::newtypes::{AppTaskId, SecureKey};
 use crate::{
-    merge_schemas, AppId, AppMediaObjectId, EngineId, FixedInstanceId, InstanceEvent, ModifyTaskError, RequestId, SocketId, Task,
-    TaskEvent, TaskId,
+    merge_schemas, AppId, AppMediaObjectId, EngineId, FixedInstanceId, InstanceEvent, ModifyTaskError, PlayId, RequestId, SocketId, Task,
+    TaskEvent, TaskId, TaskPlayState, TaskPlayStateSummary,
 };
 
 pub mod streaming;
@@ -115,9 +115,6 @@ pub enum DomainError {
     #[error("Engine {engine_id} raised an error: {error}")]
     Engine { engine_id: EngineId, error: EngineError },
 
-    #[error("Modification of task {task_id} failed: {error}")]
-    ModifyTask { task_id: AppTaskId, error: ModifyTaskError },
-
     #[error("Engine {engine_id} not found")]
     EngineNotFound { engine_id: EngineId },
 
@@ -127,11 +124,20 @@ pub enum DomainError {
     #[error("Task {task_id} not found")]
     TaskNotFound { task_id: AppTaskId },
 
-    #[error("Task {task_id} failed to modify: {error}")]
-    TaskModification { task_id: AppTaskId, error: ModifyTaskError },
+    #[error("Task {task_id} stream {play_id} not found")]
+    TaskStreamNotFound { task_id: AppTaskId, play_id: PlayId },
+
+    #[error("Task {task_id} packet {serial} of stream {play_id} not found")]
+    TaskPacketNotFound { task_id: AppTaskId, play_id: PlayId, serial: u64 },
 
     #[error("Task {task_id} already exists")]
     TaskExists { task_id: AppTaskId },
+
+    #[error("Task {task_id} revision {revision} cannot safely apply the update")]
+    TaskModificationRevisionOutOfDate { task_id: AppTaskId, revision: u64 },
+
+    #[error("Task {task_id} failed to modify: {error}")]
+    TaskModification { task_id: AppTaskId, error: ModifyTaskError },
 
     #[error("Instance {instance_id} not found")]
     InstanceNotFound { instance_id: FixedInstanceId },
@@ -160,8 +166,8 @@ pub enum DomainError {
     #[error("You are not authorized to access task {task_id}, required permissions {required:?}")]
     TaskAuthtorizationFailed { task_id: AppTaskId, required: TaskPermissions },
 
-    #[error("Task {task_id} is in an incorrect state to")]
-    TaskIllegalPlayState { task_id: AppTaskId },
+    #[error("Task {task_id} is in an incorrect state: state")]
+    TaskIllegalPlayState { task_id: AppTaskId, state: TaskPlayStateSummary },
 
     #[error("WebRTC error: {error}")]
     WebRTCError { error: String },

@@ -14,11 +14,11 @@ use crate::{AppTaskId, ModifyTaskSpec, RequestId, SecureKey, SerializableResult,
 
 #[derive(Serialize, Deserialize, Debug, Clone, JsonSchema)]
 pub struct StreamStats {
-    pub id:    AppTaskId,
-    pub state: TaskPlayState,
-    pub play:  PlayId,
-    pub low:   u64,
-    pub high:  u64,
+    pub id:      AppTaskId,
+    pub play_id: PlayId,
+    pub state:   TaskPlayState,
+    pub low:     Option<u64>,
+    pub high:    Option<u64>,
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone, JsonSchema)]
@@ -158,6 +158,8 @@ pub enum DomainClientMessage {
         task_id:     AppTaskId,
         /// List of modifications to apply
         modify_spec: Vec<ModifyTaskSpec>,
+        /// If true, the modifications are optional (no error if task already diverged)
+        optional:    bool,
         /// Task version
         revision:    u64,
     },
