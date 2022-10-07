@@ -124,6 +124,7 @@ pub struct MediaObject {
     pub path:     Option<String>,
     pub download: Option<MediaDownload>,
     pub upload:   Option<MediaUpload>,
+    pub revision: u64,
 }
 
 impl MediaObject {
@@ -132,7 +133,8 @@ impl MediaObject {
                metadata: None,
                path:     None,
                download: None,
-               upload:   None, }
+               upload:   None,
+               revision: 0, }
     }
 }
 
