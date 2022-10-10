@@ -11,7 +11,7 @@ use schemars::JsonSchema;
 use serde::{Deserialize, Deserializer, Serialize, Serializer};
 
 use crate::cloud::CloudError;
-use crate::{DestinationPadId, SourcePadId};
+use crate::{InputPadId, OutputPadId};
 
 /// Id of a fixed instance
 #[derive(Clone, Debug, Eq, PartialEq, Hash, Display, Constructor)]
@@ -163,8 +163,8 @@ impl<'de, K, V, T> serde::de::Visitor<'de> for Tuple2Visitor<K, V, T>
 pub struct TrackNodeId(String);
 
 impl TrackNodeId {
-    pub fn source(self) -> SourcePadId {
-        SourcePadId::TrackOutput(self)
+    pub fn source(self) -> OutputPadId {
+        OutputPadId::TrackOutput(self)
     }
 }
 
@@ -179,11 +179,11 @@ pub struct TrackMediaId(String);
 pub struct MixerNodeId(String);
 
 impl MixerNodeId {
-    pub fn input_flow(self) -> DestinationPadId {
-        DestinationPadId::MixerInput(self)
+    pub fn input_flow(self) -> InputPadId {
+        InputPadId::MixerInput(self)
     }
-    pub fn output_flow(self) -> SourcePadId {
-        SourcePadId::MixerOutput(self)
+    pub fn output_flow(self) -> OutputPadId {
+        OutputPadId::MixerOutput(self)
     }
 }
 
@@ -193,11 +193,11 @@ impl MixerNodeId {
 pub struct DynamicInstanceNodeId(String);
 
 impl DynamicInstanceNodeId {
-    pub fn input_flow(self) -> DestinationPadId {
-        DestinationPadId::DynamicInstanceInput(self)
+    pub fn input_flow(self) -> InputPadId {
+        InputPadId::DynamicInstanceInput(self)
     }
-    pub fn output_flow(self) -> SourcePadId {
-        SourcePadId::DynamicInstanceOutput(self)
+    pub fn output_flow(self) -> OutputPadId {
+        OutputPadId::DynamicInstanceOutput(self)
     }
 }
 
@@ -207,11 +207,11 @@ impl DynamicInstanceNodeId {
 pub struct FixedInstanceNodeId(String);
 
 impl FixedInstanceNodeId {
-    pub fn input_flow(self) -> DestinationPadId {
-        DestinationPadId::FixedInstanceInput(self)
+    pub fn input_flow(self) -> InputPadId {
+        InputPadId::FixedInstanceInput(self)
     }
-    pub fn output_flow(self) -> SourcePadId {
-        SourcePadId::FixedInstanceOutput(self)
+    pub fn output_flow(self) -> OutputPadId {
+        OutputPadId::FixedInstanceOutput(self)
     }
 }
 

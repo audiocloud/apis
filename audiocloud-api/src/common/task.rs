@@ -113,7 +113,7 @@ impl TaskSpec {
 
     fn check_source_channel_exists(&self,
                                    connection_id: &NodeConnectionId,
-                                   pad_id: &SourcePadId,
+                                   pad_id: &OutputPadId,
                                    channels: ChannelMask,
                                    models: &HashMap<ModelId, Model>)
                                    -> Result<(), CloudError> {
@@ -121,12 +121,12 @@ impl TaskSpec {
                                                        error:         Box::new(error), };
 
         match pad_id {
-            SourcePadId::MixerOutput(id) => self.mixers
+            OutputPadId::MixerOutput(id) => self.mixers
                                                 .get(id)
                                                 .ok_or_else(|| MixerNodeNotFound { mixer_node_id: id.clone() })
                                                 .and_then(|node| node.validate_source_channels(channels))
                                                 .map_err(complete_error),
-            SourcePadId::FixedInstanceOutput(id) => {
+            OutputPadId::FixedInstanceOutput(id) => {
                 let fixed = self.fixed
                                 .get(id)
                                 .ok_or_else(|| FixedInstanceNodeNotFound { fixed_node_id: id.clone() })
@@ -138,7 +138,7 @@ impl TaskSpec {
 
                 fixed.validate_source_channels(channels, model).map_err(complete_error)
             }
-            SourcePadId::DynamicInstanceOutput(id) => {
+            OutputPadId::DynamicInstanceOutput(id) => {
                 let dynamic = self.dynamic
                                   .get(id)
                                   .ok_or_else(|| DynamicInstanceNodeNotFound { dynamic_node_id: id.clone(), })
@@ -150,7 +150,7 @@ impl TaskSpec {
 
                 dynamic.validate_source_channels(channels, model).map_err(complete_error)
             }
-            SourcePadId::TrackOutput(id) => self.tracks
+            OutputPadId::TrackOutput(id) => self.tracks
                                                 .get(id)
                                                 .ok_or_else(|| TrackNodeNotFound { track_node_id: id.clone() })
                                                 .and_then(|node| node.validate_source_channels(channels))
@@ -160,7 +160,7 @@ impl TaskSpec {
 
     fn check_destination_channel_exists(&self,
                                         connection_id: &NodeConnectionId,
-                                        pad_id: &DestinationPadId,
+                                        pad_id: &InputPadId,
                                         channels: ChannelMask,
                                         models: &HashMap<ModelId, Model>)
                                         -> Result<(), CloudError> {
@@ -168,12 +168,12 @@ impl TaskSpec {
                                                        error:         Box::new(error), };
 
         match pad_id {
-            DestinationPadId::MixerInput(id) => self.mixers
+            InputPadId::MixerInput(id) => self.mixers
                                                     .get(id)
                                                     .ok_or_else(|| MixerNodeNotFound { mixer_node_id: id.clone() })
                                                     .and_then(|node| node.validate_destination_channels(channels))
                                                     .map_err(complete_error),
-            DestinationPadId::FixedInstanceInput(id) => {
+            InputPadId::FixedInstanceInput(id) => {
                 let fixed = self.fixed
                                 .get(id)
                                 .ok_or_else(|| FixedInstanceNodeNotFound { fixed_node_id: id.clone() })
@@ -185,7 +185,7 @@ impl TaskSpec {
 
                 fixed.validate_destination_channels(channels, model).map_err(complete_error)
             }
-            DestinationPadId::DynamicInstanceInput(id) => {
+            InputPadId::DynamicInstanceInput(id) => {
                 let dynamic = self.dynamic
                                   .get(id)
                                   .ok_or_else(|| DynamicInstanceNodeNotFound { dynamic_node_id: id.clone(), })
@@ -485,9 +485,9 @@ impl FixedInstanceNode {
 #[derive(Clone, Debug, Serialize, Deserialize, PartialEq, JsonSchema)]
 pub struct NodeConnection {
     /// Source node pad
-    pub from:          SourcePadId,
+    pub from: OutputPadId,
     /// Destination node pad
-    pub to:            DestinationPadId,
+    pub to: InputPadId,
     /// Source channel mask
     pub from_channels: ChannelMask,
     /// Destination channel mask
@@ -557,7 +557,7 @@ impl ChannelMask {
 
 /// A pad that can receive connections on a node inside a task
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, IsVariant, Unwrap, Hash, Eq, PartialOrd, Ord, JsonSchema)]
-pub enum DestinationPadId {
+pub enum InputPadId {
     /// Mixer node input
     #[serde(rename = "mixer")]
     MixerInput(MixerNodeId),
@@ -571,7 +571,7 @@ pub enum DestinationPadId {
     DynamicInstanceInput(DynamicInstanceNodeId),
 }
 
-impl DestinationPadId {
+impl InputPadId {
     pub fn references(&self, node_id: &TaskNodeId) -> bool {
         match (self, node_id) {
             (Self::MixerInput(mixer_id), TaskNodeId::Mixer(ref_mixer_id)) => mixer_id == ref_mixer_id,
@@ -584,7 +584,7 @@ impl DestinationPadId {
 
 /// A pad that can receive connections on a node inside a task
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, IsVariant, Unwrap, Hash, Eq, PartialOrd, Ord, JsonSchema)]
-pub enum SourcePadId {
+pub enum OutputPadId {
     /// Mixer node output
     #[serde(rename = "mixer")]
     MixerOutput(MixerNodeId),
@@ -602,7 +602,7 @@ pub enum SourcePadId {
     TrackOutput(TrackNodeId),
 }
 
-impl SourcePadId {
+impl OutputPadId {
     pub fn references(&self, node_id: &TaskNodeId) -> bool {
         match (self, node_id) {
             (Self::TrackOutput(track_id), TaskNodeId::Track(ref_track_id)) => track_id == ref_track_id,
@@ -614,7 +614,7 @@ impl SourcePadId {
     }
 }
 
-impl std::fmt::Display for SourcePadId {
+impl std::fmt::Display for OutputPadId {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
             Self::MixerOutput(id) => write!(f, "mixer:{}", id),
@@ -625,12 +625,91 @@ impl std::fmt::Display for SourcePadId {
     }
 }
 
-impl std::fmt::Display for DestinationPadId {
+impl std::fmt::Display for InputPadId {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
             Self::MixerInput(id) => write!(f, "mixer:{}", id),
             Self::FixedInstanceInput(id) => write!(f, "fixed:{}", id),
             Self::DynamicInstanceInput(id) => write!(f, "dynamic:{}", id),
+        }
+    }
+}
+
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, IsVariant, Unwrap, Hash, Eq, PartialOrd, Ord, JsonSchema)]
+pub enum NodePadId {
+    /// Mixer node output
+    #[serde(rename = "out_mixer")]
+    MixerOutput(MixerNodeId),
+
+    /// Fixed instance node output
+    #[serde(rename = "out_fixed")]
+    FixedInstanceOutput(FixedInstanceNodeId),
+
+    /// Dynamic instance node output
+    #[serde(rename = "out_dynamic")]
+    DynamicInstanceOutput(DynamicInstanceNodeId),
+
+    /// Track node output
+    #[serde(rename = "out_track")]
+    TrackOutput(TrackNodeId),
+
+    /// Mixer node input
+    #[serde(rename = "in_mixer")]
+    MixerInput(MixerNodeId),
+
+    /// Fixed instance node input
+    #[serde(rename = "in_fixed")]
+    FixedInstanceInput(FixedInstanceNodeId),
+
+    /// Dynamic instance node input
+    #[serde(rename = "in_dynamic")]
+    DynamicInstanceInput(DynamicInstanceNodeId),
+}
+
+impl NodePadId {
+    pub fn is_input(&self) -> bool {
+        matches!(self,
+                 Self::MixerInput(_) | Self::FixedInstanceInput(_) | Self::DynamicInstanceInput(_))
+    }
+
+    pub fn is_output(&self) -> bool {
+        !self.is_input()
+    }
+
+    pub fn as_ref(&self) -> &Self { self }
+}
+
+impl ToString for NodePadId {
+    fn to_string(&self) -> String {
+        match self {
+            NodePadId::MixerOutput(id) => OutputPadId::MixerOutput(id.clone()).to_string(),
+            NodePadId::FixedInstanceOutput(id) => OutputPadId::FixedInstanceOutput(id.clone()).to_string(),
+            NodePadId::DynamicInstanceOutput(id) => OutputPadId::DynamicInstanceOutput(id.clone()).to_string(),
+            NodePadId::TrackOutput(id) => OutputPadId::TrackOutput(id.clone()).to_string(),
+            NodePadId::MixerInput(id) => InputPadId::MixerInput(id.clone()).to_string(),
+            NodePadId::FixedInstanceInput(id) => InputPadId::FixedInstanceInput(id.clone()).to_string(),
+            NodePadId::DynamicInstanceInput(id) => InputPadId::DynamicInstanceInput(id.clone()).to_string(),
+        }
+    }
+}
+
+impl From<OutputPadId> for NodePadId {
+    fn from(src: OutputPadId) -> Self {
+        match src {
+            OutputPadId::MixerOutput(id) => Self::MixerOutput(id),
+            OutputPadId::FixedInstanceOutput(id) => Self::FixedInstanceOutput(id),
+            OutputPadId::DynamicInstanceOutput(id) => Self::DynamicInstanceOutput(id),
+            OutputPadId::TrackOutput(id) => Self::TrackOutput(id),
+        }
+    }
+}
+
+impl From<InputPadId> for NodePadId {
+    fn from(src: InputPadId) -> Self {
+        match src {
+            InputPadId::MixerInput(id) => Self::MixerInput(id),
+            InputPadId::FixedInstanceInput(id) => Self::FixedInstanceInput(id),
+            InputPadId::DynamicInstanceInput(id) => Self::DynamicInstanceInput(id),
         }
     }
 }
@@ -838,27 +917,25 @@ pub enum TaskEvent {
 #[serde(rename_all = "snake_case")]
 pub struct StreamingPacket {
     pub play_id:           PlayId,
-    pub serial:            u64,
     pub created_at:        Timestamp,
     pub audio:             Vec<DiffStamped<CompressedAudio>>,
+    pub instance_metering: HashMap<FixedInstanceId, Vec<DiffStamped<serde_json::Value>>>,
+    pub pad_metering:      HashMap<NodePadId, Vec<DiffStamped<PadMetering>>>,
     pub timeline_pos:      f64,
     pub streaming_pos:     u64,
-    pub instance_metering: HashMap<FixedInstanceId, Vec<DiffStamped<serde_json::Value>>>,
-    pub node_outputs:      HashMap<SourcePadId, Vec<DiffStamped<PadMetering>>>,
-    pub node_inputs:       HashMap<DestinationPadId, Vec<DiffStamped<PadMetering>>>,
+    pub serial:            u64,
 }
 
 impl Default for StreamingPacket {
     fn default() -> Self {
-        Self { play_id:           PlayId::new(Default::default()),
-               serial:            0,
-               created_at:        now(),
-               audio:             Default::default(),
-               timeline_pos:      0.0,
-               streaming_pos:     0,
-               instance_metering: Default::default(),
-               node_outputs:      Default::default(),
-               node_inputs:       Default::default(), }
+        Self { play_id:           { PlayId::new(Default::default()) },
+               audio:             { Default::default() },
+               instance_metering: { Default::default() },
+               pad_metering:      { Default::default() },
+               created_at:        { now() },
+               timeline_pos:      { 0.0 },
+               streaming_pos:     { 0 },
+               serial:            { 0 }, }
     }
 }
 

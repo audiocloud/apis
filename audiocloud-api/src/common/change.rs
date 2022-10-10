@@ -19,7 +19,7 @@ use crate::newtypes::{
     DynamicInstanceNodeId, FixedInstanceId, FixedInstanceNodeId, MediaObjectId, MixerNodeId, NodeConnectionId, SecureKey, TrackMediaId,
     TrackNodeId,
 };
-use crate::{json_schema_new_type, AppMediaObjectId, ChannelMask, DestinationPadId, SourcePadId, TaskNodeId, TaskSecurity};
+use crate::{json_schema_new_type, AppMediaObjectId, ChannelMask, InputPadId, OutputPadId, TaskNodeId, TaskSecurity};
 
 use self::ModifyTaskError::*;
 
@@ -110,9 +110,9 @@ pub enum ModifyTaskSpec {
         /// Connection id
         connection_id: NodeConnectionId,
         /// Source node pad
-        from:          SourcePadId,
+        from: OutputPadId,
         /// Destination node pad
-        to:            DestinationPadId,
+        to: InputPadId,
         /// Source channel mask
         from_channels: ChannelMask,
         /// Destination channel mask
@@ -505,7 +505,7 @@ impl TaskSpec {
         Ok(())
     }
 
-    pub fn is_connected(&self, from: &SourcePadId, to: &DestinationPadId) -> bool {
+    pub fn is_connected(&self, from: &OutputPadId, to: &InputPadId) -> bool {
         self.connections
             .iter()
             .any(|(_, connection)| &connection.from == from && &connection.to == to)
@@ -654,8 +654,8 @@ impl TaskSpec {
 
     pub fn add_connection(&mut self,
                           connection_id: NodeConnectionId,
-                          from: SourcePadId,
-                          to: DestinationPadId,
+                          from: OutputPadId,
+                          to: InputPadId,
                           from_channels: ChannelMask,
                           to_channels: ChannelMask,
                           volume: f64,
