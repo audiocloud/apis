@@ -43,8 +43,17 @@ pub enum InstanceDriverError {
     #[error("Parameter {error} does not exist")]
     ParameterDoesNotExist { error: String },
 
-    #[error("Media is not present, can't play or rewind")]
+    #[error("Parameters are malformed: {error}")]
+    ParametersMalformed { error: String },
+
+    #[error("Reports are malformed: {error}")]
+    ReportsMalformed { error: String },
+
+    #[error("Media is not present, can't play, record or rewind")]
     MediaNotPresent,
+
+    #[error("Instance is not a power controller")]
+    NotPowerController,
 
     #[error("Driver can't guarantee that playback won't be interrupted")]
     NotInterruptable,

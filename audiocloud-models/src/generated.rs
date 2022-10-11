@@ -10,9 +10,9 @@ pub mod audiocloud {
 
     #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
     pub struct Insert1X1Preset {}
-    #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
+    #[derive(Serialize, Deserialize, Clone, Debug, Default, PartialEq, JsonSchema)]
     pub struct Insert1X1Parameters {}
-    #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
+    #[derive(Serialize, Deserialize, Clone, Debug, Default, PartialEq, JsonSchema)]
     pub struct Insert1X1Reports {
         pub insert_input:  Option<f64>,
         pub insert_output: Option<f64>,
@@ -20,9 +20,9 @@ pub mod audiocloud {
 
     #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
     pub struct Insert24X2Preset {}
-    #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
+    #[derive(Serialize, Deserialize, Clone, Debug, Default, PartialEq, JsonSchema)]
     pub struct Insert24X2Parameters {}
-    #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
+    #[derive(Serialize, Deserialize, Clone, Debug, Default, PartialEq, JsonSchema)]
     pub struct Insert24X2Reports {
         pub insert_input:  Option<Vec<f64>>,
         pub insert_output: Option<Stereo<f64>>,
@@ -30,9 +30,9 @@ pub mod audiocloud {
 
     #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
     pub struct Insert2X2Preset {}
-    #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
+    #[derive(Serialize, Deserialize, Clone, Debug, Default, PartialEq, JsonSchema)]
     pub struct Insert2X2Parameters {}
-    #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
+    #[derive(Serialize, Deserialize, Clone, Debug, Default, PartialEq, JsonSchema)]
     pub struct Insert2X2Reports {
         pub insert_input:  Option<Stereo<f64>>,
         pub insert_output: Option<Stereo<f64>>,
@@ -60,7 +60,7 @@ pub mod distopik {
         pub low_mid_width:    Stereo<bool>,
         pub output_pad:       Stereo<ToggleOr<i64>>,
     }
-    #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
+    #[derive(Serialize, Deserialize, Clone, Debug, Default, PartialEq, JsonSchema)]
     pub struct Dual1084Parameters {
         pub eql_toggle:       Option<Stereo<bool>>,
         pub high_freq:        Option<Stereo<ToggleOr<u64>>>,
@@ -77,7 +77,7 @@ pub mod distopik {
         pub low_mid_width:    Option<Stereo<bool>>,
         pub output_pad:       Option<Stereo<ToggleOr<i64>>>,
     }
-    #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
+    #[derive(Serialize, Deserialize, Clone, Debug, Default, PartialEq, JsonSchema)]
     pub struct Dual1084Reports {}
 
     pub const EQL_TOGGLE_NAME: &str = "eql_toggle";
@@ -166,13 +166,13 @@ pub mod distopik {
         pub input:      Vec<f64>,
         pub pan:        Vec<f64>,
     }
-    #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
+    #[derive(Serialize, Deserialize, Clone, Debug, Default, PartialEq, JsonSchema)]
     pub struct SummatraParameters {
         pub bus_assign: Option<Vec<u64>>,
         pub input:      Option<Vec<f64>>,
         pub pan:        Option<Vec<f64>>,
     }
-    #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
+    #[derive(Serialize, Deserialize, Clone, Debug, Default, PartialEq, JsonSchema)]
     pub struct SummatraReports {}
 
     pub const BUS_ASSIGN_NAME: &str = "bus_assign";
@@ -193,11 +193,11 @@ pub mod netio {
     pub struct PowerPdu4CPreset {
         pub power: Vec<bool>,
     }
-    #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
+    #[derive(Serialize, Deserialize, Clone, Debug, Default, PartialEq, JsonSchema)]
     pub struct PowerPdu4CParameters {
         pub power: Option<Vec<bool>>,
     }
-    #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
+    #[derive(Serialize, Deserialize, Clone, Debug, Default, PartialEq, JsonSchema)]
     pub struct PowerPdu4CReports {
         pub current:      Option<Vec<f64>>,
         pub energy:       Option<Vec<f64>>,
