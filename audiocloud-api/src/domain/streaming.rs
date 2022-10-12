@@ -58,7 +58,7 @@ impl<T> From<(Timestamp, T)> for DiffStamped<T> {
 
 /// A mesasge received over a real-time communication channel from a streaming domain connection
 #[derive(Serialize, Deserialize, Debug, Clone, JsonSchema)]
-#[serde(rename_all = "snake_case")]
+#[serde(rename_all = "snake_case", tag = "type")]
 pub enum DomainServerMessage {
     /// Task generated event
     TaskEvent {
@@ -148,7 +148,7 @@ pub enum PeerConnectionCreated {
 
 /// A message sent over a real-time communication channel to a streaming domain connection
 #[derive(Serialize, Deserialize, Debug, Clone, JsonSchema)]
-#[serde(rename_all = "snake_case")]
+#[serde(rename_all = "snake_case", tag = "type")]
 pub enum DomainClientMessage {
     /// Request to modify task specification
     RequestModifyTaskSpec {
