@@ -3,7 +3,7 @@ name: Build Client Packages and publish to NPM
 on:
   push:
     branches:
-      - 'master'
+      - 'main'
   workflow_dispatch: { }
 
 jobs:

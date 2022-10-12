@@ -13,7 +13,8 @@ pub use event::*;
 
 use crate::common::media::PlayId;
 use crate::{
-    merge_schemas, AppId, AppMediaObjectId, AppTaskId, FixedInstanceId, MediaObject, ModifyTaskError, RenderId, TaskPlayState, TaskSpec,
+    merge_schemas, AppId, AppMediaObjectId, AppTaskId, FixedInstanceId, MediaObject, ModifyTaskError, RenderId, TaskId, TaskPlayState,
+    TaskSpec,
 };
 
 pub mod command;
@@ -178,6 +179,7 @@ pub fn schemas() -> RootSchema {
                    schema_for!(SetMedia),
                    schema_for!(SetInstances),
                    schema_for!(AppId),
+                   schema_for!(TaskId),
                    schema_for!(crate::RequestPlay),
                    schema_for!(crate::RequestSeek),
                    schema_for!(crate::RequestChangeMixer),
