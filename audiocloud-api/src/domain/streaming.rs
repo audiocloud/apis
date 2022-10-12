@@ -88,6 +88,12 @@ pub enum DomainServerMessage {
         /// Result of the operation - the assigned socket ID
         result:     SerializableResult<PeerConnectionCreated, DomainError>,
     },
+    AnswerPeerConnectionResponse {
+        /// Request id this message is responding to
+        request_id: RequestId,
+        /// Result of the operation or error
+        result:     SerializableResult<(), DomainError>,
+    },
     /// Response to submitting a peer connection candidate
     PeerConnectionCandidateResponse {
         /// Request id this message is responding to
@@ -135,6 +141,7 @@ pub enum DomainServerMessage {
 
 /// Confirmation that the socket has been created normally from the domain client offer
 #[derive(Serialize, Deserialize, Debug, Clone, JsonSchema)]
+#[serde(rename_all = "snake_case")]
 pub enum PeerConnectionCreated {
     /// Connection created normally
     Created {
@@ -166,9 +173,15 @@ pub enum DomainClientMessage {
     /// Request a new WebRTC peer connection to the domain
     RequestPeerConnection {
         /// Request id (to reference the response to)
-        request_id:  RequestId,
-        /// Local description offer
-        description: String,
+        request_id: RequestId,
+    },
+    AnswerPeerConnection {
+        /// The socket for which we are generating an anwser
+        socket_id:  SocketId,
+        /// Request id (to reference the response to)
+        request_id: RequestId,
+        /// The domain server's WebRTC offer response (answer)
+        answer:     String,
     },
     /// Submit a new WebRTC peer connection ICE candidate
     SubmitPeerConnectionCandidate {
