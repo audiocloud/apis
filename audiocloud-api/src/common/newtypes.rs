@@ -264,6 +264,18 @@ impl EngineId {
 #[repr(transparent)]
 pub struct SocketId(String);
 
+/// A client identifier to group sockets belonging to the same client
+#[derive(Clone, Debug, Serialize, Deserialize, Eq, PartialEq, Ord, PartialOrd, Display, Deref, Constructor, Hash, From, FromStr)]
+#[repr(transparent)]
+pub struct ClientId(String);
+
+#[derive(Clone, Debug, Serialize, Deserialize, Eq, PartialEq, Ord, PartialOrd, Display, Constructor, Hash, JsonSchema)]
+#[display(fmt = "{client_id}.{socket_id}")]
+pub struct ClientSocketId {
+    pub client_id: ClientId,
+    pub socket_id: SocketId,
+}
+
 impl TaskId {
     pub fn validate(self) -> Result<Self, CloudError> {
         static VALIDATION: OnceCell<Regex> = OnceCell::new();
@@ -437,6 +449,7 @@ json_schema_new_type!(AppId,
                       ReportId,
                       ModelId,
                       TaskId,
+                      ClientId,
                       SocketId,
                       RequestId,
                       EngineId);

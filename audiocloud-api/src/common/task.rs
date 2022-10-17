@@ -169,10 +169,10 @@ impl TaskSpec {
 
         match pad_id {
             InputPadId::MixerInput(id) => self.mixers
-                                                    .get(id)
-                                                    .ok_or_else(|| MixerNodeNotFound { mixer_node_id: id.clone() })
-                                                    .and_then(|node| node.validate_destination_channels(channels))
-                                                    .map_err(complete_error),
+                                              .get(id)
+                                              .ok_or_else(|| MixerNodeNotFound { mixer_node_id: id.clone() })
+                                              .and_then(|node| node.validate_destination_channels(channels))
+                                              .map_err(complete_error),
             InputPadId::FixedInstanceInput(id) => {
                 let fixed = self.fixed
                                 .get(id)
@@ -485,9 +485,9 @@ impl FixedInstanceNode {
 #[derive(Clone, Debug, Serialize, Deserialize, PartialEq, JsonSchema)]
 pub struct NodeConnection {
     /// Source node pad
-    pub from: OutputPadId,
+    pub from:          OutputPadId,
     /// Destination node pad
-    pub to: InputPadId,
+    pub to:            InputPadId,
     /// Source channel mask
     pub from_channels: ChannelMask,
     /// Destination channel mask
@@ -676,7 +676,9 @@ impl NodePadId {
         !self.is_input()
     }
 
-    pub fn as_ref(&self) -> &Self { self }
+    pub fn as_ref(&self) -> &Self {
+        self
+    }
 }
 
 impl ToString for NodePadId {
@@ -887,6 +889,10 @@ impl TaskPermissions {
         }
 
         true
+    }
+
+    pub fn can_audio(&self) -> bool {
+        self.audio
     }
 
     pub fn full() -> Self {

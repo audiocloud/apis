@@ -15,12 +15,10 @@ use crate::audio_engine::EngineError;
 use crate::common::change::{DesiredTaskPlayState, ModifyTaskSpec};
 use crate::common::task::TaskPermissions;
 use crate::common::task::TaskSpec;
+use crate::domain::DomainError::AuthenticationFailed;
 use crate::instance_driver::InstanceDriverError;
 use crate::newtypes::{AppTaskId, SecureKey};
-use crate::{
-    merge_schemas, AppId, AppMediaObjectId, EngineId, FixedInstanceId, InstanceEvent, ModifyTaskError, PlayId, RequestId, SocketId, Task,
-    TaskEvent, TaskId, TaskPlayState, TaskPlayStateSummary,
-};
+use crate::{merge_schemas, AppId, AppMediaObjectId, EngineId, FixedInstanceId, InstanceEvent, ModifyTaskError, PlayId, RequestId, SocketId, Task, TaskEvent, TaskId, TaskPlayState, TaskPlayStateSummary, ClientSocketId};
 
 pub mod streaming;
 pub mod tasks;
@@ -119,7 +117,10 @@ pub enum DomainError {
     EngineNotFound { engine_id: EngineId },
 
     #[error("Socket {socket_id} not found")]
-    SocketNotFound { socket_id: SocketId },
+    SocketNotFound { socket_id: ClientSocketId },
+
+    #[error("Socket {socket_id} already exists")]
+    SocketExists { socket_id: ClientSocketId },
 
     #[error("Task {task_id} not found")]
     TaskNotFound { task_id: AppTaskId },

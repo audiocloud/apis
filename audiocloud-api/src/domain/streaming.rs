@@ -10,7 +10,7 @@ use crate::common::media::{PlayId, RenderId};
 use crate::common::time::Timestamp;
 use crate::domain::tasks::TaskUpdated;
 use crate::domain::DomainError;
-use crate::{AppTaskId, ModifyTaskSpec, RequestId, SecureKey, SerializableResult, SocketId, TaskEvent, TaskPermissions};
+use crate::{AppTaskId, ClientSocketId, ModifyTaskSpec, RequestId, SecureKey, SerializableResult, SocketId, TaskEvent, TaskPermissions};
 
 #[derive(Serialize, Deserialize, Debug, Clone, JsonSchema)]
 pub struct StreamStats {
@@ -117,12 +117,10 @@ pub enum DomainServerMessage {
     },
     /// Submit a new WebRTC peer connection ICE candidate
     SubmitPeerConnectionCandidate {
-        /// Request id (to reference the response to)
-        request_id: RequestId,
         /// Socket id of the peer connection
-        socket_id:  SocketId,
+        socket_id: SocketId,
         /// ICE Candidate
-        candidate:  String,
+        candidate: Option<String>,
     },
     /// Ping message
     Ping {
@@ -146,7 +144,7 @@ pub enum PeerConnectionCreated {
     /// Connection created normally
     Created {
         /// Created socket id
-        socket_id: SocketId,
+        socket_id: ClientSocketId,
 
         /// The domain server's WebRTC offer
         remote_description: String,
@@ -190,7 +188,7 @@ pub enum DomainClientMessage {
         /// Socket id of the peer connection
         socket_id:  SocketId,
         /// ICE Candidate
-        candidate:  String,
+        candidate:  Option<String>,
     },
     /// Request attaching to a task
     RequestAttachToTask {
