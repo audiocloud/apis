@@ -1,26 +1,95 @@
-on: [ workflow_dispatch ]
+name: Build Client Packages and publish to NPM
 
-name: Build API package and publish to NPM
+on:
+  push:
+    branches:
+      - 'main'
+  workflow_dispatch: { }
 
 jobs:
-  build:
-    name: NPM build and publish
-    defaults:
-      run:
-        working-directory: js-api
+  schemas:
+    name: Build Schema Files
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
+        name: Checkout code
+      - uses: actions/cache@v3
+        with:
+          path: |
+            ~/.cargo/bin/
+            ~/.cargo/registry/index/
+            ~/.cargo/registry/cache/
+            ~/.cargo/git/db/
+            target/
+          key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock', '**/Cargo.toml') }}
+          restore-keys: |
+            ${{ runner.os }}-cargo-
+      - uses: actions-rs/cargo@v1
+        with:
+          args: -p audiocloud-api --example export_schemas
+          command: run
+      - uses: actions-rs/cargo@v1
+        with:
+          args: -p audiocloud-models --example export_schema
+          command: run
+      - uses: actions/upload-artifact@v3
+        name: Upload files
+        with:
+          name: schemas
+          path: openapi_*.json
+  bump:
+    name: Bump version
+    runs-on: ubuntu-latest
+    needs: schemas
+    steps:
+      - name: 'Checkout source code'
+        uses: 'actions/checkout@v2'
+      - name: 'Automated Version Bump'
+        id: version-bump
+        uses: 'phips28/gh-action-bump-version@master'
+        with:
+          skip-tag: 'true'
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          PACKAGEJSON_DIR: packages/workdir
+  publish:
+    name: Publish
+    runs-on: ubuntu-latest
+    needs: bump
+    strategy:
+      matrix:
+        package:
+          - { name: cloud-client, schema: openapi_cloud.json }
+          - { name: domain-client, schema: openapi_domain.json }
+          - { name: audio-engine-client, schema: openapi_audio_engine.json }
+          - { name: instance-driver-client, schema: openapi_instance_driver.json }
+          - { name: models, schema: openapi_models.json }
+    steps:
+      - uses: actions/checkout@v2
         name: Checkout API code
+      - name: Download binary artifact
+        uses: actions/download-artifact@v3
+        with:
+          name: schemas
       - uses: actions/setup-node@v3
         with:
           node-version: '18.x'
           registry-url: 'https://registry.npmjs.org'
-      - run: npm ci
-        name: Install dependencies
-      - run: npm run build
-        name: Build API package
-      - run: npm publish --access public
+      - run: |
+          cp ../../${{ matrix.package.schema }} .
+          envsubst < package.json > package2.json
+          mv package2.json package.json
+          npm install
+          npm run generate
+          npm run build
+        name: Install deps, generate and build client
+        working-directory: './packages/workdir'
+        env:
+          PACKAGE: ${{ matrix.package.name }}
+          SCHEMA: ${{ matrix.package.schema }}
+      - run: |
+          npm publish --access public
         name: Publish to NPM
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+        working-directory: './packages/workdir'
