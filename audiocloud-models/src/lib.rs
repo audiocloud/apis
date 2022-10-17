@@ -16,6 +16,7 @@ pub mod audio_cloud;
 pub mod cockos;
 pub mod distopik;
 pub mod netio;
+pub mod elysia;
 
 pub enum Manufacturers {
     AudioCloud,
