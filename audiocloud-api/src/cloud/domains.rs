@@ -12,7 +12,7 @@ use crate::time::{TimeRange, Timestamp};
 use crate::EngineId;
 
 /// Used by domain for booting
-#[derive(Serialize, Deserialize, Debug, Clone, JsonSchema)]
+#[derive(Serialize, Deserialize, Debug, Clone, PartialEq, JsonSchema)]
 #[serde(rename_all = "snake_case")]
 pub struct DomainConfig {
     /// Id of the domain
@@ -135,7 +135,7 @@ pub enum DomainModelSource {
 }
 
 /// Information about a media engine within a domain
-#[derive(Serialize, Deserialize, Debug, Clone, JsonSchema)]
+#[derive(Serialize, Deserialize, Debug, Clone, PartialEq, JsonSchema)]
 pub struct DomainEngineConfig {
     /// Dynamic instances configured on the audio engine, with associated limits
     #[serde(default)]
@@ -150,7 +150,7 @@ pub struct DomainEngineConfig {
 }
 
 /// Limits on dynamic instances
-#[derive(Serialize, Deserialize, Debug, Clone, JsonSchema)]
+#[derive(Serialize, Deserialize, Debug, Clone, PartialEq, JsonSchema)]
 pub struct DynamicInstanceLimits {
     /// Maximum number of concurrent dynamic instances
     ///
