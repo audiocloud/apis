@@ -117,7 +117,7 @@ pub struct MediaUpload {
     pub state:    MediaJobState,
 }
 
-#[derive(Serialize, Deserialize, Clone, Debug, JsonSchema)]
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
 pub struct MediaObject {
     pub id:       AppMediaObjectId,
     pub metadata: Option<MediaMetadata>,

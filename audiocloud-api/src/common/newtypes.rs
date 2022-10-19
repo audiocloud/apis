@@ -9,6 +9,7 @@ use once_cell::sync::OnceCell;
 use regex::Regex;
 use schemars::JsonSchema;
 use serde::{Deserialize, Deserializer, Serialize, Serializer};
+use utoipa::openapi::SchemaFormat::Uuid;
 
 use crate::cloud::CloudError;
 use crate::{InputPadId, OutputPadId};
@@ -231,6 +232,10 @@ impl AppId {
 
     pub fn admin() -> AppId {
         AppId("admin".to_string())
+    }
+
+    pub fn test() -> AppId {
+        AppId("test".to_string())
     }
 }
 
