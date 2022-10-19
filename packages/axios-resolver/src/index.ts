@@ -1,10 +1,10 @@
-import Axios, { AxiosInstance, AxiosRequestConfig, AxiosResponse } from "axios";
+import Axios, { AxiosInstance, AxiosRequestConfig } from "axios";
 
 export type Request<B> =
   | { method: "get"; headers?: Record<string, any>; path: string }
   | {
       method: "post" | "delete" | "patch" | "put";
-      body: B;
+      body?: B;
       headers?: Record<string, any>;
       path: string;
     };
@@ -36,14 +36,21 @@ export class AxiosRequester implements Requester {
       axios_request.headers!["content-type"] = "application/json";
     }
 
-    const res: AxiosResponse = await this.axios
+    const res = await this.axios
       .request(axios_request)
-      .catch((res) => res);
-
+      .catch(({ response }) => response);
     if (res.status >= 200 && res.status < 300) {
-      return res.data;
+      return Promise.resolve({
+        ok: res.data,
+        is_error: false,
+        is_ok: true,
+      } as Result<T, E>);
     } else {
-      throw res;
+      return Promise.reject({
+        error: res.data,
+        is_ok: false,
+        is_error: true,
+      } as Result<T, E>);
     }
   }
 }
